@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ndri_dairy_risk">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/webp" href="icons/app_logo.webp"/>
+
+  <title>ndri_dairy_risk</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    /* Custom splash screen styles */
+    #splash {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+    .loader {
+      border: 7px solid #e0e0e0;
+      border-top: 7px solid #009688;
+      border-radius: 50%;
+      width: 64px;
+      height: 64px;
+      animation: spin 1.1s linear infinite;
+      margin-bottom: 32px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .loading-text {
+      font-family: 'Roboto', Arial, sans-serif;
+      color: #009688;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .brand {
+      font-size: 17px;
+      color: #333;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+    /* Optional: fade out effect */
+    #splash.removed {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+  </style>
+</head>
+<body>
+<!-- Splash Loader -->
+<div id="splash">
+  <!-- Optionally add your logo below: -->
+  <!-- <img src="icons/app_logo.webp" alt="App Logo" style="width:70px;height:70px;margin-bottom:16px;"> -->
+  <div class="loader"></div>
+  <div class="loading-text">Loading Dairy Climate Risk Panel...</div>
+</div>
+<script src="flutter_bootstrap.js" async></script>
+<script>
+  // Remove splash when Flutter renders the first frame
+  window.addEventListener('flutter-first-frame', function() {
+    var splash = document.getElementById('splash');
+    if (splash) splash.classList.add('removed');
+    setTimeout(function() {
+      if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+    }, 550);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1001685338819",
+    "project_id": "ndri-risk-app",
+    "storage_bucket": "ndri-risk-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1001685338819:android:e24df40885ceb1d1277076",
+        "android_client_info": {
+          "package_name": "com.example.ndri_dairy_risk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAas6vkcxJDVpWt3XBLY4Xaa3KJDFHRsgk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

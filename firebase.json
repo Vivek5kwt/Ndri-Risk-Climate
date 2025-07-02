@@ -1,0 +1,44 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ndri-risk-app",
+          "appId": "1:1001685338819:android:e24df40885ceb1d1277076",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ndri-risk-app",
+          "configurations": {
+            "android": "1:1001685338819:android:e24df40885ceb1d1277076",
+            "ios": "1:1001685338819:ios:25b610ea596d3575277076",
+            "web": "1:1001685338819:web:d43a357d3d5f7f71277076"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
