@@ -15,7 +15,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../config/app_colors.dart';
 import '../../config/app_strings.dart';
 import '../../config/assets.dart';
@@ -25,7 +24,7 @@ import '../../data/services/location_state.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_bloc.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_event.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_state.dart';
-import '../widgets/continue_button.dart';
+import '../../logic/score_calculate/question_weight.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(
@@ -201,14 +200,77 @@ class _HomeScreenState extends State<HomeScreen> {
     _localNotifications = flutterLocal;
   }
 
-  Future<void> _showSubmitResultDialog(BuildContext context) async {
+  Future<void> _showSubmitResultDialog(BuildContext context) async
+  {
+    final shouldSubmit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.help_outline_rounded,
+                  size: 60, color: Colors.amber),
+              const SizedBox(height: 16),
+              const Text(
+                'Are you sure to submit?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Once submitted, you cannot make changes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Colors.black54),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton.icon(
+                    icon: const Icon(Icons.edit),
+                    label: const Text("Edit"),
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text("Yes"),
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+    if (shouldSubmit != true) return;
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         backgroundColor: Colors.white,
         elevation: 14,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -217,37 +279,32 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [Colors.green.shade400, Colors.blue.shade400],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blue.shade100.withOpacity(0.19),
-                          blurRadius: 24,
-                          spreadRadius: 1,
-                          offset: const Offset(0, 8),
+                  AnimatedScale(
+                    scale: 1,
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.elasticOut,
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Colors.green, Colors.blue],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 650),
-                      curve: Curves.elasticOut,
-                      builder: (_, scale, child) => Transform.scale(
-                        scale: scale,
-                        child: child,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
                       ),
                       child: const Icon(Icons.verified_rounded,
-                          color: Colors.white, size: 60),
+                          color: Colors.white, size: 58),
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 24),
                   Text(
                     "Thank you for your submission!",
                     textAlign: TextAlign.center,
@@ -263,8 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text:
-                              "Your answers have been securely submitted.\n\n",
+                          text: "Your answers have been securely submitted.\n\n",
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Colors.green.shade900,
@@ -281,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const TextSpan(
                           text:
-                              "• Your responses are final and cannot be edited.\n"
+                          "• Your responses are final and cannot be edited.\n"
                               "• Your socio-climatic risk result has been calculated based on your answers.",
                           style: TextStyle(
                             color: Colors.black87,
@@ -294,16 +350,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
-                  ContinueButton(
-                    onTap: () {
+                  const SizedBox(height: 28),
+                  ElevatedButton(
+                    onPressed: () {
                       Navigator.of(ctx).pop();
-
                       if (context.mounted) {
                         (context as Element).markNeedsBuild();
                       }
                       setState(() => step = 99);
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepOrange,
+                      padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      "Continue",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.5,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -316,14 +385,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: const CircleBorder(),
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  splashColor: Colors.red.withOpacity(0.13),
+                  splashColor: Colors.red.withOpacity(0.15),
                   onTap: () {
                     Navigator.of(ctx).pop();
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(8),
                     child:
-                        Icon(Icons.close_rounded, color: Colors.red, size: 28),
+                    Icon(Icons.close_rounded, color: Colors.red, size: 28),
                   ),
                 ),
               ),
@@ -333,7 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
   Future<void> _generateReport() async {
     await _initPermissions();
     final st = context.read<RiskAssessmentBloc>().state;
@@ -370,7 +438,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       return '0.00';
     }
-
     String hazardLevelFromValue(double v) {
       if (v < 0.254952719) return 'Very Low';
       if (v < 0.359426855) return 'Low';
@@ -378,7 +445,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (v < 0.512033541) return 'High';
       return 'Very High';
     }
-
     PdfColor riskColor(String level) {
       switch (level.toLowerCase()) {
         case 'very low':
@@ -484,10 +550,38 @@ class _HomeScreenState extends State<HomeScreen> {
     //String exposureScore = _asFixed(st.answers['exposure']);
     String vulnerabilityScore = asFixed(getRandomScore());
     String exposureScore = asFixed(getRandomScore());
+    String getTotalScore =asFixed(vulnerabilityScore).toString() + asFixed(exposureScore);
+    String getHazardScore= asFixed(hazardLevelFromValue(200.10));
+    print('getted the value $getTotalScore');
+
     double hazardVal = LocationService().hazardFor(district);
     String hazardScore = hazardVal.toStringAsFixed(2);
     String riskScore = asFixed(st.answers['riskScore']);
     String riskLevel = st.answers['riskLevel'] ?? 'Moderate';
+    print('getted the hrisk scrore $riskLevel');
+    pw.Widget buildLegendRow(PdfColor color, String label) {
+      return pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.end,
+        children: [
+          pw.Container(
+            width: 14,
+            height: 14,
+            decoration: pw.BoxDecoration(
+              color: color,
+              border: pw.Border.all(color: PdfColors.black, width: 0.5),
+            ),
+          ),
+          pw.SizedBox(width: 8),
+          pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: 14,
+              color: PdfColors.black,
+            ),
+          ),
+        ],
+      );
+    }
 
     pdf.addPage(
       pw.Page(
@@ -686,111 +780,44 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: pw.FontWeight.bold,
                             color: riskColor(riskLevel)),
                       ),
-                      pw.SizedBox(height: 5),
-                      pw.RichText(
-                        text: const pw.TextSpan(
-                          style: pw.TextStyle(fontSize: 16),
-                          children: [
-                            pw.TextSpan(text: '('),
-                            pw.TextSpan(
-                              text: 'very low',
-                              style: pw.TextStyle(
-                                color: PdfColors.black,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: '/ low',
-                              style: pw.TextStyle(
-                                color: PdfColors.green,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: '/ medium',
-                              style: pw.TextStyle(
-                                color: PdfColors.yellow,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: '/ high',
-                              style: pw.TextStyle(
-                                color: PdfColors.orange,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: '/ very high',
-                              style: pw.TextStyle(
-                                color: PdfColors.red,
-                              ),
-                            ),
-                            pw.TextSpan(text: ')'),
-                          ],
-                        ),
-                      ),
-                      pw.SizedBox(height: 15),
+                      pw.SizedBox(height: 10),
                       pw.Row(children: [
-                        pw.Text('Remarks: (if high/very high)',
+                        pw.Text('Remarks:',
                             style: pw.TextStyle(
                                 fontSize: 18,
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColors.brown)),
                       ]),
                       pw.SizedBox(height: 8),
-                      pw.Text(
-                        'You are advised to contact your nearest KVK/ State Animal Husbandry personnel for customised adaptation plan of your dairy farm to minimise risk towards climate change.',
+                      if (riskLevel.toString() == 'High' || riskLevel.toString() == 'Very High')
+                        pw.Text(
+                        '$riskLevel You are advised to contact your nearest KVK/ State Animal Husbandry personnel for customised adaptation plan of your dairy farm to minimise risk towards climate change.',
                         style: pw.TextStyle(
                             fontSize: 18, fontWeight: pw.FontWeight.bold),
                       ),
                       pw.SizedBox(height: 25),
-                      pw.RichText(
-                        text: pw.TextSpan(
-                          style: pw.TextStyle(
-                              fontSize: 18, fontWeight: pw.FontWeight.bold),
-                          children: const [
-                            pw.TextSpan(
-                              text: 'Note: ',
-                              style: pw.TextStyle(
-                                color: PdfColors.black,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'Green ',
-                              style: pw.TextStyle(
-                                color: PdfColors.green,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'indicates very low, ',
-                              style: pw.TextStyle(
-                                color: PdfColors.black,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'yellow ',
-                              style: pw.TextStyle(
-                                color: PdfColors.yellow,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'indicates medium, ',
-                              style: pw.TextStyle(
-                                color: PdfColors.black,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'red ',
-                              style: pw.TextStyle(
-                                color: PdfColors.red,
-                              ),
-                            ),
-                            pw.TextSpan(
-                              text: 'indicates very high',
-                              style: pw.TextStyle(
-                                color: PdfColors.black,
-                              ),
-                            ),
+                      pw.Container(
+                        padding: const pw.EdgeInsets.all(10),
+                        width: 120,
+                        decoration: pw.BoxDecoration(
+                          border: pw.Border.all(color: PdfColors.black, width: 1),
+                        ),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            buildLegendRow(PdfColors.blue900, 'Very low'),
+                            pw.SizedBox(height: 4),
+                            buildLegendRow(PdfColors.green, 'Low'),
+                            pw.SizedBox(height: 4),
+                            buildLegendRow(PdfColors.yellow, 'Moderate'),
+                            pw.SizedBox(height: 4),
+                            buildLegendRow(PdfColors.orange, 'High'),
+                            pw.SizedBox(height: 4),
+                            buildLegendRow(PdfColors.red, 'Very high'),
                           ],
                         ),
                       ),
+
                       pw.SizedBox(height: 10),
                       pw.RichText(
                         text: const pw.TextSpan(
@@ -1653,6 +1680,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(width: 9),
                       Text(
                         'Next',
                         style: TextStyle(
@@ -1664,6 +1692,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           letterSpacing: 0.4,
                         ),
                       ),
+                      const SizedBox(width: 9),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: isAllAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                     ],
                   ),
                 ),
@@ -1703,6 +1734,7 @@ class _HomeScreenState extends State<HomeScreen> {
               controller: _agPageCtrl,
               itemCount: pageRanges.length,
               onPageChanged: (i) => setState(() => agPageIdx = i),
+              physics: const NeverScrollableScrollPhysics(),
               itemBuilder: (_, i) {
                 final start = pageRanges[i]['start']!;
                 final end = pageRanges[i]['end']!.clamp(0, qs.length);
@@ -1733,7 +1765,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     totalQuestions > 0 && answeredCount == totalQuestions;
 
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+
                   children: [
+                    if (i == 2)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.greenColor,
+                          border: Border.all(color: Colors.black, width: 1.5),
+                        ),
+                        child: const AppText(
+                          text: 'C. Buffaloes',
+                          color: Colors.white,
+                          textSize: 14,
+                          textAlign: TextAlign.start,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+
                     Expanded(
                       child: ListView(
                         padding: EdgeInsets.zero,
@@ -1898,6 +1950,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
+                                  const SizedBox(width: 9),
                                   Text(
                                     'Next',
                                     style: TextStyle(
@@ -1909,6 +1962,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       letterSpacing: 0.4,
                                     ),
                                   ),
+                                  const SizedBox(width: 9),
+                                  Icon(Icons.arrow_forward_rounded,
+                                      color: isPageAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                                 ],
                               ),
                             ),
@@ -2124,6 +2180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(width: 9),
                       Text(
                         'Next',
                         style: TextStyle(
@@ -2135,6 +2192,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           letterSpacing: 0.4,
                         ),
                       ),
+                      const SizedBox(width: 9),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: isPageAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                     ],
                   ),
                 ),
@@ -2300,6 +2360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(width: 9),
                       Text(
                         'Next',
                         style: TextStyle(
@@ -2311,6 +2372,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           letterSpacing: 0.4,
                         ),
                       ),
+                      const SizedBox(width: 9),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: isPageAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                     ],
                   ),
                 ),
@@ -2432,6 +2496,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+        SizedBox(height: 10.h),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -2552,6 +2617,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      const SizedBox(width: 9),
                       Text(
                         'Next',
                         style: TextStyle(
@@ -2563,52 +2629,37 @@ class _HomeScreenState extends State<HomeScreen> {
                           letterSpacing: 0.4,
                         ),
                       ),
+                      const SizedBox(width: 9),
+                      Icon(Icons.arrow_forward_rounded,
+                          color: isPageAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                     ],
                   ),
                 ),
               ),
+
             if (climatePageIdx == 2)
               GestureDetector(
-                onTap: isPageAnswered
-                    ? () async {
-                        context
-                            .read<RiskAssessmentBloc>()
-                            .add(SubmitAnswersEvent());
-                        await _showSubmitResultDialog(context);
-                      }
-                    : () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Row(
-                              children: [
-                                Icon(Icons.info_outline_rounded,
-                                    color: Colors.amber, size: 24),
-                                SizedBox(width: 14),
-                                Expanded(
-                                  child: Text(
-                                    "Please answer all questions to continue.",
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: const Color(0xFF4E4376),
-                            behavior: SnackBarBehavior.floating,
-                            elevation: 8,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16)),
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 26, vertical: 22),
-                            action: SnackBarAction(
-                              label: 'Dismiss',
-                              textColor: Colors.amber.withOpacity(0.7),
-                              onPressed: () {},
-                            ),
-                          ),
-                        );
-                      },
+                onTap: () {
+            /*      Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PreviewAnswersScreen(
+                        allAnswers: allAnswers,
+                        allQuestions: questionsList,
+                        onEdit: (variableNumber) {
+                          final index = questionsList.indexWhere(
+                                (q) => q.variableNumber == var  iableNumber,
+                          );
+                          if (index != -1) {
+                            setState(() {
+                              currentQuestionIndex = index;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  );*/
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -2644,16 +2695,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Icon(
                         isPageAnswered
-                            ? Icons.check_rounded
+                            ? Icons.visibility
                             : Icons.lock_outline_rounded,
                         color: isPageAnswered
                             ? Colors.brown.shade700
                             : Colors.brown.shade200,
-                        size: 21,
+                        size: 18,
                       ),
                       const SizedBox(width: 9),
                       Text(
-                        'Submit',
+                        'Preview',
                         style: TextStyle(
                           color: isPageAnswered
                               ? Colors.brown.shade700
@@ -2669,6 +2720,108 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
           ],
         ),
+        if (climatePageIdx == 2)
+          SizedBox( height: 10.h,),
+        if (climatePageIdx == 2)
+          GestureDetector(
+            onTap: isPageAnswered
+                ? () async {
+              context
+                  .read<RiskAssessmentBloc>()
+                  .add(SubmitAnswersEvent());
+              await _showSubmitResultDialog(context);
+            }
+                : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          color: Colors.amber, size: 24),
+                      SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          "Please answer all questions to continue.",
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: const Color(0xFF4E4376),
+                  behavior: SnackBarBehavior.floating,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 26, vertical: 22),
+                  action: SnackBarAction(
+                    label: 'Dismiss',
+                    textColor: Colors.amber.withOpacity(0.7),
+                    onPressed: () {},
+                  ),
+                ),
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: 144,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isPageAnswered
+                    ? Colors.white
+                    : Colors.brown.shade50.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: isPageAnswered
+                      ? Colors.brown.shade700
+                      : Colors.brown.shade100.withOpacity(0.8),
+                  width: 2,
+                ),
+                boxShadow: [
+                  if (isPageAnswered)
+                    BoxShadow(
+                      color: Colors.brown.shade200,
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  if (!isPageAnswered)
+                    BoxShadow(
+                      color: Colors.brown.shade100.withOpacity(0.6),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isPageAnswered
+                        ? Icons.check_rounded
+                        : Icons.lock_outline_rounded,
+                    color: isPageAnswered
+                        ? Colors.brown.shade700
+                        : Colors.brown.shade200,
+                    size: 21,
+                  ),
+                  const SizedBox(width: 9),
+                  Text(
+                    'Submit',
+                    style: TextStyle(
+                      color: isPageAnswered
+                          ? Colors.brown.shade700
+                          : Colors.brown.shade200,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.5,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ]),
     );
   }
@@ -3055,6 +3208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const SizedBox(width: 9),
                     Text(
                       'Next',
                       style: TextStyle(
@@ -3066,6 +3220,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         letterSpacing: 0.4,
                       ),
                     ),
+                    const SizedBox(width: 9),
+                    Icon(Icons.arrow_forward_rounded,
+                        color: isPageAnswered?Colors.brown.shade500: Colors.brown.shade200, size: 22),
                   ],
                 ),
               ),
@@ -3164,11 +3321,12 @@ class _HumanCard extends StatefulWidget {
   final void Function(String)? onGenderSelected;
   final Future<void> Function(String, dynamic)? onSave;
 
-  const _HumanCard(
-      {required this.question,
-      this.savedAnswer,
-      this.onGenderSelected,
-      this.onSave});
+  const _HumanCard({
+    required this.question,
+    this.savedAnswer,
+    this.onGenderSelected,
+    this.onSave,
+  });
 
   @override
   State<_HumanCard> createState() => _HumanCardState();
@@ -3177,6 +3335,7 @@ class _HumanCard extends StatefulWidget {
 class _HumanCardState extends State<_HumanCard> {
   String? _gender, _edu, _household;
   late TextEditingController _ctrl;
+  double? finalValue;
 
   @override
   void initState() {
@@ -3186,7 +3345,31 @@ class _HumanCardState extends State<_HumanCard> {
     if (v == '3') _edu = widget.savedAnswer;
     if (v == '10') _household = widget.savedAnswer;
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
+    calculateFinalValue(_ctrl.text);
   }
+
+  void calculateFinalValue(String input) {
+    final v = widget.question.variableNumber;
+    if (questionParams.containsKey(v)) {
+      final params = questionParams[v]!;
+      final double? inputVal = double.tryParse(input);
+      if (inputVal != null) {
+        final min = params['min'] as num;
+        final max = params['max'] as num;
+        final weight = params['weight'] as double;
+        final isPositive = params['isPositive'] as bool;
+
+        final normalized = max == min ? 0 : ((inputVal - min) / (max - min));
+        final value = ((isPositive ? normalized : (1 - normalized)) * weight);
+        setState(() => finalValue = value);
+      } else {
+        setState(() => finalValue = null);
+      }
+    } else {
+      setState(() => finalValue = null);
+    }
+  }
+
 
   @override
   void dispose() {
@@ -3208,7 +3391,8 @@ class _HumanCardState extends State<_HumanCard> {
           value: _gender,
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
-          items: ['Male', 'Female']
+          hint:  const Text("Select Gender",style: TextStyle(color: Colors.grey),),
+          items: ['Male', 'Female', 'Other']
               .map((g) => DropdownMenuItem(value: g, child: Text(g)))
               .toList(),
           onChanged: (val) {
@@ -3225,6 +3409,7 @@ class _HumanCardState extends State<_HumanCard> {
           value: _edu,
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
+          hint: Text('Select Education',style: TextStyle(color: Colors.grey),),
           items: [
             'No formal schooling',
             'Primary',
@@ -3233,9 +3418,8 @@ class _HumanCardState extends State<_HumanCard> {
             'Diploma/certificate course',
             'Graduate',
             'Post graduate and above',
-          ]
-              .map((e) => DropdownMenuItem(
-                  value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
+          ].map((e) => DropdownMenuItem(
+              value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (val) {
             setState(() => _edu = val);
@@ -3250,6 +3434,7 @@ class _HumanCardState extends State<_HumanCard> {
           value: _household,
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
+          hint: Text('Select Household Type',style: TextStyle(color: Colors.grey),),
           items: [
             'Permanent Pucca house',
             'Permanent Kaccha house',
@@ -3266,43 +3451,62 @@ class _HumanCardState extends State<_HumanCard> {
       field = TextField(
         controller: _ctrl,
         textAlignVertical: TextAlignVertical.center,
-        decoration: const InputDecoration(
-            border: InputBorder.none,
-            isDense: true,
-            contentPadding: EdgeInsets.zero),
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          hintText: 'Type here',
+          hintStyle: const TextStyle(color: Colors.grey),
+          contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+        ),
         keyboardType: TextInputType.number,
         onChanged: (txt) {
+          calculateFinalValue(txt);
           context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, txt));
           widget.onSave?.call(v, txt);
         },
       );
     }
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-        decoration: BoxDecoration(
-            color: barCol, border: Border.all(color: Colors.black, width: 1.5)),
-        child: AppText(
-            text: '$v. ${widget.question.questionText}',
-            color:
-                barCol == AppColors.yellowColor ? Colors.black : Colors.white,
-            textSize: 14.sp,
-            fontWeight: FontWeight.w600),
-      ),
-      Container(
-        height: 38.h,
-        margin: EdgeInsets.only(bottom: 14.h),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.greenColor, width: 1.4)),
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        alignment: Alignment.centerLeft,
-        child: field,
-      ),
-    ]);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+          decoration: BoxDecoration(
+              color: barCol, border: Border.all(color: Colors.black, width: 1.5)),
+          child: AppText(
+              text: '$v. ${widget.question.questionText}',
+              color: barCol == AppColors.yellowColor ? Colors.black : Colors.white,
+              textSize: 14.sp,
+              fontWeight: FontWeight.w600),
+        ),
+        Container(
+          height: 38.h,
+          margin: EdgeInsets.only(bottom: 6.h),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: AppColors.greenColor, width: 1.4)),
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          alignment: Alignment.centerLeft,
+          child: field,
+        ),
+        if (finalValue != null)
+          Padding(
+            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            child: Text(
+              'Final Value: ${finalValue!.toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5.sp,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
+
 
 class AnimatedEntrance extends StatefulWidget {
   final Widget child;
@@ -3521,10 +3725,13 @@ class _AgCardState extends State<_AgCard> {
                 child: TextField(
                   controller: _ctrl,
                   textAlignVertical: TextAlignVertical.center,
-                  decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    hintText: 'Type here',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+                  ),
                   keyboardType: TextInputType.number,
                   onChanged: (txt) {
                     context.read<RiskAssessmentBloc>().add(
@@ -3730,7 +3937,7 @@ class _AgCardState extends State<_AgCard> {
               ],
             ),
           ),
-        if (v == '18.7')
+        if (v == '18.6')
           Container(
             margin: const EdgeInsets.only(bottom: 20),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -3738,12 +3945,13 @@ class _AgCardState extends State<_AgCard> {
                 color: AppColors.yellowColor,
                 border: Border.all(color: Colors.black, width: 1.5)),
             child: const AppText(
-                text: 'B. Crossbred cattle cattle',
+                text: 'B. Crossbred cattle',
                 color: Colors.black,
                 textSize: 14,
                 textAlign: TextAlign.start,
                 fontWeight: FontWeight.w700),
           ),
+
       ],
     );
   }
@@ -4040,10 +4248,13 @@ class _LivCardState extends State<_LivCard> {
         child: TextField(
           controller: _ctrl,
           textAlignVertical: TextAlignVertical.center,
-          decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            hintText: 'Type here',
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+          ),
           keyboardType: TextInputType.number,
           onChanged: (txt) {
             context
@@ -4092,6 +4303,7 @@ class _SCYesNoState extends State<_SocialCardYesNo> {
             value: sel,
             isExpanded: true,
             icon: const Icon(Icons.arrow_drop_down),
+            hint: Text("Select Yes or No",style: TextStyle(color: Colors.grey),),
             items: const [
               DropdownMenuItem(value: 1, child: Text('Yes')),
               DropdownMenuItem(value: 0, child: Text('No')),
@@ -4146,10 +4358,13 @@ class _SocialCardNumState extends State<_SocialCardNum> {
         child: TextField(
           controller: _ctrl,
           textAlignVertical: TextAlignVertical.center,
-          decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero),
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            isDense: true,
+            hintText: 'Type here',
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+          ),
           keyboardType: TextInputType.number,
           onChanged: (v) {
             ctx
@@ -4412,11 +4627,14 @@ class _InfraCardState extends State<_InfraCard> {
         child: TextField(
           controller: _ctrl,
           textAlignVertical: TextAlignVertical.center,
-          decoration: const InputDecoration(
+          decoration:  InputDecoration(
             border: InputBorder.none,
             isDense: true,
-            contentPadding: EdgeInsets.zero,
+            hintText: 'Type here',
+            hintStyle: const TextStyle(color: Colors.grey),
+            contentPadding: EdgeInsets.symmetric(vertical: 3.h),
           ),
+
           keyboardType: TextInputType.number,
           onChanged: (txt) {
             context

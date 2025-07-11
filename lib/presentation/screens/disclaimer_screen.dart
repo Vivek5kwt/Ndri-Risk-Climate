@@ -39,7 +39,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
     final double safeTop = MediaQuery.of(context).padding.top;
     final double headerBlock = 60.h;
     final double desiredCenter = (screenH + safeTop) * 0.38;
-    final double dynamicGap = (desiredCenter - headerBlock).clamp(0.0, 120.0);
+    final double dynamicGap = (desiredCenter - headerBlock).clamp(0.0, 100.0);
 
     return Scaffold(
       body: Stack(
@@ -125,6 +125,11 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                                       'anonymous. Furthermore, no data will be disclosed to any third party under '
                                       'any circumstances.',
                                 ),
+                                SizedBox(height: 16.h),
+                                _bullet(
+                                  'All the fields are compulsory and if there is no value for any field, please fill 0(zero).',
+                                  color: Color(0xFFC00000),
+                                ),
                               ],
                             ),
                           ),
@@ -141,7 +146,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(width: 6.r,),
+                        SizedBox(width: 6.r),
                         Container(
                           height: 25.r,
                           width: 22.r,
@@ -167,7 +172,8 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                             padding: const EdgeInsets.all(8.0),
                             child: Container(
                               margin: EdgeInsets.only(top: 6.h),
-                              padding: EdgeInsets.fromLTRB(4.w, 6.w, 4.w, 6.w),
+                              padding:
+                              EdgeInsets.fromLTRB(4.w, 6.w, 4.w, 6.w),
                               decoration: BoxDecoration(
                                 color: AppColors.yellowColor,
                                 border: Border.all(
@@ -228,14 +234,13 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
     );
   }
 
-  Widget _bullet(String text) {
-    const bulletColor = Color(0xFF082765);
+  Widget _bullet(String text, {Color color = const Color(0xFF082765)}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppText(
           text: '➢',
-          color: bulletColor,
+          color: color,
           textSize: 14.sp,
           fontWeight: FontWeight.w800,
         ),
@@ -243,7 +248,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
         Expanded(
           child: AppText(
             text: text,
-            color: bulletColor,
+            color: color,
             textSize: 12.sp,
             fontWeight: FontWeight.w700,
             lineHeight: 1.40,
