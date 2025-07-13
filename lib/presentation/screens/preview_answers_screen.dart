@@ -78,7 +78,15 @@ class PreviewAnswersScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final question = sortedQuestions[index];
               // --- This is the fix: always get answer using variableNumber! ---
-              final answer = allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
+              final rawAnswer = allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
+              // Convert stored 1/0 values used for yes/no questions into
+              // human readable booleans. This avoids showing "1" or "0" in
+              // the preview for true/false questions.
+              final answer = rawAnswer == '1'
+                  ? 'True'
+                  : rawAnswer == '0'
+                      ? 'False'
+                      : rawAnswer;
 
               final Color cardColor = (index % 2 == 0)
                   ? Colors.yellow.shade50
