@@ -367,12 +367,7 @@ class QuestionRepository {
         questionType: QuestionType.vulnerability,
         category: 'Social Capital',
       ),
-      QuestionModel(
-        variableNumber: '12',
-        questionText: 'Number of animals suffering from diseases',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
+
       QuestionModel(
         variableNumber: '21',
         questionText: 'Types of diseases',
@@ -463,52 +458,8 @@ class QuestionRepository {
         questionType: QuestionType.vulnerability,
         category: 'Social Capital',
       ),
-      QuestionModel(
-        variableNumber: '46',
-        questionText:
-            'Types of officials visiting (Tick applicable: ADO, BDO, Input dealers, Researchers)',
-        questionType: QuestionType.vulnerability,
-        category: 'Social Capital',
-      ),
-      QuestionModel(
-        variableNumber: '47',
-        questionText:
-            'Number of visits by government or private veterinarians in a year',
-        questionType: QuestionType.vulnerability,
-        category: 'Social Capital',
-      ),
-      QuestionModel(
-        variableNumber: '51',
-        questionText: 'Distance to nearest health care services (in km)',
-        questionType: QuestionType.vulnerability,
-        category: 'Infrastructure',
-      ),
-      QuestionModel(
-        variableNumber: '52',
-        questionText:
-            'Distance to nearest veterinary hospital services (in km)',
-        questionType: QuestionType.vulnerability,
-        category: 'Infrastructure',
-      ),
-      QuestionModel(
-        variableNumber: '53',
-        questionText: 'Distance to nearest all-weather road (in km)',
-        questionType: QuestionType.vulnerability,
-        category: 'Infrastructure',
-      ),
-      QuestionModel(
-        variableNumber: '54',
-        questionText: 'Distance to nearest market (in km)',
-        questionType: QuestionType.vulnerability,
-        category: 'Infrastructure',
-      ),
-      QuestionModel(
-        variableNumber: '55',
-        questionText:
-            'Perception towards climate change (Final Score: sum of the responses)',
-        questionType: QuestionType.vulnerability,
-        category: 'Climate',
-      ),
+
+
       QuestionModel(
         variableNumber: '44.1',
         questionText: '1. Increasing temperature during summers',
@@ -606,13 +557,6 @@ class QuestionRepository {
         category: 'Climate - Perception',
       ),
       QuestionModel(
-        variableNumber: '71',
-        questionText:
-            'Awareness towards climate change (Final Score: sum of the responses below)',
-        questionType: QuestionType.vulnerability,
-        category: 'Climate',
-      ),
-      QuestionModel(
         variableNumber: '45.1',
         questionText:
             '1. Agriculture and dairy farming are extremely vulnerable to Climate Change',
@@ -659,13 +603,6 @@ class QuestionRepository {
             '7. Changes in rainfall pattern are likely to lead to severe water shortage and/or flooding',
         questionType: QuestionType.vulnerability,
         category: 'Climate - Awareness',
-      ),
-      QuestionModel(
-        variableNumber: '79',
-        questionText:
-            'Preparedness toward climate change (Final Score: sum of the responses)',
-        questionType: QuestionType.vulnerability,
-        category: 'Climate',
       ),
       QuestionModel(
         variableNumber: '46.1',

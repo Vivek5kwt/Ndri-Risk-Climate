@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import '../../data/models/question_model.dart';
 
@@ -85,8 +86,8 @@ class PreviewAnswersScreen extends StatelessWidget {
               final answer = rawAnswer == '1'
                   ? 'True'
                   : rawAnswer == '0'
-                      ? 'False'
-                      : rawAnswer;
+                  ? 'False'
+                  : rawAnswer;
 
               final Color cardColor = (index % 2 == 0)
                   ? Colors.yellow.shade50
@@ -98,9 +99,11 @@ class PreviewAnswersScreen extends StatelessWidget {
                   ? Colors.red.shade50
                   : Colors.green.shade50.withOpacity(0.97);
 
+              final bool isSubQuestion = question.variableNumber.contains('.');
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 260),
                 curve: Curves.easeOutCubic,
+                margin: EdgeInsets.only(left: isSubQuestion ? 25 : 0),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -141,11 +144,12 @@ class PreviewAnswersScreen extends StatelessWidget {
                             backgroundColor: Colors.white,
                             radius: 13,
                             child: Text(
-                              '${index + 1}',
+                              question.variableNumber,
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: leftBarColor,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 12,
                               ),
                             ),
                           ),
@@ -159,7 +163,7 @@ class PreviewAnswersScreen extends StatelessWidget {
                         children: [
                           // Question
                           Text(
-                            question.questionText,
+                            '${question.variableNumber}. ${question.questionText}',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 15.6,
