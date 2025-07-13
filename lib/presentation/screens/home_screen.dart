@@ -4557,7 +4557,7 @@ class _OfficialMultiState extends State<_OfficialMulti> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _bar(
-              '36. Tap on the types of officials to whom you visited during last one year',
+              'Tap on the types of officials to whom you visited during last one year',
               AppColors.greenColor,
               textColor: Colors.white),
           Container(
