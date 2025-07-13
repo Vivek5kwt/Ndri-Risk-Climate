@@ -18,6 +18,10 @@ class FirestoreService {
     });
   }
 
+  Future<void> saveSurveySubmission(Map<String, dynamic> answers) async {
+    await _db.collection('surveySubmissions').add(answers);
+  }
+
   Future<void> deleteSubmission(String docId) async {
     await _db.collection('surveySubmissions').doc(docId).delete();
   }
