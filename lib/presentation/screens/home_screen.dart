@@ -573,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('getted the hrisk scrore $riskLevel');
     pw.Widget buildLegendRow(PdfColor color, String label) {
       return pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.end,
+        mainAxisAlignment: pw.MainAxisAlignment.start,
         children: [
           pw.Container(
             width: 14,
@@ -741,13 +741,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         levelColor: riskColor(hazardLevel),
                       ),
                       pw.SizedBox(height: 10),
-                      pw.Container(
-                        height: 110,
-                        width: 300,
-                        margin: const pw.EdgeInsets.only(left: 20),
-                        child: pw.Stack(
-                          children: [
-                            pw.Image(gaugeImage, width: 300, height: 110),
+                      pw.Center(
+                        child: pw.Container(
+                          height: 110,
+                          width: 300,
+                          child: pw.Stack(
+                            children: [
+                              pw.Image(gaugeImage, width: 300, height: 110),
                             /*    pw.Positioned(
                           left: 100 + (riskScoreVal.clamp(0, 1) * 285),
                           top: 28,
@@ -761,36 +761,41 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),*/
-                            pw.Positioned(
-                              left: 55,
-                              top: 60,
-                              child: pw.Text(
-                                riskScore,
-                                style: pw.TextStyle(
-                                  fontSize: 33,
-                                  color: PdfColors.blue,
-                                  fontWeight: pw.FontWeight.bold,
+                            pw.Positioned.fill(
+                              child: pw.Center(
+                                child: pw.Text(
+                                  riskScore,
+                                  style: pw.TextStyle(
+                                    fontSize: 33,
+                                    color: PdfColors.blue,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      ),
                       pw.SizedBox(height: 10),
-                      pw.Text(
-                        'Your socio-climatic risk is calculated to be',
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.black),
+                      pw.Center(
+                        child: pw.Text(
+                          'Your socio-climatic risk is calculated to be',
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black),
+                        ),
                       ),
                       pw.SizedBox(height: 5),
-                      pw.Text(
-                        riskLevel,
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: riskColor(riskLevel)),
+                      pw.Center(
+                        child: pw.Text(
+                          riskLevel,
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: riskColor(riskLevel)),
+                        ),
                       ),
                       pw.SizedBox(height: 10),
                       pw.Row(children: [
@@ -809,26 +814,29 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 18, fontWeight: pw.FontWeight.bold),
                         ),
                       pw.SizedBox(height: 25),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        width: 120,
-                        decoration: pw.BoxDecoration(
-                          border: pw.Border.all(
-                              color: PdfColors.black, width: 1),
-                        ),
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            buildLegendRow(PdfColors.blue900, 'Very low'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.green, 'Low'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.yellow, 'Moderate'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.orange, 'High'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.red, 'Very high'),
-                          ],
+                      pw.Align(
+                        alignment: pw.Alignment.centerRight,
+                        child: pw.Container(
+                          padding: const pw.EdgeInsets.all(10),
+                          width: 120,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                                color: PdfColors.black, width: 1),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              buildLegendRow(PdfColors.blue900, 'Very low'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.green, 'Low'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.yellow, 'Moderate'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.orange, 'High'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.red, 'Very high'),
+                            ],
+                          ),
                         ),
                       ),
 
