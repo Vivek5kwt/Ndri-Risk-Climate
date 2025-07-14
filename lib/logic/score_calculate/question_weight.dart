@@ -285,3 +285,17 @@ double computeVulnerabilityScore(Map<String, String> ans) =>
 double computeExposureScore(Map<String, String> ans) =>
     computeScore(ans, exposureKeys);
 
+double? computeFinalValueForInput(String key, String input) {
+  final double? val = double.tryParse(input);
+  if (val == null) return null;
+  if (questionParams.containsKey(key)) {
+    final p = questionParams[key]!;
+    final min = p['min'] as num;
+    final max = p['max'] as num;
+    final weight = p['weight'] as double;
+    final isPositive = p['isPositive'] as bool;
+    final norm = max == min ? 0.0 : ((val - min) / (max - min));
+    return ((isPositive ? norm : (1 - norm)) * weight);
+  }
+  return 0.0;
+}

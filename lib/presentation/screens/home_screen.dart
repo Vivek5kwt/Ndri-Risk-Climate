@@ -3487,29 +3487,8 @@ class _HumanCardState extends State<_HumanCard> {
 
   void calculateFinalValue(String input) {
     final v = widget.question.variableNumber;
-    if (questionParams.containsKey(v)) {
-      final params = questionParams[v]!;
-      final double? inputVal = double.tryParse(input);
-      if (inputVal != null) {
-        final min = params['min'] as num;
-        final max = params['max'] as num;
-        final weight = params['weight'] as double;
-        final isPositive = params['isPositive'] as bool;
-
-        final normalized = max == min ? 0 : ((inputVal - min) / (max - min));
-        final value = ((isPositive ? normalized : (1 - normalized)) * weight);
-        setState(() => finalValue = value);
-      } else {
-        setState(() => finalValue = null);
-      }
-    } else {
-      final double? inputVal = double.tryParse(input);
-      if (inputVal != null) {
-        setState(() => finalValue = 0.0);
-      } else {
-        setState(() => finalValue = null);
-      }
-    }
+    finalValue = computeFinalValueForInput(v, input);
+    setState(() {});
   }
 
 
@@ -3718,11 +3697,14 @@ class _AgCard extends StatefulWidget {
 class _AgCardState extends State<_AgCard> {
   late TextEditingController _ctrl;
   late Set<String> selP;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
+    finalValue = computeFinalValueForInput(
+        widget.question.variableNumber, _ctrl.text);
     if (widget.savedAnswer != null && widget.savedAnswer!.isNotEmpty) {
       selP = widget.savedAnswer!.split(',').toSet();
     } else {
@@ -3883,12 +3865,26 @@ class _AgCardState extends State<_AgCard> {
             ),
             keyboardType: TextInputType.number,
             onChanged: (txt) {
+              setState(() =>
+              finalValue = computeFinalValueForInput(v, txt));
               context.read<RiskAssessmentBloc>().add(
                   SaveAnswerEvent(widget.question.variableNumber, txt));
               widget.onSave?.call(widget.question.variableNumber, txt);
             },
           ),
         ),
+        if (finalValue != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            child: Text(
+              'Final Value: ${finalValue!.toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
         if (v == '18')
           Container(
             margin: const EdgeInsets.only(bottom: 20),
@@ -4358,11 +4354,14 @@ class _LivCard extends StatefulWidget {
 
 class _LivCardState extends State<_LivCard> {
   late TextEditingController _ctrl;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
+    finalValue = computeFinalValueForInput(
+        widget.question.variableNumber, _ctrl.text);
   }
 
   @override
@@ -4408,6 +4407,8 @@ class _LivCardState extends State<_LivCard> {
           ),
           keyboardType: TextInputType.number,
           onChanged: (txt) {
+            setState(() =>
+            finalValue = computeFinalValueForInput(v, txt));
             context
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, txt));
@@ -4415,6 +4416,18 @@ class _LivCardState extends State<_LivCard> {
           },
         ),
       ),
+      if (finalValue != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          child: Text(
+            'Final Value: ${finalValue!.toStringAsFixed(3)}',
+            style: TextStyle(
+              color: Colors.teal.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+          ),
+        ),
     ]);
   }
 }
@@ -4436,12 +4449,17 @@ class _SocialCardYesNo extends StatefulWidget {
 
 class _SCYesNoState extends State<_SocialCardYesNo> {
   int? sel;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     if (widget.savedAnswer != null && widget.savedAnswer!.isNotEmpty) {
       sel = int.tryParse(widget.savedAnswer!);
+    }
+    if (sel != null) {
+      finalValue = computeFinalValueForInput(
+          widget.question.variableNumber, sel.toString());
     }
   }
 
@@ -4462,13 +4480,20 @@ class _SCYesNoState extends State<_SocialCardYesNo> {
               DropdownMenuItem(value: 0, child: Text('No')),
             ],
             onChanged: (v) {
-              setState(() => sel = v);
+              setState(() {
+                sel = v;
+                finalValue = v == null
+                    ? null
+                    : computeFinalValueForInput(
+                    widget.question.variableNumber, v.toString());
+              });
               context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(
                   widget.question.variableNumber, v.toString()));
               widget.onSave?.call(widget.question.variableNumber, v.toString());
             },
           ),
         ),
+        finalValue: finalValue,
       );
 }
 
@@ -4491,11 +4516,14 @@ class _SocialCardNum extends StatefulWidget {
 
 class _SocialCardNumState extends State<_SocialCardNum> {
   late TextEditingController _ctrl;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
+    finalValue = computeFinalValueForInput(
+        widget.question.variableNumber, _ctrl.text);
   }
 
   @override
@@ -4521,12 +4549,15 @@ class _SocialCardNumState extends State<_SocialCardNum> {
           ),
           keyboardType: TextInputType.number,
           onChanged: (v) {
+            setState(() =>
+            finalValue = computeFinalValueForInput(widget.question.variableNumber, v));
             ctx
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, v));
             widget.onSave?.call(widget.question.variableNumber, v);
           },
         ),
+        finalValue: finalValue,
       );
 }
 
@@ -4748,11 +4779,14 @@ class _InfraCard extends StatefulWidget {
 
 class _InfraCardState extends State<_InfraCard> {
   late TextEditingController _ctrl;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
+    finalValue = computeFinalValueForInput(
+        widget.question.variableNumber, _ctrl.text);
   }
 
   @override
@@ -4799,6 +4833,8 @@ class _InfraCardState extends State<_InfraCard> {
 
           keyboardType: TextInputType.number,
           onChanged: (txt) {
+            setState(() =>
+            finalValue = computeFinalValueForInput(v, txt));
             context
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, txt));
@@ -4806,6 +4842,18 @@ class _InfraCardState extends State<_InfraCard> {
           },
         ),
       ),
+      if (finalValue != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          child: Text(
+            'Final Value: ${finalValue!.toStringAsFixed(3)}',
+            style: TextStyle(
+              color: Colors.teal.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+          ),
+        ),
     ]);
   }
 }
@@ -4827,12 +4875,17 @@ class _YesNoCircle extends StatefulWidget {
 
 class _YesNoCircleState extends State<_YesNoCircle> {
   bool? yes;
+  double? finalValue;
 
   @override
   void initState() {
     super.initState();
     if (widget.savedAnswer != null && widget.savedAnswer!.isNotEmpty) {
       yes = widget.savedAnswer == "1";
+    }
+    if (yes != null) {
+      finalValue = computeFinalValueForInput(
+          widget.question.variableNumber, yes! ? '1' : '0');
     }
   }
 
@@ -4927,13 +4980,29 @@ class _YesNoCircleState extends State<_YesNoCircle> {
               ],
             ),
           ),
+          if (finalValue != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14, left: 8),
+              child: Text(
+                'Final Value: ${finalValue!.toStringAsFixed(3)}',
+                style: TextStyle(
+                  color: Colors.teal.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
         ],
       );
 
   Widget _circle(int v, {required String label, required Color yesColor}) =>
       GestureDetector(
         onTap: () {
-          setState(() => yes = v == 1);
+          setState(() {
+            yes = v == 1;
+            finalValue = computeFinalValueForInput(
+                widget.question.variableNumber, v.toString());
+          });
           context.read<RiskAssessmentBloc>().add(
               SaveAnswerEvent(widget.question.variableNumber, v.toString()));
           widget.onSave?.call(widget.question.variableNumber, v.toString());
@@ -4996,6 +5065,7 @@ class _RatingCircleState extends State<_RatingCircle>
     with SingleTickerProviderStateMixin {
   int? sel;
   late AnimationController _anim;
+  double? finalValue;
 
   final List<int> scale = [4, 3, 2, 1, 0];
   static const List<String> labels = [
@@ -5019,6 +5089,10 @@ class _RatingCircleState extends State<_RatingCircle>
     if (widget.savedAnswer != null && widget.savedAnswer!.isNotEmpty) {
       sel = int.tryParse(widget.savedAnswer!);
     }
+    if (sel != null) {
+      finalValue = computeFinalValueForInput(
+          widget.question.variableNumber, sel.toString());
+    }
     _anim = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 320),
@@ -5034,7 +5108,11 @@ class _RatingCircleState extends State<_RatingCircle>
   }
 
   void _select(int value) {
-    setState(() => sel = value);
+    setState(() {
+      sel = value;
+      finalValue = computeFinalValueForInput(
+          widget.question.variableNumber, value.toString());
+    });
     _anim.forward(from: 0.97);
     widget.onSave?.call(widget.question.variableNumber, value.toString());
     context
@@ -5202,6 +5280,18 @@ class _RatingCircleState extends State<_RatingCircle>
             }),
           ),
         ),
+        if (finalValue != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            child: Text(
+              'Final Value: ${finalValue!.toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -5312,7 +5402,8 @@ Widget _bar(String t, Color c, {Color textColor = Colors.white}) =>
       ),
     );
 
-Widget _line(String q, Color barColor, {required Widget child}) =>
+Widget _line(String q, Color barColor,
+    {required Widget child, double? finalValue}) =>
     Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -5339,5 +5430,17 @@ Widget _line(String q, Color barColor, {required Widget child}) =>
           alignment: Alignment.centerLeft,
           child: child,
         ),
+        if (finalValue != null)
+          Padding(
+            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            child: Text(
+              'Final Value: ${finalValue!.toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5.sp,
+              ),
+            ),
+          ),
       ],
     );
