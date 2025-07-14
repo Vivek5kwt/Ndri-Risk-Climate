@@ -557,10 +557,10 @@ class _HomeScreenState extends State<HomeScreen> {
     String block = blockCtrl.text.trim();
     String village = villageCtrl.text.trim();
 
-    //String vulnerabilityScore = _asFixed(st.answers['vulnerability']);
-    //String exposureScore = _asFixed(st.answers['exposure']);
-    String vulnerabilityScore = asFixed(getRandomScore());
-    String exposureScore = asFixed(getRandomScore());
+    final vulnVal = computeVulnerabilityScore(st.answers);
+    final expVal = computeExposureScore(st.answers);
+    String vulnerabilityScore = vulnVal.toStringAsFixed(2);
+    String exposureScore = expVal.toStringAsFixed(2);
     String getTotalScore = asFixed(vulnerabilityScore).toString() +
         asFixed(exposureScore);
     String getHazardScore = asFixed(hazardLevelFromValue(200.10));
