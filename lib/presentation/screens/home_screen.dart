@@ -3503,7 +3503,12 @@ class _HumanCardState extends State<_HumanCard> {
         setState(() => finalValue = null);
       }
     } else {
-      setState(() => finalValue = null);
+      final double? inputVal = double.tryParse(input);
+      if (inputVal != null) {
+        setState(() => finalValue = 0.0);
+      } else {
+        setState(() => finalValue = null);
+      }
     }
   }
 
