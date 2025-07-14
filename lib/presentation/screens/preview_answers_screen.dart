@@ -310,8 +310,10 @@ class PreviewAnswersScreen extends StatelessWidget {
                 label: "Submit",
                 icon: Icons.check_rounded,
                 onPressed: () async {
-                  await _showSubmitResultDialog(context);
-                  onSubmit();
+                  final didSubmit = await _showSubmitResultDialog(context);
+                  if (didSubmit) {
+                    onSubmit();
+                  }
                 },
                 gradient: const LinearGradient(
                   colors: [
@@ -416,7 +418,7 @@ class _AnimatedButtonState extends State<AnimatedButton>
 }
 
 // --- Submit dialog logic ---
-Future<void> _showSubmitResultDialog(BuildContext context) async {
+Future<bool> _showSubmitResultDialog(BuildContext context) async {
   final shouldSubmit = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
@@ -477,7 +479,7 @@ Future<void> _showSubmitResultDialog(BuildContext context) async {
       ),
     ),
   );
-  if (shouldSubmit != true) return;
+  if (shouldSubmit != true) return false;
   await showDialog(
     context: context,
     barrierDismissible: false,
@@ -614,4 +616,5 @@ Future<void> _showSubmitResultDialog(BuildContext context) async {
       ),
     ),
   );
+  return true;
 }
