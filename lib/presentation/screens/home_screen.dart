@@ -546,6 +546,106 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+
+
+      pw.Widget gaugeScore({
+        required String label,
+        required String score,
+        required double value,
+        double size = 120,
+        PdfColor color = PdfColors.blue,
+      }) {
+        value = value.clamp(0.0, 1.0);
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              label,
+              style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 4),
+            pw.Container(
+              width: size,
+              height: size / 2,
+              child: pw.Stack(
+                alignment: pw.Alignment.center,
+                children: [
+                  pw.CustomPaint(
+                    size: PdfPoint(size, size),
+                    painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
+                      final radius = rect.width / 2;
+                      final center = pw.Offset(rect.left + radius, rect.top + radius);
+                      final trackRadius = radius * 0.85;
+                      final segmentWidth = radius * 0.22;
+                      final colors = [
+                        PdfColors.blue,
+                        PdfColors.green,
+                        PdfColors.yellow,
+                        PdfColors.orange,
+                        PdfColors.red,
+                      ];
+                      final segmentAngle = pi / colors.length;
+                      for (var i = 0; i < colors.length; i++) {
+                        final paint = pw.Paint()
+                          ..style = pw.PaintingStyle.stroke
+                          ..strokeWidth = segmentWidth
+                          ..color = colors[i];
+                        final start = pi + i * segmentAngle;
+                        canvas.drawArc(
+                          pw.Rect.fromCircle(center: center, radius: trackRadius),
+                          start,
+                          segmentAngle,
+                          false,
+                          paint,
+                        );
+                      }
+                      final borderPaint = pw.Paint()
+                        ..style = pw.PaintingStyle.stroke
+                        ..strokeWidth = 1
+                        ..color = PdfColors.black;
+                      canvas.drawArc(
+                        pw.Rect.fromCircle(center: center, radius: trackRadius + segmentWidth / 2),
+                        pi,
+                        pi,
+                        false,
+                        borderPaint,
+                      );
+
+                      final pointerAngle = pi + value * pi;
+                      final pointerOffset = pw.Offset(
+                        center.dx + trackRadius * cos(pointerAngle),
+                        center.dy + trackRadius * sin(pointerAngle),
+                      );
+                      canvas.drawCircle(
+                        pointerOffset,
+                        segmentWidth / 4,
+                        pw.Paint()..color = PdfColors.white,
+                      );
+                      canvas.drawCircle(
+                        pointerOffset,
+                        segmentWidth / 4,
+                        pw.Paint()
+                          ..style = pw.PaintingStyle.stroke
+                          ..strokeWidth = 1
+                          ..color = PdfColors.black,
+                      );
+                    },
+                  ),
+                  pw.Text(
+                    score,
+                    style: pw.TextStyle(
+                      fontSize: 16,
+                      fontWeight: pw.FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
+
     double getRandomScore({double min = 0.30, double max = 0.75}) {
       final random = Random();
       return min + (random.nextDouble() * (max - min));
@@ -573,7 +673,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('getted the hrisk scrore $riskLevel');
     pw.Widget buildLegendRow(PdfColor color, String label) {
       return pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.end,
+        mainAxisAlignment: pw.MainAxisAlignment.start,
         children: [
           pw.Container(
             width: 14,
@@ -719,15 +819,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             double.tryParse(vulnerabilityScore) ?? 0.0)),
                       ),
                       pw.SizedBox(height: 10),
-                      imageScoreBarWithArrow(
+                      gaugeScore(
                         label: '2. Exposure score',
                         score: exposureScore,
                         value: double.tryParse(exposureScore) ?? 0.0,
-                        barImage: barImage,
-                        pointerImage: pointerArrowImage,
-                        level: hazardLevelFromValue(
-                            double.tryParse(exposureScore) ?? 0.0),
-                        levelColor: riskColor(hazardLevelFromValue(
+                        color: riskColor(hazardLevelFromValue(
                             double.tryParse(exposureScore) ?? 0.0)),
                       ),
                       pw.SizedBox(height: 10),
@@ -741,13 +837,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         levelColor: riskColor(hazardLevel),
                       ),
                       pw.SizedBox(height: 10),
-                      pw.Container(
-                        height: 110,
-                        width: 300,
-                        margin: const pw.EdgeInsets.only(left: 20),
-                        child: pw.Stack(
-                          children: [
-                            pw.Image(gaugeImage, width: 300, height: 110),
+                      pw.Center(
+                        child: pw.Container(
+                          height: 110,
+                          width: 300,
+                          child: pw.Stack(
+                            children: [
+                              pw.Image(gaugeImage, width: 300, height: 110),
                             /*    pw.Positioned(
                           left: 100 + (riskScoreVal.clamp(0, 1) * 285),
                           top: 28,
@@ -761,36 +857,41 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),*/
-                            pw.Positioned(
-                              left: 55,
-                              top: 60,
-                              child: pw.Text(
-                                riskScore,
-                                style: pw.TextStyle(
-                                  fontSize: 33,
-                                  color: PdfColors.blue,
-                                  fontWeight: pw.FontWeight.bold,
+                            pw.Positioned.fill(
+                              child: pw.Center(
+                                child: pw.Text(
+                                  riskScore,
+                                  style: pw.TextStyle(
+                                    fontSize: 33,
+                                    color: PdfColors.blue,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                       ),
+                      ),
                       pw.SizedBox(height: 10),
-                      pw.Text(
-                        'Your socio-climatic risk is calculated to be',
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.black),
+                      pw.Center(
+                        child: pw.Text(
+                          'Your socio-climatic risk is calculated to be',
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black),
+                        ),
                       ),
                       pw.SizedBox(height: 5),
-                      pw.Text(
-                        riskLevel,
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: riskColor(riskLevel)),
+                      pw.Center(
+                        child: pw.Text(
+                          riskLevel,
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: riskColor(riskLevel)),
+                        ),
                       ),
                       pw.SizedBox(height: 10),
                       pw.Row(children: [
@@ -809,26 +910,29 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 18, fontWeight: pw.FontWeight.bold),
                         ),
                       pw.SizedBox(height: 25),
-                      pw.Container(
-                        padding: const pw.EdgeInsets.all(10),
-                        width: 120,
-                        decoration: pw.BoxDecoration(
-                          border: pw.Border.all(
-                              color: PdfColors.black, width: 1),
-                        ),
-                        child: pw.Column(
-                          crossAxisAlignment: pw.CrossAxisAlignment.start,
-                          children: [
-                            buildLegendRow(PdfColors.blue900, 'Very low'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.green, 'Low'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.yellow, 'Moderate'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.orange, 'High'),
-                            pw.SizedBox(height: 4),
-                            buildLegendRow(PdfColors.red, 'Very high'),
-                          ],
+                      pw.Align(
+                        alignment: pw.Alignment.centerRight,
+                        child: pw.Container(
+                          padding: const pw.EdgeInsets.all(10),
+                          width: 120,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                                color: PdfColors.black, width: 1),
+                          ),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              buildLegendRow(PdfColors.blue900, 'Very low'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.green, 'Low'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.yellow, 'Moderate'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.orange, 'High'),
+                              pw.SizedBox(height: 4),
+                              buildLegendRow(PdfColors.red, 'Very high'),
+                            ],
+                          ),
                         ),
                       ),
 
