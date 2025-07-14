@@ -573,7 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('getted the hrisk scrore $riskLevel');
     pw.Widget buildLegendRow(PdfColor color, String label) {
       return pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.end,
+        mainAxisAlignment: pw.MainAxisAlignment.start,
         children: [
           pw.Container(
             width: 14,
@@ -777,20 +777,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       pw.SizedBox(height: 10),
-                      pw.Text(
-                        'Your socio-climatic risk is calculated to be',
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.black),
+                      pw.Center(
+                        child: pw.Text(
+                          'Your socio-climatic risk is calculated to be',
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black),
+                        ),
                       ),
                       pw.SizedBox(height: 5),
-                      pw.Text(
-                        riskLevel,
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: riskColor(riskLevel)),
+                      pw.Center(
+                        child: pw.Text(
+                          riskLevel,
+                          style: pw.TextStyle(
+                              fontSize: 20,
+                              fontWeight: pw.FontWeight.bold,
+                              color: riskColor(riskLevel)),
+                        ),
                       ),
                       pw.SizedBox(height: 10),
                       pw.Row(children: [
