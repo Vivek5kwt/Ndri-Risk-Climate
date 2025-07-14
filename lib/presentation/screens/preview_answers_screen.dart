@@ -8,6 +8,27 @@ class PreviewAnswersScreen extends StatelessWidget {
   final VoidCallback onEditFirstQuestion;
   final VoidCallback onSubmit;
 
+  // Questions that expect yes/no answers stored as 1 or 0.
+  static const Set<String> yesNoVars = {
+    '34',
+    '46.1',
+    '46.2',
+    '46.3',
+    '46.4',
+    '46.5',
+    '46.6',
+    '46.7',
+    '46.8',
+    '46.9',
+    '46.10',
+    '46.11',
+    '46.12',
+    '46.13',
+    '46.14',
+    '46.15',
+    '46.16',
+  };
+
   const PreviewAnswersScreen({
     super.key,
     required this.allAnswers,
@@ -80,13 +101,16 @@ class PreviewAnswersScreen extends StatelessWidget {
               final question = sortedQuestions[index];
               // --- This is the fix: always get answer using variableNumber! ---
               final rawAnswer = allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
-              // Convert stored 1/0 values used for yes/no questions into
-              // human readable booleans. This avoids showing "1" or "0" in
-              // the preview for true/false questions.
-              final answer = rawAnswer == '1'
-                  ? 'True'
-                  : rawAnswer == '0'
-                  ? 'False'
+              // For yes/no questions convert stored 1/0 values into
+              // human readable "Yes"/"No". Other questions may legitimately
+              // use numeric answers like 0 or 1 (e.g. rating scale), so
+              // we leave those values untouched.
+              final answer = yesNoVars.contains(question.variableNumber)
+                  ? (rawAnswer == '1'
+                      ? 'Yes'
+                      : rawAnswer == '0'
+                          ? 'No'
+                          : rawAnswer)
                   : rawAnswer;
 
               final Color cardColor = (index % 2 == 0)
