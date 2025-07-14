@@ -546,6 +546,104 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    pw.Widget gaugeScore({
+      required String label,
+      required String score,
+      required double value,
+      double size = 120,
+      PdfColor color = PdfColors.blue,
+    }) {
+      value = value.clamp(0.0, 1.0);
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            label,
+            style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Container(
+            width: size,
+            height: size / 2,
+            child: pw.Stack(
+              alignment: pw.Alignment.center,
+              children: [
+                pw.CustomPaint(
+                  size: pw.Size(size, size),
+                  painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
+                    final radius = size / 2;
+                    final center = pw.Offset(radius, radius);
+                    final trackRadius = radius * 0.85;
+                    final segmentWidth = radius * 0.22;
+                    final colors = [
+                      PdfColors.blue,
+                      PdfColors.green,
+                      PdfColors.yellow,
+                      PdfColors.orange,
+                      PdfColors.red,
+                    ];
+                    final segmentAngle = pi / colors.length;
+                    for (var i = 0; i < colors.length; i++) {
+                      final paint = pw.Paint()
+                        ..style = pw.PaintingStyle.stroke
+                        ..strokeWidth = segmentWidth
+                        ..color = colors[i];
+                      final start = pi + i * segmentAngle;
+                      canvas.drawArc(
+                        pw.Rect.fromCircle(center: center, radius: trackRadius),
+                        start,
+                        segmentAngle,
+                        false,
+                        paint,
+                      );
+                    }
+                    final borderPaint = pw.Paint()
+                      ..style = pw.PaintingStyle.stroke
+                      ..strokeWidth = 1
+                      ..color = PdfColors.black;
+                    canvas.drawArc(
+                      pw.Rect.fromCircle(center: center, radius: trackRadius + segmentWidth / 2),
+                      pi,
+                      pi,
+                      false,
+                      borderPaint,
+                    );
+
+                    final pointerAngle = pi + value * pi;
+                    final pointerOffset = pw.Offset(
+                      center.dx + trackRadius * cos(pointerAngle),
+                      center.dy + trackRadius * sin(pointerAngle),
+                    );
+                    canvas.drawCircle(
+                      pointerOffset,
+                      segmentWidth / 4,
+                      pw.Paint()..color = PdfColors.white,
+                    );
+                    canvas.drawCircle(
+                      pointerOffset,
+                      segmentWidth / 4,
+                      pw.Paint()
+                        ..style = pw.PaintingStyle.stroke
+                        ..strokeWidth = 1
+                        ..color = PdfColors.black,
+                    );
+                  },
+                ),
+                pw.Text(
+                  score,
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     double getRandomScore({double min = 0.30, double max = 0.75}) {
       final random = Random();
       return min + (random.nextDouble() * (max - min));
@@ -719,15 +817,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             double.tryParse(vulnerabilityScore) ?? 0.0)),
                       ),
                       pw.SizedBox(height: 10),
-                      imageScoreBarWithArrow(
+                      gaugeScore(
                         label: '2. Exposure score',
                         score: exposureScore,
                         value: double.tryParse(exposureScore) ?? 0.0,
-                        barImage: barImage,
-                        pointerImage: pointerArrowImage,
-                        level: hazardLevelFromValue(
-                            double.tryParse(exposureScore) ?? 0.0),
-                        levelColor: riskColor(hazardLevelFromValue(
+                        color: riskColor(hazardLevelFromValue(
                             double.tryParse(exposureScore) ?? 0.0)),
                       ),
                       pw.SizedBox(height: 10),
