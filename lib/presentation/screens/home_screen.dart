@@ -761,15 +761,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),*/
-                            pw.Positioned(
-                              left: 55,
-                              top: 60,
-                              child: pw.Text(
-                                riskScore,
-                                style: pw.TextStyle(
-                                  fontSize: 33,
-                                  color: PdfColors.blue,
-                                  fontWeight: pw.FontWeight.bold,
+                            pw.Positioned.fill(
+                              child: pw.Center(
+                                child: pw.Text(
+                                  riskScore,
+                                  style: pw.TextStyle(
+                                    fontSize: 33,
+                                    color: PdfColors.blue,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
