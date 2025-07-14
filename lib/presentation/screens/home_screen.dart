@@ -4607,9 +4607,9 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                                         context
                                             .read<RiskAssessmentBloc>()
                                             .add(SaveAnswerEvent(
-                                            '37', sel.join(',')));
+                                            '36', sel.join(',')));
                                         widget.onSave
-                                            ?.call(37, sel.join(','));
+                                            ?.call(36, sel.join(','));
                                       },
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 6, vertical: 0),
@@ -4659,8 +4659,8 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                         selected ? sel.remove(label) : sel.add(label));
                         context
                             .read<RiskAssessmentBloc>()
-                            .add(SaveAnswerEvent('37', sel.join(',')));
-                        widget.onSave?.call(37, sel.join(','));
+                            .add(SaveAnswerEvent('36', sel.join(',')));
+                        widget.onSave?.call(36, sel.join(','));
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 210),
