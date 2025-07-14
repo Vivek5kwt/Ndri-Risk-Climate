@@ -355,11 +355,13 @@ class QuestionRepository {
         category: 'Social Capital',
       ),
       QuestionModel(
-        variableNumber: '29',
-        questionText: 'Number of sources of income',
+        variableNumber: '36',
+        questionText:
+            'Tap on the types of officials to whom you visited during last one year',
         questionType: QuestionType.vulnerability,
         category: 'Social Capital',
       ),
+
       QuestionModel(
         variableNumber: '37',
         questionText: '37. Number of visits by extension agents in a year',
@@ -372,53 +374,6 @@ class QuestionRepository {
             '38. Number of visits by government or private veterinarians in a year',
         questionType: QuestionType.vulnerability,
         category: 'Social Capital',
-      ),
-
-      QuestionModel(
-        variableNumber: '21',
-        questionText: 'Types of diseases',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '22',
-        questionText: 'Daily milk yield of buffalo in summer (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '23',
-        questionText:
-            'Daily milk yield of indigenous cattle in summer (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '24',
-        questionText:
-            'Daily milk yield of crossbred cattle in summer (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '25',
-        questionText: 'Daily milk yield of buffalo in winter (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '26',
-        questionText:
-            'Daily milk yield of indigenous cattle in winter (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
-      ),
-      QuestionModel(
-        variableNumber: '27',
-        questionText:
-            'Daily milk yield of crossbred cattle in winter (in litres/day)',
-        questionType: QuestionType.exposure,
-        category: 'Agriculture & Dairying',
       ),
       QuestionModel(
         variableNumber: '39',
