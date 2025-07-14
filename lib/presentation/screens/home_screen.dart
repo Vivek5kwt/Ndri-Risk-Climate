@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
@@ -2730,10 +2731,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 climatePageIdx = 0;
                               });
                             },
-                            onSubmit: () {
-                              context.read<RiskAssessmentBloc>()
+                            onSubmit: () async {
+                              Navigator.pop(context);
+                              context
+                                  .read<RiskAssessmentBloc>()
                                   .add(SubmitAnswersEvent());
-                              context.go('/disclaimer');
+                              await _showSubmitResultDialog(context);
                             },
                           ),
                     ),
@@ -2772,7 +2775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {},
                         ),
                       ));
-                  },
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -3143,15 +3146,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         AnimatedSwitcher(
                           duration: Duration(milliseconds: 300),
                           child: Icon(
-                            Icons.check_circle_rounded,
-                            key: ValueKey('done_icon'),
+                            Icons.home_rounded,
+                            key: ValueKey('home_icon'),
                             color: Colors.white,
                             size: 28,
                           ),
                         ),
                         SizedBox(width: 14),
                         Text(
-                          'Done',
+                          'Return Home',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
