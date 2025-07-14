@@ -29,6 +29,13 @@ class PreviewAnswersScreen extends StatelessWidget {
     '46.16',
   };
 
+  // Questions that act as section headings and don't need answers displayed
+  static const Set<String> headingVars = {
+    '13',
+    '18',
+    '45',
+  };
+
   const PreviewAnswersScreen({
     super.key,
     required this.allAnswers,
@@ -99,18 +106,21 @@ class PreviewAnswersScreen extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 15),
             itemBuilder: (context, index) {
               final question = sortedQuestions[index];
+              final bool isHeading = headingVars.contains(question.variableNumber);
               // --- This is the fix: always get answer using variableNumber! ---
-              final rawAnswer = allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
+              final rawAnswer = isHeading
+                  ? ''
+                  : allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
               // For yes/no questions convert stored 1/0 values into
               // human readable "Yes"/"No". Other questions may legitimately
               // use numeric answers like 0 or 1 (e.g. rating scale), so
               // we leave those values untouched.
               final answer = yesNoVars.contains(question.variableNumber)
                   ? (rawAnswer == '1'
-                      ? 'Yes'
-                      : rawAnswer == '0'
-                          ? 'No'
-                          : rawAnswer)
+                  ? 'Yes'
+                  : rawAnswer == '0'
+                  ? 'No'
+                  : rawAnswer)
                   : rawAnswer;
 
               final Color cardColor = (index % 2 == 0)
@@ -196,64 +206,66 @@ class PreviewAnswersScreen extends StatelessWidget {
                               letterSpacing: 0.04,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          // Answer row
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 400),
-                            curve: Curves.easeInCubic,
-                            decoration: BoxDecoration(
-                              color: answerBoxColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: answer == 'Not Answered'
-                                    ? Colors.red.shade200
-                                    : leftBarColor.withOpacity(0.23),
-                                width: 1.15,
-                              ),
-                              boxShadow: answer == 'Not Answered'
-                                  ? [
-                                BoxShadow(
-                                  color: Colors.red.shade100.withOpacity(0.19),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                                  : [
-                                BoxShadow(
-                                  color: leftBarColor.withOpacity(0.12),
-                                  blurRadius: 5,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7.5),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  answer == 'Not Answered'
-                                      ? Icons.error_outline_rounded
-                                      : Icons.check_circle_rounded,
+                          if (!isHeading) ...[
+                            const SizedBox(height: 8),
+                            // Answer row
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInCubic,
+                              decoration: BoxDecoration(
+                                color: answerBoxColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
                                   color: answer == 'Not Answered'
-                                      ? Colors.red.shade400
-                                      : leftBarColor,
-                                  size: 19,
+                                      ? Colors.red.shade200
+                                      : leftBarColor.withOpacity(0.23),
+                                  width: 1.15,
                                 ),
-                                const SizedBox(width: 7),
-                                Expanded(
-                                  child: Text(
-                                    answer,
-                                    style: TextStyle(
-                                      color: answer == 'Not Answered'
-                                          ? Colors.red.shade700
-                                          : Colors.brown.shade800,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14.8,
+                                boxShadow: answer == 'Not Answered'
+                                    ? [
+                                  BoxShadow(
+                                    color: Colors.red.shade100.withOpacity(0.19),
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                                    : [
+                                  BoxShadow(
+                                    color: leftBarColor.withOpacity(0.12),
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7.5),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    answer == 'Not Answered'
+                                        ? Icons.error_outline_rounded
+                                        : Icons.check_circle_rounded,
+                                    color: answer == 'Not Answered'
+                                        ? Colors.red.shade400
+                                        : leftBarColor,
+                                    size: 19,
+                                  ),
+                                  const SizedBox(width: 7),
+                                  Expanded(
+                                    child: Text(
+                                      answer,
+                                      style: TextStyle(
+                                        color: answer == 'Not Answered'
+                                            ? Colors.red.shade700
+                                            : Colors.brown.shade800,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14.8,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
