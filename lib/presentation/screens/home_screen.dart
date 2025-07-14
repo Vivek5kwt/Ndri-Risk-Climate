@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     '32',
     '33',
   ];
-  final socialVars = ['34', '35', '36', '37', '38'];
+  final socialVars = ['34', '35', '37', '38'];
   final infraVars = ['39', '40', '41', '42', '43', '44'];
   final percepVars = [
     '44.1',
@@ -4556,10 +4556,16 @@ class _OfficialMultiState extends State<_OfficialMulti> {
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _bar(
-              '36. Tap on the types of officials to whom you visited during last one year',
-              AppColors.greenColor,
-              textColor: Colors.white),
+          Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                  color: AppColors.greenColor,
+                  border: Border.all(color: Colors.black, width: 1.5)),
+              child: const AppText(
+                  text: '36. Tap on the types of officials to whom you visited during last one year',
+                  color: Colors.white,
+                  textSize: 14,
+                  fontWeight: FontWeight.w700)),
           Container(
             decoration: const BoxDecoration(color: Colors.white),
             padding: const EdgeInsets.all(6),

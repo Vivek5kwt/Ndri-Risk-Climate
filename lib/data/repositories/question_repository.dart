@@ -355,6 +355,12 @@ class QuestionRepository {
         category: 'Social Capital',
       ),
       QuestionModel(
+        variableNumber: '29',
+        questionText: 'Number of sources of income',
+        questionType: QuestionType.vulnerability,
+        category: 'Social Capital',
+      ),
+      QuestionModel(
         variableNumber: '37',
         questionText: '37. Number of visits by extension agents in a year',
         questionType: QuestionType.vulnerability,
