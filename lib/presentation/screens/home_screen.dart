@@ -2731,9 +2731,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               });
                             },
                             onSubmit: () {
-                              Navigator.pop(context);
-                              context.read<RiskAssessmentBloc>().add(
-                                  SubmitAnswersEvent());
+                              context.read<RiskAssessmentBloc>()
+                                  .add(SubmitAnswersEvent());
+                              context.go('/disclaimer');
                             },
                           ),
                     ),
