@@ -568,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: pw.Stack(
               alignment: pw.Alignment.center,
               children: [
-                pw.CustomPaint(
+           /*     pw.CustomPaint(
                   size: pw.Size(size, size),
                   painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
                     final radius = size / 2;
@@ -628,7 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ..color = PdfColors.black,
                     );
                   },
-                ),
+                ),*/
                 pw.Text(
                   score,
                   style: pw.TextStyle(
