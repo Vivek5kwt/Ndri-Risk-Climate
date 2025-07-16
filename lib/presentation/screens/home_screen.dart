@@ -3816,12 +3816,33 @@ class _AgCardState extends State<_AgCard> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
-    finalValue = computeFinalValueForInput(
-        widget.question.variableNumber, _ctrl.text);
+    calculateFinalValue(_ctrl.text);
     if (widget.savedAnswer != null && widget.savedAnswer!.isNotEmpty) {
       selP = widget.savedAnswer!.split(',').toSet();
     } else {
       selP = <String>{};
+    }
+  }
+
+  void calculateFinalValue(String input) {
+    final v = widget.question.variableNumber;
+    final bloc = context.read<RiskAssessmentBloc>();
+
+    if (v == '13.1' || v == '13.2' || v == '13.3') {
+      final answers = Map<String, String>.from(bloc.state.answers);
+      answers[v] = input;
+      final owned = double.tryParse(answers['13.1'] ?? '') ?? 0.0;
+      final leasedIn = double.tryParse(answers['13.2'] ?? '') ?? 0.0;
+      final leasedOut = double.tryParse(answers['13.3'] ?? '') ?? 0.0;
+      final operational = owned + leasedIn - leasedOut;
+
+      bloc.add(SaveAnswerEvent('13', operational.toString()));
+      widget.onSave?.call('13', operational.toString());
+
+      finalValue =
+          v == '13.3' ? computeFinalValueForInput('13', operational.toString()) : null;
+    } else {
+      finalValue = computeFinalValueForInput(v, input);
     }
   }
 
@@ -3978,10 +3999,10 @@ class _AgCardState extends State<_AgCard> {
             ),
             keyboardType: TextInputType.number,
             onChanged: (txt) {
-              setState(() =>
-              finalValue = computeFinalValueForInput(v, txt));
-              context.read<RiskAssessmentBloc>().add(
-                  SaveAnswerEvent(widget.question.variableNumber, txt));
+              setState(() => calculateFinalValue(txt));
+              context
+                  .read<RiskAssessmentBloc>()
+                  .add(SaveAnswerEvent(widget.question.variableNumber, txt));
               widget.onSave?.call(widget.question.variableNumber, txt);
             },
           ),
