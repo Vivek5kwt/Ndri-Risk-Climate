@@ -78,16 +78,106 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 3.6934,
     'isPositive': false,
   },
+  '18.2': {
+    'min': 0,
+    'max': 4,
+    'weight': 2.9547,
+    'isPositive': false,
+  },
+  '18.3': {
+    'min': 0,
+    'max': 4,
+    'weight': 2.3993,
+    'isPositive': false,
+  },
+  '18.4': {
+    'min': 0,
+    'max': 4,
+    'weight': 1.4770,
+    'isPositive': false,
+  },
+  '18.5': {
+    'min': 0,
+    'max': 4,
+    'weight': 3.6934,
+    'isPositive': false,
+  },
+  '18.6': {
+    'min': 0,
+    'max': 4,
+    'weight': 4.6583,
+    'isPositive': false,
+  },
+  '18.7': {
+    'min': 0,
+    'max': 4,
+    'weight': 4.4023,
+    'isPositive': false,
+  },
   '18.8': {
     'min': 0,
     'max': 5,
     'weight': 3.0159,
     'isPositive': false,
   },
+  '18.9': {
+    'min': 0,
+    'max': 5,
+    'weight': 2.7678,
+    'isPositive': false,
+  },
+  '18.10': {
+    'min': 0,
+    'max': 5,
+    'weight': 1.5623,
+    'isPositive': false,
+  },
+  '18.11': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.4023,
+    'isPositive': false,
+  },
+  '18.12': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.6583,
+    'isPositive': false,
+  },
+  '18.13': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.6583,
+    'isPositive': false,
+  },
   '18.14': {
     'min': 0,
     'max': 5,
     'weight': 4.1064,
+    'isPositive': false,
+  },
+  '18.15': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.6583,
+    'isPositive': false,
+  },
+  '18.16': {
+    'min': 0,
+    'max': 5,
+    'weight': 1.8500,
+    'isPositive': false,
+  },
+  '18.17': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.6583,
+    'isPositive': false,
+  },
+  '18.18': {
+    'min': 0,
+    'max': 5,
+    'weight': 4.6583,
     'isPositive': false,
   },
   '28': {
@@ -222,7 +312,29 @@ int mapHouseType(String val) {
 
 // Keys for vulnerability and exposure questions used in score calculation
 final Set<String> vulnerabilityKeys = {
-  '13', '15', '18', '18.1', '18.8', '18.14', '28', '26'
+  '13',
+  '15',
+  '18',
+  '18.1',
+  '18.2',
+  '18.3',
+  '18.4',
+  '18.5',
+  '18.6',
+  '18.7',
+  '18.8',
+  '18.9',
+  '18.10',
+  '18.11',
+  '18.12',
+  '18.13',
+  '18.14',
+  '18.15',
+  '18.16',
+  '18.17',
+  '18.18',
+  '28',
+  '26'
 };
 
 final Set<String> exposureKeys = {
@@ -252,7 +364,10 @@ double _calcFor(String key, Map<String, String> ans) {
     if (input == 0.0) {
       double sum = 0.0;
       for (var i = 1; i <= 18; i++) {
-        sum += _parseAnswer('18.$i', ans);
+        final subKey = '18.' + i.toString();
+        final val = _parseAnswer(subKey, ans);
+        final w = questionParams[subKey]?['weight'] as double? ?? 1.0;
+        sum += val * w;
       }
       input = sum;
     }
