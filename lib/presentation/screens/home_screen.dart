@@ -571,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             pw.SizedBox(width: 6),
-         /*   pw.Container(
+            /*   pw.Container(
               width: size,
               height: size / 2,
               child: pw.CustomPaint(
@@ -3811,6 +3811,51 @@ class _AgCardState extends State<_AgCard> {
   late TextEditingController _ctrl;
   late Set<String> selP;
   double? finalValue;
+  static final Map<String, String> _landAnswers = {
+    '13.1': '',
+    '13.2': '',
+    '13.3': '',
+  };
+  static final Map<String, String> _herdAnswers = {
+    '18.1': '',
+    '18.2': '',
+    '18.3': '',
+    '18.4': '',
+    '18.5': '',
+    '18.6': '',
+    '18.7': '',
+    '18.8': '',
+    '18.9': '',
+    '18.10': '',
+    '18.11': '',
+    '18.12': '',
+    '18.13': '',
+    '18.14': '',
+    '18.15': '',
+    '18.16': '',
+    '18.17': '',
+    '18.18': '',
+  };
+  static const Map<String, double> _herdWeights = {
+    '18.1': 1.0,
+    '18.2': 0.8,
+    '18.3': 0.65,
+    '18.4': 0.4,
+    '18.5': 1.0,
+    '18.6': 1.26,
+    '18.7': 1.19,
+    '18.8': 0.85,
+    '18.9': 0.85,
+    '18.10': 0.48,
+    '18.11': 1.19,
+    '18.12': 1.26,
+    '18.13': 1.26,
+    '18.14': 1.01,
+    '18.15': 1.26,
+    '18.16': 0.5,
+    '18.17': 1.26,
+    '18.18': 1.26,
+  };
 
   @override
   void initState() {
@@ -3829,18 +3874,30 @@ class _AgCardState extends State<_AgCard> {
     final bloc = context.read<RiskAssessmentBloc>();
 
     if (v == '13.1' || v == '13.2' || v == '13.3') {
-      final answers = Map<String, String>.from(bloc.state.answers);
-      answers[v] = input;
-      final owned = double.tryParse(answers['13.1'] ?? '') ?? 0.0;
-      final leasedIn = double.tryParse(answers['13.2'] ?? '') ?? 0.0;
-      final leasedOut = double.tryParse(answers['13.3'] ?? '') ?? 0.0;
+      _landAnswers[v] = input;
+
+      final owned = double.tryParse(_landAnswers['13.1'] ?? '') ?? 0.0;
+      final leasedIn = double.tryParse(_landAnswers['13.2'] ?? '') ?? 0.0;
+      final leasedOut = double.tryParse(_landAnswers['13.3'] ?? '') ?? 0.0;
       final operational = owned + leasedIn - leasedOut;
 
       bloc.add(SaveAnswerEvent('13', operational.toString()));
       widget.onSave?.call('13', operational.toString());
 
       finalValue =
-          v == '13.3' ? computeFinalValueForInput('13', operational.toString()) : null;
+      v == '13.3' ? computeFinalValueForInput('13', operational.toString()) : null;
+    } else if (v.startsWith('18.')) {
+      _herdAnswers[v] = input;
+      double sum = 0.0;
+      _herdWeights.forEach((k, w) {
+        final val = double.tryParse(_herdAnswers[k] ?? '') ?? 0.0;
+        sum += val * w;
+      });
+      bloc.add(SaveAnswerEvent('18', sum.toString()));
+      widget.onSave?.call('18', sum.toString());
+
+      finalValue =
+      v == '18.18' ? computeFinalValueForInput('18', sum.toString()) : null;
     } else {
       finalValue = computeFinalValueForInput(v, input);
     }
