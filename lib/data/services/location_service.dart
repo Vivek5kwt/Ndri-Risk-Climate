@@ -227,4 +227,6 @@ class LocationService {
     _distCache[state] = list;
     return list;
   }
+
+  Map<String, double> get hazardMap => _hazard;
 }

@@ -936,6 +936,28 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
+    final hazardEntries = LocationService().hazardMap.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(20),
+        build: (pw.Context context) {
+          return [
+            pw.Header(level: 0, child: pw.Text('District Hazard Scores')),
+            pw.Table.fromTextArray(
+              headers: ['District', 'Score'],
+              data: [
+                for (final e in hazardEntries)
+                  [e.key, e.value.toStringAsFixed(3)]
+              ],
+              cellAlignment: pw.Alignment.centerLeft,
+            ),
+          ];
+        },
+      ),
+    );
+
     Directory downloadsDir;
     if (Platform.isAndroid) {
       downloadsDir = Directory('/storage/emulated/0/Download');
