@@ -561,6 +561,7 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const pw.EdgeInsets.symmetric(vertical: 2),
         child: pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.center,
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
           children: [
             pw.SizedBox(
               width: 190,
@@ -570,11 +571,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             pw.SizedBox(width: 6),
-            pw.Container(
+         /*   pw.Container(
               width: size,
               height: size / 2,
               child: pw.CustomPaint(
-                size: pw.Size(size, size),
+                size: PdfPoint(size, size),
                 painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
                   final radius = size / 2;
                   final center = pw.Offset(radius, radius);
@@ -634,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
-            ),
+            ),*/
             pw.SizedBox(width: 10),
             pw.Container(
               width: 40,
@@ -860,7 +861,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                       pw.SizedBox(height: 10),
-                     /* pw.Center(
+                      /* pw.Center(
                         child: pw.Text(
                           'Your socio-climatic risk is calculated to be',
                           style: pw.TextStyle(
@@ -1090,12 +1091,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-
-// ---- This is the CustomPainter you must also add below the above function ----
-
-
-
   String _riskLevelFromValue(double v) {
     if (v < 0.2) return 'Very Low';
     if (v < 0.4) return 'Low';
@@ -5450,7 +5445,7 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
   void initState() {
     super.initState();
     final saved =
-        context.read<RiskAssessmentBloc>().state.answers['46.99'];
+    context.read<RiskAssessmentBloc>().state.answers['46.99'];
     if (saved != null && saved is String) {
       ctrl.text = saved;
     }

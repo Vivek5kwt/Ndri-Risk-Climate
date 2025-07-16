@@ -53,11 +53,34 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 0.08,
     'isPositive': false,
   },
-  // Vulnerability indicators
+  '11': {
+    'min': 73,
+    'max': 15,
+    'weight': 2.839466072,
+    'isPositive': false,
+  },
   '13': {
     'min': 0,
     'max': 67,
     'weight': 7.8191,
+    'isPositive': false,
+  },
+  '13.1': {
+    'min': 0,
+    'max': 40,
+    'weight':7.150952382,
+    'isPositive': false,
+  },
+  '13.2': {
+    'min': 0,
+    'max': 40,
+    'weight':7.150952382,
+    'isPositive': false,
+  },
+  '13.3': {
+    'min': 0,
+    'max': 40,
+    'weight':7.150952382,
     'isPositive': false,
   },
   '15': {
