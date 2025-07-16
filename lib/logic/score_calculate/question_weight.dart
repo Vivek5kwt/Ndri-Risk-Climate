@@ -257,7 +257,16 @@ final Set<String> exposureKeys = {
 double _parseAnswer(String key, Map<String, String> ans) {
   String? raw = ans[key];
   if (raw == null || raw.isEmpty) return 0.0;
-  return double.tryParse(raw) ?? 0.0;
+  final parsed = double.tryParse(raw);
+  if (parsed != null) return parsed;
+  if (key == '3') {
+    final idx = mapEducation(raw);
+    return idx < 0 ? 0.0 : idx.toDouble();
+  }
+  if (key == '10') {
+    return mapHouseType(raw).toDouble();
+  }
+  return 0.0;
 }
 
 double _calcFor(String key, Map<String, String> ans) {
@@ -329,8 +338,18 @@ double computeExposureScore(Map<String, String> ans) =>
     computeScore(ans, exposureKeys);
 
 double? computeFinalValueForInput(String key, String input) {
-  final double? val = double.tryParse(input);
-  if (val == null) return null;
+  double? val = double.tryParse(input);
+  if (val == null) {
+    if (key == '3') {
+      final idx = mapEducation(input);
+      if (idx == -1) return null;
+      val = idx.toDouble();
+    } else if (key == '10') {
+      val = mapHouseType(input).toDouble();
+    } else {
+      return null;
+    }
+  }
   if (questionParams.containsKey(key)) {
     final p = questionParams[key]!;
     final min = p['min'] as num;
