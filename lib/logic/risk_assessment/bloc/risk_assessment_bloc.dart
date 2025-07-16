@@ -65,7 +65,7 @@ class RiskAssessmentBloc extends Bloc<RiskAssessmentEvent, RiskAssessmentState> 
           questions: state.questions,
           answers: updatedAnswers,
           name: state.name,
-          gender: event.questionNumber == 2 ? event.answer : state.gender,
+          gender: event.questionNumber == '1' ? event.answer : state.gender,
           stateName: state.stateName,
           district: state.district,
           block: state.block,

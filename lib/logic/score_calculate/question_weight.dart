@@ -245,7 +245,7 @@ int mapHouseType(String val) {
 
 // Keys for vulnerability and exposure questions used in score calculation
 final Set<String> vulnerabilityKeys = {
-  '13', '15', '18', '18.1', '18.8', '18.14', '28', '26'
+  '2', '13', '15', '18', '18.1', '18.8', '18.14', '28', '26'
 };
 
 final Set<String> exposureKeys = {
