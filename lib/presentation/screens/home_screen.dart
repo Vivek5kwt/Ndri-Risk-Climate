@@ -3661,6 +3661,7 @@ class _HumanCardState extends State<_HumanCard> {
             setState(() => _edu = val);
             context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, val!));
             widget.onSave?.call(v, val);
+            calculateFinalValue(val);
           },
         ),
       );
@@ -3681,6 +3682,7 @@ class _HumanCardState extends State<_HumanCard> {
             setState(() => _household = val);
             context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, val!));
             widget.onSave?.call(v, val);
+            calculateFinalValue(val);
           },
         ),
       );
