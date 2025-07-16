@@ -24,7 +24,7 @@ import '../../config/assets.dart';
 import '../../data/models/question_model.dart';
 import '../../data/services/location_service.dart';
 import '../../data/services/location_state.dart';
-import '../../demo2.dart';
+import '../../socioClimaticGaugePDF.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_bloc.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_event.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_state.dart';
