@@ -556,93 +556,108 @@ class _HomeScreenState extends State<HomeScreen> {
       PdfColor color = PdfColors.blue,
     }) {
       value = value.clamp(0.0, 1.0);
-      return pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            label,
-            style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
-          ),
-          pw.SizedBox(height: 4),
-          pw.Container(
-            width: size,
-            height: size / 2,
-            child: pw.Stack(
-              alignment: pw.Alignment.center,
-              children: [
-           /*     pw.CustomPaint(
-                  size: pw.Size(size, size),
-                  painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
-                    final radius = size / 2;
-                    final center = pw.Offset(radius, radius);
-                    final trackRadius = radius * 0.85;
-                    final segmentWidth = radius * 0.22;
-                    final colors = [
-                      PdfColors.blue,
-                      PdfColors.green,
-                      PdfColors.yellow,
-                      PdfColors.orange,
-                      PdfColors.red,
-                    ];
-                    final segmentAngle = pi / colors.length;
-                    for (var i = 0; i < colors.length; i++) {
-                      final paint = pw.Paint()
-                        ..style = pw.PaintingStyle.stroke
-                        ..strokeWidth = segmentWidth
-                        ..color = colors[i];
-                      final start = pi + i * segmentAngle;
-                      canvas.drawArc(
-                        pw.Rect.fromCircle(center: center, radius: trackRadius),
-                        start,
-                        segmentAngle,
-                        false,
-                        paint,
-                      );
-                    }
-                    final borderPaint = pw.Paint()
+      final level = _riskLevelFromValue(value);
+      return pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+        child: pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.SizedBox(
+              width: 190,
+              child: pw.Text(
+                label,
+                style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+              ),
+            ),
+            pw.SizedBox(width: 6),
+            pw.Container(
+              width: size,
+              height: size / 2,
+              child: pw.CustomPaint(
+                size: pw.Size(size, size),
+                painter: (pw.Context ctx, pw.Canvas canvas, pw.Rect rect) {
+                  final radius = size / 2;
+                  final center = pw.Offset(radius, radius);
+                  final trackRadius = radius * 0.85;
+                  final segmentWidth = radius * 0.22;
+                  final colors = [
+                    PdfColors.blue,
+                    PdfColors.green,
+                    PdfColors.yellow,
+                    PdfColors.orange,
+                    PdfColors.red,
+                  ];
+                  final segmentAngle = pi / colors.length;
+                  for (var i = 0; i < colors.length; i++) {
+                    final paint = pw.Paint()
+                      ..style = pw.PaintingStyle.stroke
+                      ..strokeWidth = segmentWidth
+                      ..color = colors[i];
+                    final start = pi + i * segmentAngle;
+                    canvas.drawArc(
+                      pw.Rect.fromCircle(center: center, radius: trackRadius),
+                      start,
+                      segmentAngle,
+                      false,
+                      paint,
+                    );
+                  }
+                  final borderPaint = pw.Paint()
+                    ..style = pw.PaintingStyle.stroke
+                    ..strokeWidth = 1
+                    ..color = PdfColors.black;
+                  canvas.drawArc(
+                    pw.Rect.fromCircle(center: center, radius: trackRadius + segmentWidth / 2),
+                    pi,
+                    pi,
+                    false,
+                    borderPaint,
+                  );
+
+                  final pointerAngle = pi + value * pi;
+                  final pointerOffset = pw.Offset(
+                    center.dx + trackRadius * cos(pointerAngle),
+                    center.dy + trackRadius * sin(pointerAngle),
+                  );
+                  canvas.drawCircle(
+                    pointerOffset,
+                    segmentWidth / 4,
+                    pw.Paint()..color = PdfColors.white,
+                  );
+                  canvas.drawCircle(
+                    pointerOffset,
+                    segmentWidth / 4,
+                    pw.Paint()
                       ..style = pw.PaintingStyle.stroke
                       ..strokeWidth = 1
-                      ..color = PdfColors.black;
-                    canvas.drawArc(
-                      pw.Rect.fromCircle(center: center, radius: trackRadius + segmentWidth / 2),
-                      pi,
-                      pi,
-                      false,
-                      borderPaint,
-                    );
-
-                    final pointerAngle = pi + value * pi;
-                    final pointerOffset = pw.Offset(
-                      center.dx + trackRadius * cos(pointerAngle),
-                      center.dy + trackRadius * sin(pointerAngle),
-                    );
-                    canvas.drawCircle(
-                      pointerOffset,
-                      segmentWidth / 4,
-                      pw.Paint()..color = PdfColors.white,
-                    );
-                    canvas.drawCircle(
-                      pointerOffset,
-                      segmentWidth / 4,
-                      pw.Paint()
-                        ..style = pw.PaintingStyle.stroke
-                        ..strokeWidth = 1
-                        ..color = PdfColors.black,
-                    );
-                  },
-                ),*/
-                pw.Text(
-                  score,
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-              ],
+                      ..color = PdfColors.black,
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            pw.SizedBox(width: 10),
+            pw.Container(
+              width: 40,
+              alignment: pw.Alignment.centerLeft,
+              child: pw.Text(
+                score,
+                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              ),
+            ),
+            pw.SizedBox(width: 6),
+            pw.Container(
+              width: 50,
+              child: pw.Text(
+                level,
+                style: pw.TextStyle(
+                  fontSize: 15,
+                  color: _riskColor(level),
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -839,8 +854,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       pw.SizedBox(height: 10),
                       pw.Center(
                         child: socioClimaticGaugePDF(
-                          score: /*double.tryParse(riskScore) ??*/ 60.0, // between 0.0 and 1.0
-                          dateText: DateFormat('dd MMM yyyy').format(DateTime.now()), // or your desired date
+                          score: double.tryParse(riskScore) ?? 0.0,
+                          dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
                         ),
                       ),
 
@@ -936,20 +951,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    final hazardEntries = LocationService().hazardMap.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+    final double selectedHazard = LocationService().hazardFor(district);
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
-            pw.Header(level: 0, child: pw.Text('District Hazard Scores')),
+            pw.Header(level: 0, child: pw.Text('District Hazard Score')),
             pw.Table.fromTextArray(
               headers: ['District', 'Score'],
               data: [
-                for (final e in hazardEntries)
-                  [e.key, e.value.toStringAsFixed(3)]
+                [district, selectedHazard.toStringAsFixed(3)]
               ],
               cellAlignment: pw.Alignment.centerLeft,
             ),
