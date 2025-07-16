@@ -663,6 +663,12 @@ class QuestionRepository {
         questionType: QuestionType.vulnerability,
         category: 'Climate - Preparedness',
       ),
+      QuestionModel(
+        variableNumber: '46.99',
+        questionText: '⚙️  Add any OTHER adaptation strategy (optional)',
+        questionType: QuestionType.vulnerability,
+        category: 'Climate - Preparedness',
+      ),
     ];
   }
 }

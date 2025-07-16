@@ -2657,9 +2657,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                     ),
                     if (i == 2)
-                      const AnimatedEntrance(
-                        delay: Duration(milliseconds: 400),
-                        child: _ExtraAdaptationCard(),
+                      AnimatedEntrance(
+                        delay: const Duration(milliseconds: 400),
+                        child: _ExtraAdaptationCard(
+                          onChanged: (txt) => _saveAnswer('46.99', txt),
+                        ),
                       ),
                     SizedBox(height: 80.h),
                   ],
@@ -5420,7 +5422,8 @@ class _DashLine extends StatelessWidget {
 }
 
 class _ExtraAdaptationCard extends StatefulWidget {
-  const _ExtraAdaptationCard();
+  final ValueChanged<String> onChanged;
+  const _ExtraAdaptationCard({required this.onChanged});
 
   @override
   State<_ExtraAdaptationCard> createState() => _ExtraAdaptationCardState();
@@ -5428,6 +5431,16 @@ class _ExtraAdaptationCard extends StatefulWidget {
 
 class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
   final ctrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final saved =
+        context.read<RiskAssessmentBloc>().state.answers['46.99'];
+    if (saved != null && saved is String) {
+      ctrl.text = saved;
+    }
+  }
 
   @override
   void dispose() {
@@ -5473,10 +5486,12 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
-              onChanged: (txt) =>
-                  context.read<RiskAssessmentBloc>().add(
-                    SaveAnswerEvent('46.99', txt),
-                  ),
+              onChanged: (txt) {
+                widget.onChanged(txt);
+                context.read<RiskAssessmentBloc>().add(
+                  SaveAnswerEvent('46.99', txt),
+                );
+              },
             ),
           ),
         ],
