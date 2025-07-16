@@ -12,8 +12,10 @@ import 'logic/risk_assessment/bloc/risk_assessment_bloc.dart';
 import 'logic/risk_assessment/bloc/risk_assessment_event.dart';
 import 'logic/splash/bloc/splash_bloc.dart';
 import 'logic/splash/bloc/splash_event.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 Future<void> main() async {
+  print('pw.CustomPainter   ${pw.CustomPainter}');
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(

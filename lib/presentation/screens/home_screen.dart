@@ -2,7 +2,8 @@
 import 'dart:convert';
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
-
+import 'dart:math' as math;
+import 'package:intl/intl.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +24,7 @@ import '../../config/assets.dart';
 import '../../data/models/question_model.dart';
 import '../../data/services/location_service.dart';
 import '../../data/services/location_state.dart';
+import '../../demo2.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_bloc.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_event.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_state.dart';
@@ -836,43 +838,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       pw.SizedBox(height: 10),
                       pw.Center(
-                        child: pw.Container(
-                          height: 110,
-                          width: 300,
-                          child: pw.Stack(
-                            children: [
-                              pw.Image(gaugeImage, width: 300, height: 110),
-                            /*    pw.Positioned(
-                          left: 100 + (riskScoreVal.clamp(0, 1) * 285),
-                          top: 28,
-                          child: pw.Container(
-                            width: 21,
-                            height: 21,
-                            decoration: pw.BoxDecoration(
-                              color: PdfColors.red,
-                              shape: pw.BoxShape.circle,
-                              border: pw.Border.all(color: PdfColors.white, width: 2),
-                            ),
-                          ),
-                        ),*/
-                            pw.Positioned.fill(
-                              child: pw.Center(
-                                child: pw.Text(
-                                  riskScore,
-                                  style: pw.TextStyle(
-                                    fontSize: 33,
-                                    color: PdfColors.blue,
-                                    fontWeight: pw.FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: socioClimaticGaugePDF(
+                          score: /*double.tryParse(riskScore) ??*/ 60.0, // between 0.0 and 1.0
+                          dateText: DateFormat('dd MMM yyyy').format(DateTime.now()), // or your desired date
                         ),
                       ),
-                      ),
+
                       pw.SizedBox(height: 10),
-                      pw.Center(
+                     /* pw.Center(
                         child: pw.Text(
                           'Your socio-climatic risk is calculated to be',
                           style: pw.TextStyle(
@@ -932,7 +905,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                      ),
+                      ),*/
 
                       pw.SizedBox(height: 10),
                       pw.RichText(
@@ -1005,7 +978,8 @@ class _HomeScreenState extends State<HomeScreen> {
     required String score,
     double barHeight = 16,
     double barWidth = 210,
-  }) async {
+  })
+  async {
     double value = double.tryParse(score) ?? 0.0;
     value = value.clamp(0.0, 1.0);
     String level = _riskLevelFromValue(value);
@@ -1081,6 +1055,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+
+// ---- This is the CustomPainter you must also add below the above function ----
+
+
 
   String _riskLevelFromValue(double v) {
     if (v < 0.2) return 'Very Low';
