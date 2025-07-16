@@ -274,9 +274,29 @@ double _calcFor(String key, Map<String, String> ans) {
     input = _parseAnswer('18', ans);
     if (input == 0.0) {
       double sum = 0.0;
-      for (var i = 1; i <= 18; i++) {
-        sum += _parseAnswer('18.$i', ans);
-      }
+      const herdWeights = {
+        '18.1': 1.0,
+        '18.2': 0.8,
+        '18.3': 0.65,
+        '18.4': 0.4,
+        '18.5': 1.0,
+        '18.6': 1.26,
+        '18.7': 1.19,
+        '18.8': 0.85,
+        '18.9': 0.85,
+        '18.10': 0.48,
+        '18.11': 1.19,
+        '18.12': 1.26,
+        '18.13': 1.26,
+        '18.14': 1.01,
+        '18.15': 1.26,
+        '18.16': 0.5,
+        '18.17': 1.26,
+        '18.18': 1.26,
+      };
+      herdWeights.forEach((k, w) {
+        sum += _parseAnswer(k, ans) * w;
+      });
       input = sum;
     }
   }
@@ -315,10 +335,9 @@ double? computeFinalValueForInput(String key, String input) {
     final p = questionParams[key]!;
     final min = p['min'] as num;
     final max = p['max'] as num;
-    final weight = p['weight'] as double;
     final isPositive = p['isPositive'] as bool;
     final norm = max == min ? 0.0 : ((val - min) / (max - min));
-    return ((isPositive ? norm : (1 - norm)) * weight);
+    return (isPositive ? norm : (1 - norm));
   }
   return 0.0;
 }
