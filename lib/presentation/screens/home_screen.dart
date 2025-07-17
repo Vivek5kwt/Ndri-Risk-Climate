@@ -1701,6 +1701,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _HumanCard(
                     question: qs[idx],
                     savedAnswer: _getSavedAnswer(qs[idx].variableNumber),
+                    savedEdu: qs[idx].variableNumber == '3'
+                        ? _getSavedAnswer('3_level')
+                        : null,
                     onGenderSelected: (val) {
                       setState(() => _selectedGender = val);
                       _saveFieldAnswers();
@@ -3568,12 +3571,14 @@ class _HomeScreenState extends State<HomeScreen> {
 class _HumanCard extends StatefulWidget {
   final QuestionModel question;
   final String? savedAnswer;
+  final String? savedEdu;
   final void Function(String)? onGenderSelected;
   final Future<void> Function(String, dynamic)? onSave;
 
   const _HumanCard({
     required this.question,
     this.savedAnswer,
+    this.savedEdu,
     this.onGenderSelected,
     this.onSave,
   });
@@ -3592,6 +3597,7 @@ class _HumanCardState extends State<_HumanCard> {
     super.initState();
     final v = widget.question.variableNumber;
     if (v == '1') _gender = widget.savedAnswer;
+    if (v == '3') _edu = widget.savedEdu;
     if (v == '10') _household = widget.savedAnswer;
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
     calculateFinalValue(_ctrl.text);
@@ -3653,32 +3659,69 @@ class _HumanCardState extends State<_HumanCard> {
             'Diploma/certificate course',
             'Graduate',
             'Post graduate and above',
-          ].map((e) =>
-              DropdownMenuItem(
-                  value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
+          ]
+              .map((e) => DropdownMenuItem(
+              value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (val) {
             setState(() => _edu = val);
+            if (val != null) {
+              context
+                  .read<RiskAssessmentBloc>()
+                  .add(SaveAnswerEvent('${v}_level', val));
+              widget.onSave?.call('${v}_level', val);
+            }
           },
         ),
       );
-      extraField = TextField(
-        controller: _ctrl,
-        textAlignVertical: TextAlignVertical.center,
-        decoration: InputDecoration(
-          border: InputBorder.none,
-          isDense: true,
-          hintText: 'Years of schooling',
-          hintStyle: const TextStyle(color: Colors.grey),
-          contentPadding: EdgeInsets.symmetric(vertical: 3.h),
-        ),
-        keyboardType: TextInputType.number,
-        onChanged: (txt) {
-          calculateFinalValue(txt);
-          context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, txt));
-          widget.onSave?.call(v, txt);
-        },
-      );
+      if (_edu != null) {
+        extraField = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                  color: barCol,
+                  border: Border.all(color: Colors.black, width: 1.5)),
+              child: AppText(
+                  text: 'Number of years of schooling',
+                  color: barCol == AppColors.yellowColor
+                      ? Colors.black
+                      : Colors.white,
+                  textSize: 14.sp,
+                  fontWeight: FontWeight.w600),
+            ),
+            Container(
+              height: 38.h,
+              margin: EdgeInsets.only(bottom: 6.h),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: AppColors.greenColor, width: 1.4)),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              alignment: Alignment.centerLeft,
+              child: TextField(
+                controller: _ctrl,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  hintText: 'Years',
+                  hintStyle: const TextStyle(color: Colors.grey),
+                  contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (txt) {
+                  calculateFinalValue(txt);
+                  context
+                      .read<RiskAssessmentBloc>()
+                      .add(SaveAnswerEvent(v, txt));
+                  widget.onSave?.call(v, txt);
+                },
+              ),
+            ),
+          ],
+        );
+      }
     } else if (v == '10') {
       field = DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -3720,47 +3763,36 @@ class _HumanCardState extends State<_HumanCard> {
       );
     }
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-            decoration: BoxDecoration(
-                color: barCol,
-                border: Border.all(color: Colors.black, width: 1.5)),
-            child: AppText(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+          decoration: BoxDecoration(
+              color: barCol,
+              border: Border.all(color: Colors.black, width: 1.5)),
+          child: AppText(
               text: '$v. ${widget.question.questionText}',
               color: barCol == AppColors.yellowColor ? Colors.black : Colors
                   .white,
               textSize: 14.sp,
               fontWeight: FontWeight.w600),
         ),
-          Container(
-            height: 38.h,
-            margin: EdgeInsets.only(bottom: 6.h),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: AppColors.greenColor, width: 1.4)),
-            padding: EdgeInsets.symmetric(horizontal: 8.w),
-            alignment: Alignment.centerLeft,
-            child: field,
-          ),
-          if (extraField != null)
-            Container(
-              height: 38.h,
-              margin: EdgeInsets.only(bottom: 6.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: AppColors.greenColor, width: 1.4),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 8.w),
-              alignment: Alignment.centerLeft,
-              child: extraField,
-            ),
-          if (finalValue != null)
-            Padding(
-              padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
-              child: Text(
+        Container(
+          height: 38.h,
+          margin: EdgeInsets.only(bottom: 6.h),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: AppColors.greenColor, width: 1.4)),
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+          alignment: Alignment.centerLeft,
+          child: field,
+        ),
+        if (extraField != null) extraField!,
+        if (finalValue != null)
+          Padding(
+            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
                 color: Colors.teal.shade700,
