@@ -12,10 +12,10 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'isPositive': true,
   },
   '4': {
-    'min': 0,
-    'max': 10,
-    'weight': 0.12,
-    'isPositive': false,
+    'min': 1,
+    'max': 22,
+    'weight': 2.644350717,
+    'isPositive': true,
   },
   '5': {
     'min': 0.065,
@@ -37,9 +37,9 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   },
   '8': {
     'min': 0,
-    'max': 4,
-    'weight': 2.040972142,
-    'isPositive': false,
+    'max': 12,
+    'weight': 2.652984683,
+    'isPositive': true,
   },
   '9': {
     'min': 0,
@@ -130,6 +130,12 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'max': 5,
     'weight': 4.1064,
     'isPositive': false,
+  },
+  '19': {
+    'min': 0,
+    'max': 10,
+    'weight': 1.592305378,
+    'isPositive': true,
   },
   '28': {
     'min': 0,
