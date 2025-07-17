@@ -37,8 +37,8 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   },
   '8': {
     'min': 0,
-    'max': 12,
-    'weight': 2.652984683,
+    'max': 4,
+    'weight': 2.040972142,
     'isPositive': true,
   },
   '9': {
@@ -48,9 +48,9 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'isPositive': true,
   },
   '10': {
-    'min': 0,
-    'max': 2,
-    'weight': 0.08,
+    'min': 1,
+    'max': 3,
+    'weight': 3.898970878,
     'isPositive': false,
   },
   '11': {
@@ -159,7 +159,7 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   '8_exp': {
     'min': 0,
     'max': 4,
-    'weight': 2.0410,
+    'weight': 2.040972142,
     'isPositive': true,
   },
   '6_exp': {
@@ -177,7 +177,7 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   '9_exp': {
     'min': 0,
     'max': 3,
-    'weight': 1.9701,
+    'weight': 1.970125947,
     'isPositive': true,
   },
   '19_exp': {
@@ -207,7 +207,7 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   '10_exp': {
     'min': 1,
     'max': 3,
-    'weight': 3.8990,
+    'weight': 3.898970878,
     'isPositive': false,
   },
   '23_exp': {
@@ -262,9 +262,9 @@ int mapEducation(String val) {
 }
 
 int mapHouseType(String val) {
-  if (val == 'Permanent Pucca house') return 0;
-  if (val == 'Permanent Kaccha house') return 1;
-  return 2;
+  if (val == 'Permanent Pucca house') return 1;
+  if (val == 'Permanent Kaccha house') return 2;
+  return 3;
 }
 
 // Keys for vulnerability and exposure questions used in score calculation
