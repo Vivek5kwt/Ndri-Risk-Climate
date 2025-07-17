@@ -3592,7 +3592,6 @@ class _HumanCardState extends State<_HumanCard> {
     super.initState();
     final v = widget.question.variableNumber;
     if (v == '1') _gender = widget.savedAnswer;
-    if (v == '3') _edu = widget.savedAnswer;
     if (v == '10') _household = widget.savedAnswer;
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
     calculateFinalValue(_ctrl.text);
@@ -3619,6 +3618,7 @@ class _HumanCardState extends State<_HumanCard> {
         : AppColors.greenColor;
 
     Widget field;
+    Widget? extraField;
     if (v == '1') {
       field = DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -3659,11 +3659,25 @@ class _HumanCardState extends State<_HumanCard> {
               .toList(),
           onChanged: (val) {
             setState(() => _edu = val);
-            context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, val!));
-            widget.onSave?.call(v, val);
-            calculateFinalValue(val);
           },
         ),
+      );
+      extraField = TextField(
+        controller: _ctrl,
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          isDense: true,
+          hintText: 'Years of schooling',
+          hintStyle: const TextStyle(color: Colors.grey),
+          contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+        ),
+        keyboardType: TextInputType.number,
+        onChanged: (txt) {
+          calculateFinalValue(txt);
+          context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(v, txt));
+          widget.onSave?.call(v, txt);
+        },
       );
     } else if (v == '10') {
       field = DropdownButtonHideUnderline(
@@ -3706,35 +3720,47 @@ class _HumanCardState extends State<_HumanCard> {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
-          decoration: BoxDecoration(
-              color: barCol,
-              border: Border.all(color: Colors.black, width: 1.5)),
-          child: AppText(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+            decoration: BoxDecoration(
+                color: barCol,
+                border: Border.all(color: Colors.black, width: 1.5)),
+            child: AppText(
               text: '$v. ${widget.question.questionText}',
               color: barCol == AppColors.yellowColor ? Colors.black : Colors
                   .white,
               textSize: 14.sp,
               fontWeight: FontWeight.w600),
         ),
-        Container(
-          height: 38.h,
-          margin: EdgeInsets.only(bottom: 6.h),
-          decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: AppColors.greenColor, width: 1.4)),
-          padding: EdgeInsets.symmetric(horizontal: 8.w),
-          alignment: Alignment.centerLeft,
-          child: field,
-        ),
-        if (finalValue != null)
-          Padding(
-            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
-            child: Text(
+          Container(
+            height: 38.h,
+            margin: EdgeInsets.only(bottom: 6.h),
+            decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: AppColors.greenColor, width: 1.4)),
+            padding: EdgeInsets.symmetric(horizontal: 8.w),
+            alignment: Alignment.centerLeft,
+            child: field,
+          ),
+          if (extraField != null)
+            Container(
+              height: 38.h,
+              margin: EdgeInsets.only(bottom: 6.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: AppColors.greenColor, width: 1.4),
+              ),
+              padding: EdgeInsets.symmetric(horizontal: 8.w),
+              alignment: Alignment.centerLeft,
+              child: extraField,
+            ),
+          if (finalValue != null)
+            Padding(
+              padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+              child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
                 color: Colors.teal.shade700,
