@@ -7,9 +7,9 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   },
   '3': {
     'min': 0,
-    'max': 6,
-    'weight': 0.2,
-    'isPositive': true,
+    'max': 21,
+    'weight': 2.629222072,
+    'isPositive': false,
   },
   '4': {
     'min': 1,
@@ -283,10 +283,6 @@ double _parseAnswer(String key, Map<String, String> ans) {
   if (raw == null || raw.isEmpty) return 0.0;
   final parsed = double.tryParse(raw);
   if (parsed != null) return parsed;
-  if (key == '3') {
-    final idx = mapEducation(raw);
-    return idx < 0 ? 0.0 : idx.toDouble();
-  }
   if (key == '10') {
     return mapHouseType(raw).toDouble();
   }
@@ -364,11 +360,7 @@ double computeExposureScore(Map<String, String> ans) =>
 double? computeFinalValueForInput(String key, String input) {
   double? val = double.tryParse(input);
   if (val == null) {
-    if (key == '3') {
-      final idx = mapEducation(input);
-      if (idx == -1) return null;
-      val = idx.toDouble();
-    } else if (key == '10') {
+    if (key == '10') {
       val = mapHouseType(input).toDouble();
     } else {
       return null;
