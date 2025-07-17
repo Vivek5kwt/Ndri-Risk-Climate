@@ -213,37 +213,37 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   '23_exp': {
     'min': 0,
     'max': 20,
-    'weight': 3.0730,
+    'weight': 3.073021933,
     'isPositive': false,
   },
   '24_exp': {
     'min': 0.5,
     'max': 20,
-    'weight': 3.2619,
+    'weight': 3.261928395,
     'isPositive': false,
   },
   '25_exp': {
     'min': 0,
     'max': 30,
-    'weight': 4.7147,
+    'weight': 4.714729009,
     'isPositive': false,
   },
   '26_exp': {
     'min': 0.5,
     'max': 40,
-    'weight': 4.5380,
+    'weight': 4.537967284,
     'isPositive': false,
   },
   '21_exp': {
     'min': 0.5,
     'max': 25,
-    'weight': 4.3995,
+    'weight': 4.399515629,
     'isPositive': false,
   },
   '22_exp': {
     'min': 0.5,
     'max': 26,
-    'weight': 4.6060,
+    'weight': 4.605965244,
     'isPositive': false,
   },
 };
@@ -335,7 +335,7 @@ double _calcFor(String key, Map<String, String> ans) {
   final isPositive = p['isPositive'] as bool;
   double norm = max == min ? 0.0 : ((input - min) / (max - min));
   double value = (isPositive ? norm : (1 - norm)) * weight;
-  return value.clamp(0.0, weight);
+  return value;
 }
 
 double computeScore(Map<String, String> ans, Set<String> keys) {
