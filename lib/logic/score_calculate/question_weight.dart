@@ -373,7 +373,8 @@ double? computeFinalValueForInput(String key, String input) {
     final weight = p['weight'] as double;
     final isPositive = p['isPositive'] as bool;
     final norm = max == min ? 0.0 : ((val - min) / (max - min));
-    return ((isPositive ? norm : (1 - norm)) * weight);
+    final unweighted = isPositive ? norm : (1 - norm);
+    return key == '18' ? unweighted : (unweighted * weight);
   }
   return 0.0;
 }
