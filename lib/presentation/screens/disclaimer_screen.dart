@@ -17,6 +17,13 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
     with SingleTickerProviderStateMixin {
   bool _isAgreed = false;
   late final AnimationController _fadeCtrl;
+  bool _loadingNext = false;
+
+  Future<void> _goNext() async {
+    setState(() => _loadingNext = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) context.go('/home');
+  }
 
   @override
   void initState() {
@@ -200,7 +207,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                     child: SizedBox(
                       width: 160.w,
                       child: ElevatedButton(
-                        onPressed: _isAgreed ? () => context.go('/home') : null,
+                        onPressed: _isAgreed ? _goNext : null,
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
                             horizontal: 17.w,
@@ -229,9 +236,16 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
               ],
             ),
           ),
-        ],
-      ),
-    );
+        if (_loadingNext)
+          Positioned.fill(
+            child: Container(
+              color: Colors.white,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+          ),
+      ],
+    ),
+  );
   }
 
   Widget _bullet(String text, {Color color = const Color(0xFF082765)}) {
