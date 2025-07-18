@@ -18,6 +18,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
   bool _isAgreed = false;
   late final AnimationController _fadeCtrl;
 
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +43,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
     final double dynamicGap = (desiredCenter - headerBlock).clamp(0.0, 100.0);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           Positioned(
@@ -229,9 +231,9 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
               ],
             ),
           ),
-        ],
-      ),
-    );
+      ],
+    ),
+  );
   }
 
   Widget _bullet(String text, {Color color = const Color(0xFF082765)}) {
