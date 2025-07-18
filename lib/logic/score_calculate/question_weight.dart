@@ -334,6 +334,8 @@ double _calcFor(String key, Map<String, String> ans) {
   final weight = p['weight'] as double;
   final isPositive = p['isPositive'] as bool;
   double norm = max == min ? 0.0 : ((input - min) / (max - min));
+  if (norm < 0.0) norm = 0.0;
+  if (norm > 1.0) norm = 1.0;
   double value = (isPositive ? norm : (1 - norm)) * weight;
   return value;
 }
@@ -372,7 +374,9 @@ double? computeFinalValueForInput(String key, String input) {
     final max = p['max'] as num;
     final weight = p['weight'] as double;
     final isPositive = p['isPositive'] as bool;
-    final norm = max == min ? 0.0 : ((val - min) / (max - min));
+    double norm = max == min ? 0.0 : ((val - min) / (max - min));
+    if (norm < 0.0) norm = 0.0;
+    if (norm > 1.0) norm = 1.0;
     final unweighted = isPositive ? norm : (1 - norm);
     return key == '18' ? unweighted : (unweighted * weight);
   }
