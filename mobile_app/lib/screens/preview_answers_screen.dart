@@ -35,7 +35,14 @@ class PreviewAnswersScreen extends StatelessWidget {
                 '${index + 1}. ${question.questionText}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text('Your Answer: $answer'),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Your Answer: $answer'),
+                  Text('Final Value: ${question.finalValue}'),
+                  Text('Accepted Value: ${question.acceptedValue}'),
+                ],
+              ),
               trailing: IconButton(
                 icon: const Icon(Icons.edit, color: Colors.blue),
                 onPressed: () {
