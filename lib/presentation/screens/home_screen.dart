@@ -3790,9 +3790,9 @@ class _HumanCardState extends State<_HumanCard> {
           child: field,
         ),
         if (extraField != null) extraField!,
-        if (finalValue != null)
+        if (finalValue != null) ...[
           Padding(
-            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
             child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
@@ -3802,6 +3802,18 @@ class _HumanCardState extends State<_HumanCard> {
               ),
             ),
           ),
+          Padding(
+            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            child: Text(
+              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5.sp,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -4125,9 +4137,9 @@ class _AgCardState extends State<_AgCard> {
             },
           ),
         ),
-        if (finalValue != null)
+        if (finalValue != null) ...[
           Padding(
-            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            padding: const EdgeInsets.only(bottom: 4, left: 8),
             child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
@@ -4137,6 +4149,18 @@ class _AgCardState extends State<_AgCard> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            child: Text(
+              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
+        ],
         if (v == '18')
           Container(
             margin: const EdgeInsets.only(bottom: 20),
@@ -4668,9 +4692,9 @@ class _LivCardState extends State<_LivCard> {
           },
         ),
       ),
-      if (finalValue != null)
+      if (finalValue != null) ...[
         Padding(
-          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          padding: const EdgeInsets.only(bottom: 4, left: 8),
           child: Text(
             'Final Value: ${finalValue!.toStringAsFixed(3)}',
             style: TextStyle(
@@ -4680,6 +4704,18 @@ class _LivCardState extends State<_LivCard> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          child: Text(
+            'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+            style: TextStyle(
+              color: Colors.teal.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+          ),
+        ),
+      ],
     ]);
   }
 }
@@ -5094,9 +5130,9 @@ class _InfraCardState extends State<_InfraCard> {
           },
         ),
       ),
-      if (finalValue != null)
+      if (finalValue != null) ...[
         Padding(
-          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          padding: const EdgeInsets.only(bottom: 4, left: 8),
           child: Text(
             'Final Value: ${finalValue!.toStringAsFixed(3)}',
             style: TextStyle(
@@ -5106,6 +5142,18 @@ class _InfraCardState extends State<_InfraCard> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14, left: 8),
+          child: Text(
+            'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+            style: TextStyle(
+              color: Colors.teal.shade700,
+              fontWeight: FontWeight.bold,
+              fontSize: 13.5,
+            ),
+          ),
+        ),
+      ],
     ]);
   }
 }
@@ -5232,9 +5280,9 @@ class _YesNoCircleState extends State<_YesNoCircle> {
               ],
             ),
           ),
-          if (finalValue != null)
+          if (finalValue != null) ...[
             Padding(
-              padding: const EdgeInsets.only(bottom: 14, left: 8),
+              padding: const EdgeInsets.only(bottom: 4, left: 8),
               child: Text(
                 'Final Value: ${finalValue!.toStringAsFixed(3)}',
                 style: TextStyle(
@@ -5244,6 +5292,18 @@ class _YesNoCircleState extends State<_YesNoCircle> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 14, left: 8),
+              child: Text(
+                'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+                style: TextStyle(
+                  color: Colors.teal.shade700,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+            ),
+          ],
         ],
       );
 
@@ -5532,9 +5592,9 @@ class _RatingCircleState extends State<_RatingCircle>
             }),
           ),
         ),
-        if (finalValue != null)
+        if (finalValue != null) ...[
           Padding(
-            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            padding: const EdgeInsets.only(bottom: 4, left: 8),
             child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
@@ -5544,6 +5604,18 @@ class _RatingCircleState extends State<_RatingCircle>
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            child: Text(
+              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -5695,9 +5767,9 @@ Widget _line(String q, Color barColor,
           alignment: Alignment.centerLeft,
           child: child,
         ),
-        if (finalValue != null)
+        if (finalValue != null) ...[
           Padding(
-            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
             child: Text(
               'Final Value: ${finalValue!.toStringAsFixed(3)}',
               style: TextStyle(
@@ -5707,5 +5779,17 @@ Widget _line(String q, Color barColor,
               ),
             ),
           ),
+          Padding(
+            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
+            child: Text(
+              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5.sp,
+              ),
+            ),
+          ),
+        ],
       ],
     );
