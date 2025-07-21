@@ -412,166 +412,31 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
     );
   }
-
-  Future<void> _generateReport() async {
-    await _initPermissions();
-    final st = context
-        .read<RiskAssessmentBloc>()
-        .state;
-    if (st is! RiskAssessmentLoaded) return;
-
-    final pdf = pw.Document();
-
-    final bgImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/ic_socio_climatic_dia.webp'))
-          .buffer
-          .asUint8List(),
-    );
-    final barImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/hazard_bar.png'))
-          .buffer
-          .asUint8List(),
-    );
-    final pointerArrowImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/score_arrow.png'))
-          .buffer
-          .asUint8List(),
-    );
-    final gaugeImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/socio_gauge.png'))
-          .buffer
-          .asUint8List(),
-    );
-
-    String asFixed(dynamic val) {
-      if (val == null) return '0.00';
-      if (val is num) return val.toStringAsFixed(2);
-      if (val is String) {
-        return double.tryParse(val)?.toStringAsFixed(2) ?? '0.00';
-      }
-      return '0.00';
-    }
-    String hazardLevelFromValue(double v) {
-      if (v < 0.254952719) return 'Very Low';
-      if (v < 0.359426855) return 'Low';
-      if (v < 0.419781228) return 'Medium';
-      if (v < 0.512033541) return 'High';
-      return 'Very High';
-    }
-    PdfColor riskColor(String level) {
-      switch (level.toLowerCase()) {
-        case 'very low':
-          return PdfColors.green;
-        case 'low':
-          return PdfColors.lightGreen;
-        case 'medium':
-          return PdfColors.yellow;
-        case 'high':
-          return PdfColors.orange;
-        case 'very high':
-          return PdfColors.red;
-        default:
-          return PdfColors.grey;
-      }
-    }
-
-    pw.Widget imageScoreBarWithArrow({
-      required String label,
-      required String score,
-      required double value,
-      required pw.MemoryImage barImage,
-      required pw.MemoryImage pointerImage,
-      double barWidth = 180,
-      double barHeight = 33,
-      String? level,
-      PdfColor? levelColor,
-    }) {
-      value = value.clamp(0.0, 1.0);
-      return pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 2),
-        child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.SizedBox(
-              width: 190,
-              child: pw.Text(
-                label,
-                style:
-                pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
-              ),
+  pw.Widget gaugeScore({
+    required String label,
+    required String score,
+    required double value,
+    double size = 120,
+    PdfColor color = PdfColors.blue,
+  })
+  {
+    value = value.clamp(0.0, 1.0);
+    final level = _riskLevelFromValue(value);
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.SizedBox(
+            width: 190,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
             ),
-            pw.SizedBox(width: 6),
-            pw.Container(
-              width: barWidth,
-              height: barHeight + 20,
-              child: pw.Stack(
-                children: [
-                  pw.Positioned(
-                    left: 0,
-                    top: 14,
-                    child:
-                    pw.Image(barImage, width: barWidth, height: barHeight),
-                  ),
-                  pw.Positioned(
-                    left: (barWidth - 22) * value,
-                    top: 0,
-                    child: pw.Image(pointerImage, width: 22, height: 22),
-                  ),
-                ],
-              ),
-            ),
-            pw.SizedBox(width: 10),
-            pw.Container(
-              width: 40,
-              alignment: pw.Alignment.centerLeft,
-              child: pw.Text(
-                score,
-                style:
-                pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-              ),
-            ),
-            pw.SizedBox(width: 6),
-            pw.Container(
-              width: 50,
-              child: pw.Text(
-                level ?? '',
-                style: pw.TextStyle(
-                  fontSize: 15,
-                  color: levelColor ?? PdfColors.black,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    pw.Widget gaugeScore({
-      required String label,
-      required String score,
-      required double value,
-      double size = 120,
-      PdfColor color = PdfColors.blue,
-    }) {
-      value = value.clamp(0.0, 1.0);
-      final level = _riskLevelFromValue(value);
-      return pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 2),
-        child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            pw.SizedBox(
-              width: 190,
-              child: pw.Text(
-                label,
-                style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
-              ),
-            ),
-            pw.SizedBox(width: 6),
-            /*   pw.Container(
+          ),
+          pw.SizedBox(width: 6),
+          /*   pw.Container(
               width: size,
               height: size / 2,
               child: pw.CustomPaint(
@@ -636,35 +501,242 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),*/
-            pw.SizedBox(width: 10),
-            pw.Container(
-              width: 40,
-              alignment: pw.Alignment.centerLeft,
-              child: pw.Text(
-                score,
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          pw.SizedBox(width: 10),
+          pw.Container(
+            width: 40,
+            alignment: pw.Alignment.centerLeft,
+            child: pw.Text(
+              score,
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.Container(
+            width: 50,
+            child: pw.Text(
+              level,
+              style: pw.TextStyle(
+                fontSize: 15,
+                color: _riskColor(level),
+                fontWeight: pw.FontWeight.bold,
               ),
             ),
-            pw.SizedBox(width: 6),
-            pw.Container(
-              width: 50,
-              child: pw.Text(
-                level,
-                style: pw.TextStyle(
-                  fontSize: 15,
-                  color: _riskColor(level),
-                  fontWeight: pw.FontWeight.bold,
+          ),
+        ],
+      ),
+    );
+  }
+  pw.Widget imageScoreBarWithArrow({
+    required String label,
+    required String score,
+    required double value,
+    required pw.MemoryImage barImage,
+    required pw.MemoryImage pointerImage,
+    double barWidth = 180,
+    double barHeight = 33,
+    String? level,
+    PdfColor? levelColor,
+  })
+  {
+    value = value.clamp(0.0, 1.0);
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.SizedBox(
+            width: 190,
+            child: pw.Text(
+              label,
+              style:
+              pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.Container(
+            width: barWidth,
+            height: barHeight + 20,
+            child: pw.Stack(
+              children: [
+                pw.Positioned(
+                  left: 0,
+                  top: 14,
+                  child:
+                  pw.Image(barImage, width: barWidth, height: barHeight),
+                ),
+                pw.Positioned(
+                  left: (barWidth - 22) * value,
+                  top: 0,
+                  child: pw.Image(pointerImage, width: 22, height: 22),
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(width: 10),
+          pw.Container(
+            width: 40,
+            alignment: pw.Alignment.centerLeft,
+            child: pw.Text(
+              score,
+              style:
+              pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.Container(
+            width: 50,
+            child: pw.Text(
+              level ?? '',
+              style: pw.TextStyle(
+                fontSize: 15,
+                color: levelColor ?? PdfColors.black,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _generateReport() async {
+    await _initPermissions();
+    final st = context.read<RiskAssessmentBloc>().state;
+    if (st is! RiskAssessmentLoaded) return;
+
+    final pdf = pw.Document();
+
+    final bgImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/ic_socio_climatic_dia.webp')).buffer.asUint8List(),
+    );
+    final barImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/hazard_bar.png')).buffer.asUint8List(),
+    );
+    final pointerArrowImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
+    );
+    final gaugeImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
+    );
+    final rainbowGaugeImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/rainbow_color.png')).buffer.asUint8List(),
+    );
+
+    String asFixed(dynamic val) {
+      if (val == null) return '0.00';
+      if (val is num) return val.toStringAsFixed(2);
+      if (val is String) {
+        return double.tryParse(val)?.toStringAsFixed(2) ?? '0.00';
+      }
+      return '0.00';
+    }
+
+    String hazardLevelFromValue(double v) {
+      if (v < 0.254952719) return 'Very Low';
+      if (v < 0.359426855) return 'Low';
+      if (v < 0.419781228) return 'Medium';
+      if (v < 0.512033541) return 'High';
+      return 'Very High';
+    }
+
+    PdfColor riskColor(String level) {
+      switch (level.toLowerCase()) {
+        case 'very low':
+          return PdfColors.green;
+        case 'low':
+          return PdfColors.lightGreen;
+        case 'medium':
+          return PdfColors.yellow;
+        case 'high':
+          return PdfColors.orange;
+        case 'very high':
+          return PdfColors.red;
+        default:
+          return PdfColors.grey;
+      }
+    }
+
+    // Utility to calculate the pointer position (angle) for the value (0..1)
+    Offset _calcPointer(double value, double centerX, double centerY, double radius) {
+      final angle = pi + value * pi; // Left is 0, right is 1
+      final r = radius;
+      return Offset(centerX + r * cos(angle), centerY + r * sin(angle));
+    }
+
+    pw.Widget gaugeWithOverlay({
+      required double value, // 0..1
+      required String dateText,
+      required double score,
+      required pw.MemoryImage gaugeImage,
+      double width = 460,
+      double height = 220,
+    }) {
+      // Adjust these to match your PNG dimensions and overlay requirements
+      final gaugeCenter = Offset(width / 2, height - 52);
+      final arcRadius = width * 0.38; // adjust for best pointer fit
+      final pointerPos = _calcPointer(value, gaugeCenter.dx, gaugeCenter.dy, arcRadius);
+
+      return pw.Container(
+        width: width,
+        height: height,
+        child: pw.Stack(
+          children: [
+            // Gauge background image
+            pw.Positioned.fill(child: pw.Image(gaugeImage, fit: pw.BoxFit.contain)),
+            // 0 label (left)
+            pw.Positioned(
+              left: 30,
+              bottom: 60,
+              child: pw.Text("0", style: pw.TextStyle(fontSize: 22)),
+            ),
+            // 1 label (right)
+            pw.Positioned(
+              right: 28,
+              bottom: 60,
+              child: pw.Text("1", style: pw.TextStyle(fontSize: 22)),
+            ),
+            // Date (center top)
+            pw.Positioned(
+              left: 0,
+              right: 0,
+              top: 36,
+              child: pw.Center(
+                child: pw.Text(
+                  dateText,
+                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ),
+            // Score (center)
+            pw.Positioned(
+              left: 0,
+              right: 0,
+              top: 80,
+              child: pw.Center(
+                child: pw.Text(
+                  score.toStringAsFixed(2),
+                  style: pw.TextStyle(fontSize: 40, fontWeight: pw.FontWeight.bold, color: PdfColors.blue),
+                ),
+              ),
+            ),
+            // Pointer (small filled white circle with black border)
+            pw.Positioned(
+              left: pointerPos.dx - 10,
+              top: pointerPos.dy - 10,
+              child: pw.Container(
+                width: 20,
+                height: 20,
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.white,
+                  shape: pw.BoxShape.circle,
+                  border: pw.Border.all(color: PdfColors.black, width: 2),
                 ),
               ),
             ),
           ],
         ),
       );
-    }
-
-    double getRandomScore({double min = 0.30, double max = 0.75}) {
-      final random = Random();
-      return min + (random.nextDouble() * (max - min));
     }
 
     String name = nameCtrl.text.trim();
@@ -677,8 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final expVal = computeExposureScore(st.answers);
     String vulnerabilityScore = vulnVal.toStringAsFixed(2);
     String exposureScore = expVal.toStringAsFixed(2);
-    String getTotalScore = asFixed(vulnerabilityScore).toString() +
-        asFixed(exposureScore);
+    String getTotalScore = asFixed(vulnerabilityScore).toString() + asFixed(exposureScore);
     String getHazardScore = asFixed(hazardLevelFromValue(200.10));
     print('getted the value $getTotalScore');
 
@@ -687,6 +758,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String riskScore = asFixed(st.answers['riskScore']);
     String riskLevel = st.answers['riskLevel'] ?? 'Moderate';
     print('getted the hrisk scrore $riskLevel');
+
     pw.Widget buildLegendRow(PdfColor color, String label) {
       return pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.start,
@@ -728,8 +800,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               pw.Padding(
-                  padding: const pw.EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 5),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 5),
                   child: pw.Column(
                     children: [
                       pw.Container(
@@ -854,75 +925,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       pw.SizedBox(height: 10),
                       pw.Center(
-                        child: socioClimaticGaugePDF(
-                          score: double.tryParse(riskScore) ?? 0.0,
+                        child: gaugeWithOverlay(
+                          value: double.tryParse(riskScore) ?? 0.0,
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
+                          score: double.tryParse(riskScore) ?? 0.0,
+                          gaugeImage: rainbowGaugeImage,
+                          width: 460,
+                          height: 220,
                         ),
                       ),
-
-                      pw.SizedBox(height: 10),
-                      /* pw.Center(
-                        child: pw.Text(
-                          'Your socio-climatic risk is calculated to be',
-                          style: pw.TextStyle(
-                              fontSize: 20,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.black),
-                        ),
-                      ),
-                      pw.SizedBox(height: 5),
-                      pw.Center(
-                        child: pw.Text(
-                          riskLevel,
-                          style: pw.TextStyle(
-                              fontSize: 20,
-                              fontWeight: pw.FontWeight.bold,
-                              color: riskColor(riskLevel)),
-                        ),
-                      ),
-                      pw.SizedBox(height: 10),
-                      pw.Row(children: [
-                        pw.Text('Remarks:',
-                            style: pw.TextStyle(
-                                fontSize: 18,
-                                fontWeight: pw.FontWeight.bold,
-                                color: PdfColors.brown)),
-                      ]),
-                      pw.SizedBox(height: 8),
-                      if (riskLevel.toString() == 'High' ||
-                          riskLevel.toString() == 'Very High')
-                        pw.Text(
-                          '$riskLevel You are advised to contact your nearest KVK/ State Animal Husbandry personnel for customised adaptation plan of your dairy farm to minimise risk towards climate change.',
-                          style: pw.TextStyle(
-                              fontSize: 18, fontWeight: pw.FontWeight.bold),
-                        ),
-                      pw.SizedBox(height: 25),
-                      pw.Align(
-                        alignment: pw.Alignment.centerRight,
-                        child: pw.Container(
-                          padding: const pw.EdgeInsets.all(10),
-                          width: 120,
-                          decoration: pw.BoxDecoration(
-                            border: pw.Border.all(
-                                color: PdfColors.black, width: 1),
-                          ),
-                          child: pw.Column(
-                            crossAxisAlignment: pw.CrossAxisAlignment.start,
-                            children: [
-                              buildLegendRow(PdfColors.blue900, 'Very low'),
-                              pw.SizedBox(height: 4),
-                              buildLegendRow(PdfColors.green, 'Low'),
-                              pw.SizedBox(height: 4),
-                              buildLegendRow(PdfColors.yellow, 'Moderate'),
-                              pw.SizedBox(height: 4),
-                              buildLegendRow(PdfColors.orange, 'High'),
-                              pw.SizedBox(height: 4),
-                              buildLegendRow(PdfColors.red, 'Very high'),
-                            ],
-                          ),
-                        ),
-                      ),*/
-
                       pw.SizedBox(height: 10),
                       pw.RichText(
                         text: const pw.TextSpan(
@@ -982,9 +993,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await downloadsDir.create(recursive: true);
     }
 
-    final fileName = 'report_${DateTime
-        .now()
-        .millisecondsSinceEpoch}.pdf';
+    final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}.pdf';
     final outFile = File('${downloadsDir.path}/$fileName');
     await outFile.writeAsBytes(await pdf.save());
 
@@ -1003,6 +1012,7 @@ class _HomeScreenState extends State<HomeScreen> {
       payload: outFile.path,
     );
   }
+
 
   Future<pw.MemoryImage> _loadArrowImage() async {
     final bytes = await rootBundle.load('assets/images/score_arrow.png');
