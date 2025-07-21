@@ -669,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
       required String dateText,
       required double score,
       required pw.MemoryImage gaugeImage,
-      double width = 460,
+      double width = 520,
       double height = 220,
     }) {
       // Adjust these to match your PNG dimensions and overlay requirements
@@ -680,43 +680,47 @@ class _HomeScreenState extends State<HomeScreen> {
       return pw.Container(
         width: width,
         height: height,
+        alignment: pw.Alignment.center,
         child: pw.Stack(
           children: [
-            // Gauge background image
-            pw.Positioned.fill(child: pw.Image(gaugeImage, fit: pw.BoxFit.contain)),
-            // 0 label (left)
-            pw.Positioned(
-              left: 30,
-              bottom: 60,
-              child: pw.Text("0", style: pw.TextStyle(fontSize: 22)),
-            ),
-            // 1 label (right)
-            pw.Positioned(
-              right: 28,
-              bottom: 60,
-              child: pw.Text("1", style: pw.TextStyle(fontSize: 22)),
-            ),
-            // Date (center top)
-            pw.Positioned(
-              left: 0,
-              right: 0,
-              top: 36,
+            // Gauge background image centered in the container
+            pw.Positioned.fill(
               child: pw.Center(
-                child: pw.Text(
-                  dateText,
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+                child: pw.Image(
+                  gaugeImage,
+                  width: width,
+                  fit: pw.BoxFit.fitWidth,
                 ),
               ),
             ),
-            // Score (center)
+            // Date (top center)
             pw.Positioned(
               left: 0,
               right: 0,
               top: 80,
               child: pw.Center(
                 child: pw.Text(
+                  dateText,
+                  style: pw.TextStyle(
+                    fontSize: 22,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Score (below date)
+            pw.Positioned(
+              left: 0,
+              right: 0,
+              top: 120,
+              child: pw.Center(
+                child: pw.Text(
                   score.toStringAsFixed(2),
-                  style: pw.TextStyle(fontSize: 40, fontWeight: pw.FontWeight.bold, color: PdfColors.blue),
+                  style: pw.TextStyle(
+                    fontSize: 40,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.blue,
+                  ),
                 ),
               ),
             ),
@@ -930,7 +934,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
                           score: double.tryParse(riskScore) ?? 0.0,
                           gaugeImage: rainbowGaugeImage,
-                          width: 460,
+                          width: 520,
                           height: 220,
                         ),
                       ),
