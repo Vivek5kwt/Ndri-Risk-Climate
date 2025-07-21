@@ -680,6 +680,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return pw.Container(
         width: width,
         height: height,
+        alignment: pw.Alignment.center,
         child: pw.Stack(
           children: [
             // Gauge background image
@@ -696,18 +697,6 @@ class _HomeScreenState extends State<HomeScreen> {
               bottom: 60,
               child: pw.Text("1", style: pw.TextStyle(fontSize: 22)),
             ),
-            // Date (center top)
-            pw.Positioned(
-              left: 0,
-              right: 0,
-              top: 36,
-              child: pw.Center(
-                child: pw.Text(
-                  dateText,
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
-                ),
-              ),
-            ),
             // Score (center)
             pw.Positioned(
               left: 0,
@@ -717,6 +706,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: pw.Text(
                   score.toStringAsFixed(2),
                   style: pw.TextStyle(fontSize: 40, fontWeight: pw.FontWeight.bold, color: PdfColors.blue),
+                ),
+              ),
+            ),
+            // Date (below score)
+            pw.Positioned(
+              left: 0,
+              right: 0,
+              top: 120,
+              child: pw.Center(
+                child: pw.Text(
+                  dateText,
+                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
                 ),
               ),
             ),
