@@ -2686,14 +2686,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Final Value: ${val.toStringAsFixed(3)}',
-                                style: TextStyle(
-                                  color: Colors.teal.shade700,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                              Text(
                                 'Accepted Value: ${val.toStringAsFixed(3)}',
                                 style: TextStyle(
                                   color: Colors.teal.shade700,
@@ -3637,6 +3629,7 @@ class _HumanCard extends StatefulWidget {
   final String? savedEdu;
   final void Function(String)? onGenderSelected;
   final Future<void> Function(String, dynamic)? onSave;
+  final bool showFinal;
 
   const _HumanCard({
     required this.question,
@@ -3644,6 +3637,7 @@ class _HumanCard extends StatefulWidget {
     this.savedEdu,
     this.onGenderSelected,
     this.onSave,
+    this.showFinal = true,
   });
 
   @override
@@ -3853,17 +3847,7 @@ class _HumanCardState extends State<_HumanCard> {
         ),
         if (extraField != null) extraField!,
         if (widget.showFinal && finalValue != null) ...[
-          Padding(
-            padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
-            child: Text(
-              'Final Value: ${finalValue!.toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5.sp,
-              ),
-            ),
-          ),
+
           Padding(
             padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
             child: Text(
@@ -3931,11 +3915,12 @@ class _AgCard extends StatefulWidget {
   final QuestionModel question;
   final String? savedAnswer;
   final Future<void> Function(String, dynamic)? onSave;
-
+  final bool showFinal;
   const _AgCard({
     required this.question,
     this.savedAnswer,
     this.onSave,
+    this.showFinal = true,
   });
 
   @override
@@ -3946,6 +3931,7 @@ class _AgCardState extends State<_AgCard> {
   late TextEditingController _ctrl;
   late Set<String> selP;
   double? finalValue;
+
   static final Map<String, String> _landAnswers = {
     '13.1': '',
     '13.2': '',
@@ -4200,17 +4186,7 @@ class _AgCardState extends State<_AgCard> {
           ),
         ),
         if (widget.showFinal && finalValue != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4, left: 8),
-            child: Text(
-              'Final Value: ${finalValue!.toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
+
           Padding(
             padding: const EdgeInsets.only(bottom: 14, left: 8),
             child: Text(
@@ -4453,11 +4429,13 @@ class _IncomeMulti extends StatefulWidget {
   final QuestionModel questionMulti;
   final String? savedAnswer;
   final Future<void> Function(num, dynamic)? onSave;
+  final bool showFinal;
 
   const _IncomeMulti({
     required this.questionMulti,
     this.savedAnswer,
     this.onSave,
+    this.showFinal = true,
   });
 
   @override
@@ -4694,17 +4672,7 @@ class _IncomeMultiState extends State<_IncomeMulti> {
               ],
             )),
         if (widget.showFinal && finalValue != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4, left: 8),
-            child: Text(
-              'Final Value: ${finalValue!.toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
+
           Padding(
             padding: const EdgeInsets.only(bottom: 14, left: 8),
             child: Text(
@@ -4800,17 +4768,7 @@ class _LivCardState extends State<_LivCard> {
         ),
       ),
       if (finalValue != null) ...[
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4, left: 8),
-          child: Text(
-            'Final Value: ${finalValue!.toStringAsFixed(3)}',
-            style: TextStyle(
-              color: Colors.teal.shade700,
-              fontWeight: FontWeight.bold,
-              fontSize: 13.5,
-            ),
-          ),
-        ),
+
         Padding(
           padding: const EdgeInsets.only(bottom: 14, left: 8),
           child: Text(
@@ -5238,17 +5196,7 @@ class _InfraCardState extends State<_InfraCard> {
         ),
       ),
       if (finalValue != null) ...[
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4, left: 8),
-          child: Text(
-            'Final Value: ${finalValue!.toStringAsFixed(3)}',
-            style: TextStyle(
-              color: Colors.teal.shade700,
-              fontWeight: FontWeight.bold,
-              fontSize: 13.5,
-            ),
-          ),
-        ),
+
         Padding(
           padding: const EdgeInsets.only(bottom: 14, left: 8),
           child: Text(
@@ -5390,17 +5338,7 @@ class _YesNoCircleState extends State<_YesNoCircle> {
             ),
           ),
           if (widget.showFinal && finalValue != null) ...[
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4, left: 8),
-              child: Text(
-                'Final Value: ${finalValue!.toStringAsFixed(3)}',
-                style: TextStyle(
-                  color: Colors.teal.shade700,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.5,
-                ),
-              ),
-            ),
+
             Padding(
               padding: const EdgeInsets.only(bottom: 14, left: 8),
               child: Text(
@@ -5704,17 +5642,7 @@ class _RatingCircleState extends State<_RatingCircle>
           ),
         ),
         if (finalValue != null) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4, left: 8),
-            child: Text(
-              'Final Value: ${finalValue!.toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
+
           Padding(
             padding: const EdgeInsets.only(bottom: 14, left: 8),
             child: Text(
