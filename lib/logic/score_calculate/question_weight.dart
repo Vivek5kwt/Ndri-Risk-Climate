@@ -155,16 +155,34 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 4.605965244,
     'isPositive': false,
   },
+  '23': {
+    'min': 0,
+    'max': 20,
+    'weight': 3.073021933,
+    'isPositive': false,
+  },
+  '24': {
+    'min': 0.5,
+    'max': 20,
+    'weight': 3.261928395,
+    'isPositive': false,
+  },
+  '25': {
+    'min': 0,
+    'max': 30,
+    'weight': 4.714729009,
+    'isPositive': false,
+  },
+  '26': {
+    'min': 0.5,
+    'max': 40,
+    'weight': 4.537967284,
+    'isPositive': false,
+  },
   '28': {
     'min': 0,
     'max': 36,
     'weight': 5.7398,
-    'isPositive': false,
-  },
-  '26': {
-    'min': 0,
-    'max': 140,
-    'weight': 4.4832,
     'isPositive': false,
   },
   // Exposure indicators
@@ -231,25 +249,25 @@ final Map<String, Map<String, dynamic>> questionParams  = {
   '23_exp': {
     'min': 0,
     'max': 20,
-    'weight': 3.07302,
+    'weight': 3.073021933,
     'isPositive': false,
   },
   '24_exp': {
     'min': 0.5,
     'max': 20,
-    'weight': 3.26193,
+    'weight': 3.261928395,
     'isPositive': false,
   },
   '25_exp': {
     'min': 0,
     'max': 30,
-    'weight': 4.71473,
+    'weight': 4.714729009,
     'isPositive': false,
   },
   '26_exp': {
     'min': 0.5,
     'max': 40,
-    'weight': 4.53797,
+    'weight': 4.537967284,
     'isPositive': false,
   },
   '21_exp': {
