@@ -400,11 +400,12 @@ double? computeFinalValueForInput(String key, String input) {
   if (val == null) {
     if (key == '10') {
       val = mapHouseType(input).toDouble();
-    } else if (key == '20') {
+    } else if (key == '20' || key == '29_exp') {
       if (input.trim().isEmpty) {
         val = 0;
       } else {
-        val = input.split(',').where((e) => e.trim().isNotEmpty).length.toDouble();
+        val =
+            input.split(',').where((e) => e.trim().isNotEmpty).length.toDouble();
       }
     } else {
       return null;
