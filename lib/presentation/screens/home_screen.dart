@@ -4205,7 +4205,10 @@ class _AgCardState extends State<_AgCard> {
                                   padding: const EdgeInsets.only(right: 8),
                                   child: GestureDetector(
                                     onTap: () {
-                                      setState(() => selP.remove(d));
+                                      setState(() {
+                                        selP.remove(d);
+                                        finalValue = computeFinalValueForInput('20', selP.join(','));
+                                      });
                                       context
                                           .read<RiskAssessmentBloc>()
                                           .add(SaveAnswerEvent(
@@ -4230,7 +4233,10 @@ class _AgCardState extends State<_AgCard> {
                                           size: 16,
                                           color: Colors.green.shade700),
                                       onDeleted: () {
-                                        setState(() => selP.remove(d));
+                                        setState(() {
+                                          selP.remove(d);
+                                          finalValue = computeFinalValueForInput('20', selP.join(','));
+                                        });
                                         context
                                             .read<RiskAssessmentBloc>()
                                             .add(SaveAnswerEvent(
@@ -4283,8 +4289,10 @@ class _AgCardState extends State<_AgCard> {
                     final bool selected = selP.contains(label);
                     return GestureDetector(
                       onTap: () {
-                        setState(() =>
-                        selected ? selP.remove(label) : selP.add(label));
+                        setState(() {
+                          selected ? selP.remove(label) : selP.add(label);
+                          finalValue = computeFinalValueForInput('20', selP.join(','));
+                        });
                         context
                             .read<RiskAssessmentBloc>()
                             .add(SaveAnswerEvent('20', selP.join(',')));
