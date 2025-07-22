@@ -137,6 +137,12 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 1.592305378,
     'isPositive': true,
   },
+  '20': {
+    'min': 0,
+    'max': 5,
+    'weight': 1.352507861,
+    'isPositive': true,
+  },
   '28': {
     'min': 0,
     'max': 36,
@@ -364,6 +370,12 @@ double? computeFinalValueForInput(String key, String input) {
   if (val == null) {
     if (key == '10') {
       val = mapHouseType(input).toDouble();
+    } else if (key == '20') {
+      if (input.trim().isEmpty) {
+        val = 0;
+      } else {
+        val = input.split(',').where((e) => e.trim().isNotEmpty).length.toDouble();
+      }
     } else {
       return null;
     }
