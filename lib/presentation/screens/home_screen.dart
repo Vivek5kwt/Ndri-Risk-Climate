@@ -157,6 +157,42 @@ class _HomeScreenState extends State<HomeScreen> {
   final _climateCtrl = PageController();
   int climatePageIdx = 0;
 
+  double _computePerceptionValue() {
+    double sum = 0.0;
+    for (final v in percepVars) {
+      final ans = _getSavedAnswer(v);
+      sum += double.tryParse(ans ?? '0') ?? 0.0;
+    }
+    double val = ((45 - sum) / 45) * 3.259157652;
+    if (val > 3.259157652) val = 3.259157652;
+    if (val < 0) val = 0;
+    return val;
+  }
+
+  double _computeAwarenessValue() {
+    double sum = 0.0;
+    for (final v in awareVars) {
+      final ans = _getSavedAnswer(v);
+      sum += double.tryParse(ans ?? '0') ?? 0.0;
+    }
+    double val = ((36 - sum) / 36) * 2.336440171;
+    if (val > 2.336440171) val = 2.336440171;
+    if (val < 0) val = 0;
+    return val;
+  }
+
+  double _computePreparednessValue() {
+    double sum = 0.0;
+    for (final v in prepVars) {
+      final ans = _getSavedAnswer(v);
+      sum += double.tryParse(ans ?? '0') ?? 0.0;
+    }
+    double val = ((15 - sum) / 14) * 5.852537611;
+    if (val > 5.852537611) val = 5.852537611;
+    if (val < 0) val = 0;
+    return val;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -2634,6 +2670,42 @@ class _HomeScreenState extends State<HomeScreen> {
                         textSize: 12.sp,
                         borderTransparent: true,
                       ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+                      child: Builder(
+                        builder: (_) {
+                          double val;
+                          if (i == 0) {
+                            val = _computePerceptionValue();
+                          } else if (i == 1) {
+                            val = _computeAwarenessValue();
+                          } else {
+                            val = _computePreparednessValue();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Final Value: ${val.toStringAsFixed(3)}',
+                                style: TextStyle(
+                                  color: Colors.teal.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                              Text(
+                                'Accepted Value: ${val.toStringAsFixed(3)}',
+                                style: TextStyle(
+                                  color: Colors.teal.shade700,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13.5,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     ...slice(i)
                         .asMap()
@@ -2648,12 +2720,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               savedAnswer:
                               _getSavedAnswer(e.value.variableNumber),
                               onSave: _saveAnswer,
+                              showFinal: false,
                             )
                                 : _RatingCircle(
                               question: e.value,
                               savedAnswer:
                               _getSavedAnswer(e.value.variableNumber),
                               onSave: _saveAnswer,
+                              showFinal: false,
                             ),
                           ),
                     ),
@@ -3778,7 +3852,7 @@ class _HumanCardState extends State<_HumanCard> {
           child: field,
         ),
         if (extraField != null) extraField!,
-        if (finalValue != null) ...[
+        if (widget.showFinal && finalValue != null) ...[
           Padding(
             padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
             child: Text(
@@ -4125,7 +4199,7 @@ class _AgCardState extends State<_AgCard> {
             },
           ),
         ),
-        if (finalValue != null) ...[
+        if (widget.showFinal && finalValue != null) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 4, left: 8),
             child: Text(
@@ -4619,7 +4693,7 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                 const SizedBox(height: 2),
               ],
             )),
-        if (finalValue != null) ...[
+        if (widget.showFinal && finalValue != null) ...[
           Padding(
             padding: const EdgeInsets.only(bottom: 4, left: 8),
             child: Text(
@@ -5195,11 +5269,13 @@ class _YesNoCircle extends StatefulWidget {
   final QuestionModel question;
   final String? savedAnswer;
   final Future<void> Function(String, dynamic)? onSave;
+  final bool showFinal;
 
   const _YesNoCircle({
     required this.question,
     this.savedAnswer,
     this.onSave,
+    this.showFinal = true,
   });
 
   @override
@@ -5313,7 +5389,7 @@ class _YesNoCircleState extends State<_YesNoCircle> {
               ],
             ),
           ),
-          if (finalValue != null) ...[
+          if (widget.showFinal && finalValue != null) ...[
             Padding(
               padding: const EdgeInsets.only(bottom: 4, left: 8),
               child: Text(
@@ -5395,11 +5471,13 @@ class _RatingCircle extends StatefulWidget {
   final QuestionModel question;
   final String? savedAnswer;
   final Future<void> Function(String, dynamic)? onSave;
+  final bool showFinal;
 
   const _RatingCircle({
     required this.question,
     this.savedAnswer,
     this.onSave,
+    this.showFinal = true,
   });
 
   @override
