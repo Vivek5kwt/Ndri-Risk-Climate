@@ -191,6 +191,18 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 5.739753618,
     'isPositive': false,
   },
+  '34': {
+    'min': 0,
+    'max': 1,
+    'weight': 1.592334687,
+    'isPositive': true,
+  },
+  '35': {
+    'min': 0,
+    'max': 50,
+    'weight': 3.87279524,
+    'isPositive': false,
+  },
   // Exposure indicators
   '7_exp': {
     'min': 0,
