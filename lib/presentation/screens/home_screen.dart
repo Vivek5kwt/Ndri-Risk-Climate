@@ -4400,6 +4400,7 @@ class _IncomeMultiState extends State<_IncomeMulti> {
   ];
 
   late Set<String> sel;
+  double? finalValue;
 
   @override
   void initState() {
@@ -4409,6 +4410,7 @@ class _IncomeMultiState extends State<_IncomeMulti> {
     } else {
       sel = <String>{};
     }
+    finalValue = computeFinalValueForInput('29_exp', sel.join(','));
   }
 
   @override
@@ -4465,7 +4467,11 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                                   padding: const EdgeInsets.only(right: 7),
                                   child: GestureDetector(
                                     onTap: () {
-                                      setState(() => sel.remove(d));
+                                      setState(() {
+                                        sel.remove(d);
+                                        finalValue = computeFinalValueForInput(
+                                            '29_exp', sel.join(','));
+                                      });
                                       context
                                           .read<RiskAssessmentBloc>()
                                           .add(SaveAnswerEvent(
@@ -4490,7 +4496,11 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                                           size: 16,
                                           color: Colors.green.shade700),
                                       onDeleted: () {
-                                        setState(() => sel.remove(d));
+                                        setState(() {
+                                          sel.remove(d);
+                                          finalValue = computeFinalValueForInput(
+                                              '29_exp', sel.join(','));
+                                        });
                                         context
                                             .read<RiskAssessmentBloc>()
                                             .add(SaveAnswerEvent(
@@ -4543,8 +4553,11 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                     final bool selected = sel.contains(label);
                     return GestureDetector(
                       onTap: () {
-                        setState(() =>
-                        selected ? sel.remove(label) : sel.add(label));
+                        setState(() {
+                          selected ? sel.remove(label) : sel.add(label);
+                          finalValue = computeFinalValueForInput(
+                              '29_exp', sel.join(','));
+                        });
                         context
                             .read<RiskAssessmentBloc>()
                             .add(SaveAnswerEvent('29', sel.join(',')));
@@ -4606,6 +4619,30 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                 const SizedBox(height: 2),
               ],
             )),
+        if (finalValue != null) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4, left: 8),
+            child: Text(
+              'Final Value: ${finalValue!.toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14, left: 8),
+            child: Text(
+              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
+              style: TextStyle(
+                color: Colors.teal.shade700,
+                fontWeight: FontWeight.bold,
+                fontSize: 13.5,
+              ),
+            ),
+          ),
+        ],
       ]);
 }
 
