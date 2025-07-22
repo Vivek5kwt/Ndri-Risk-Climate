@@ -203,10 +203,16 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 3.87279524,
     'isPositive': false,
   },
-  '36': {
+  '37': {
     'min': 0,
     'max': 370,
     'weight': 3.837484704,
+    'isPositive': false,
+  },
+  '38': {
+    'min': 0,
+    'max': 49,
+    'weight': 4.407898972,
     'isPositive': false,
   },
   // Exposure indicators
@@ -424,7 +430,7 @@ double? computeFinalValueForInput(String key, String input) {
   if (val == null) {
     if (key == '10') {
       val = mapHouseType(input).toDouble();
-    } else if (key == '20' || key == '29_exp' || key == '36') {
+    } else if (key == '20' || key == '29_exp') {
       if (input.trim().isEmpty) {
         val = 0;
       } else {
@@ -452,12 +458,6 @@ double? computeFinalValueForInput(String key, String input) {
       if (clamped > weight) clamped = weight;
       if (clamped < 0) clamped = 0;
       return clamped;
-    }
-    if (key == '36') {
-      double calc = ((max - val) / max) * weight;
-      if (calc > weight) calc = weight;
-      if (calc < 0) calc = 0;
-      return calc;
     }
     return unweighted * weight;
   }
