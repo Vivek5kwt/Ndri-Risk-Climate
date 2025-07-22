@@ -143,6 +143,18 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 1.352507861,
     'isPositive': true,
   },
+  '21': {
+    'min': 0.5,
+    'max': 25,
+    'weight': 4.399515629,
+    'isPositive': false,
+  },
+  '22': {
+    'min': 0.5,
+    'max': 26,
+    'weight': 4.605965244,
+    'isPositive': false,
+  },
   '28': {
     'min': 0,
     'max': 36,
