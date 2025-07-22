@@ -669,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
       required String dateText,
       required double score,
       required pw.MemoryImage gaugeImage,
-      double width = 460,
+      double width = 520,
       double height = 220,
     }) {
       // Adjust these to match your PNG dimensions and overlay requirements
@@ -682,46 +682,42 @@ class _HomeScreenState extends State<HomeScreen> {
         height: height,
         alignment: pw.Alignment.center,
         child: pw.Stack(
+          alignment: pw.Alignment.center,
           children: [
-            // Gauge background image
-            pw.Positioned.fill(child: pw.Image(gaugeImage, fit: pw.BoxFit.contain)),
-            // 0 label (left)
-            pw.Positioned(
-              left: 30,
-              bottom: 60,
-              child: pw.Text("0", style: pw.TextStyle(fontSize: 22)),
+            pw.Image(
+              gaugeImage,
+              width: width,
+              fit: pw.BoxFit.fitWidth,
             ),
-            // 1 label (right)
-            pw.Positioned(
-              right: 28,
-              bottom: 60,
-              child: pw.Text("1", style: pw.TextStyle(fontSize: 22)),
-            ),
-            // Score (center)
             pw.Positioned(
               left: 0,
-              right: 0,
-              top: 80,
-              child: pw.Center(
-                child: pw.Text(
-                  score.toStringAsFixed(2),
-                  style: pw.TextStyle(fontSize: 40, fontWeight: pw.FontWeight.bold, color: PdfColors.blue),
-                ),
+              right: 10,
+              top: height * 0.33,
+              child: pw.Column(
+                mainAxisSize: pw.MainAxisSize.min,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                children: [
+                  pw.Text(
+                    dateText,
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    score.toStringAsFixed(2),
+                    textAlign: pw.TextAlign.center,
+                    style: pw.TextStyle(
+                      fontSize: 40,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.blue,
+                    ),
+                  ),
+                ],
               ),
             ),
-            // Date (below score)
-            pw.Positioned(
-              left: 0,
-              right: 0,
-              top: 120,
-              child: pw.Center(
-                child: pw.Text(
-                  dateText,
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
-                ),
-              ),
-            ),
-            // Pointer (small filled white circle with black border)
             pw.Positioned(
               left: pointerPos.dx - 10,
               top: pointerPos.dy - 10,
@@ -931,7 +927,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
                           score: double.tryParse(riskScore) ?? 0.0,
                           gaugeImage: rainbowGaugeImage,
-                          width: 460,
+                          width: 520,
                           height: 220,
                         ),
                       ),
@@ -964,25 +960,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
 
-    final double selectedHazard = LocationService().hazardFor(district);
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(20),
-        build: (pw.Context context) {
-          return [
-            pw.Header(level: 0, child: pw.Text('District Hazard Score')),
-            pw.Table.fromTextArray(
-              headers: ['District', 'Score'],
-              data: [
-                [district, selectedHazard.toStringAsFixed(3)]
-              ],
-              cellAlignment: pw.Alignment.centerLeft,
-            ),
-          ];
-        },
-      ),
-    );
 
     Directory downloadsDir;
     if (Platform.isAndroid) {
