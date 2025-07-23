@@ -67,7 +67,7 @@ class QuestionRepository {
       ),
       QuestionModel(
         variableNumber: '11',
-        questionText: 'Experience in animal care (in years)',
+        questionText: 'Experience in animal raring (in years)',
         questionType: QuestionType.vulnerability,
         category: 'Demographic',
       ),
