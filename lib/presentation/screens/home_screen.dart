@@ -676,6 +676,14 @@ class _HomeScreenState extends State<HomeScreen> {
       return 'Very High';
     }
 
+    String exposureLevelFromValue(double v) {
+      if (v < 0.3629) return 'Very Low';
+      if (v < 0.4252) return 'Low';
+      if (v < 0.4670) return 'Medium';
+      if (v < 0.5131) return 'High';
+      return 'Very High';
+    }
+
     PdfColor riskColor(String level) {
       switch (level.toLowerCase()) {
         case 'very low':
@@ -832,6 +840,8 @@ class _HomeScreenState extends State<HomeScreen> {
         build: (pw.Context context) {
           final hazardLevel = hazardLevelFromValue(hazardVal);
           final hazardValueForBar = hazardVal.clamp(0.0, 1.0);
+          final exposureLevel = exposureLevelFromValue(expVal);
+          final exposureValueForBar = expVal.clamp(0.0, 1.0);
 
           return pw.Stack(
             children: [
@@ -948,12 +958,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             double.tryParse(vulnerabilityScore) ?? 0.0)),
                       ),
                       pw.SizedBox(height: 10),
-                      gaugeScore(
+                      imageScoreBarWithArrow(
                         label: '2. Exposure score',
                         score: exposureScore,
-                        value: double.tryParse(exposureScore) ?? 0.0,
-                        color: riskColor(hazardLevelFromValue(
-                            double.tryParse(exposureScore) ?? 0.0)),
+                        value: exposureValueForBar,
+                        barImage: barImage,
+                        pointerImage: pointerArrowImage,
+                        level: exposureLevel,
+                        levelColor: riskColor(exposureLevel),
                       ),
                       pw.SizedBox(height: 10),
                       imageScoreBarWithArrow(
