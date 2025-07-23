@@ -4711,8 +4711,16 @@ class _LivCardState extends State<_LivCard> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
-    finalValue = computeFinalValueForInput(
-        widget.question.variableNumber, _ctrl.text);
+    final v = widget.question.variableNumber;
+    if (v == '31') {
+      final ans = context.read<RiskAssessmentBloc>().state.answers['30'];
+      final total = double.tryParse(ans ?? '') ?? 0.0;
+      final perc = double.tryParse(_ctrl.text) ?? 0.0;
+      final computed = total * perc / 100.0;
+      finalValue = computeFinalValueForInput('31', computed.toString());
+    } else {
+      finalValue = computeFinalValueForInput(v, _ctrl.text);
+    }
   }
 
   @override
@@ -4758,8 +4766,17 @@ class _LivCardState extends State<_LivCard> {
           ),
           keyboardType: TextInputType.number,
           onChanged: (txt) {
-            setState(() =>
-            finalValue = computeFinalValueForInput(v, txt));
+            setState(() {
+              if (v == '31') {
+                final ans = context.read<RiskAssessmentBloc>().state.answers['30'];
+                final total = double.tryParse(ans ?? '') ?? 0.0;
+                final perc = double.tryParse(txt) ?? 0.0;
+                final computed = total * perc / 100.0;
+                finalValue = computeFinalValueForInput('31', computed.toString());
+              } else {
+                finalValue = computeFinalValueForInput(v, txt);
+              }
+            });
             context
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, txt));
