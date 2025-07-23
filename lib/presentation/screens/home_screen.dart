@@ -652,6 +652,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final pointerArrowImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
+    final gaugePointerImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/pointer.png')).buffer.asUint8List(),
+    );
     final gaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
     );
@@ -713,12 +716,15 @@ class _HomeScreenState extends State<HomeScreen> {
       required String dateText,
       required double score,
       required pw.MemoryImage gaugeImage,
-      double width = 520,
+      required pw.MemoryImage pointerImage,
+      double width = 540,
       double height = 220,
+      double pointerSize = 20,
     }) {
       // Adjust these to match your PNG dimensions and overlay requirements
       final gaugeCenter = Offset(width / 2, height - 52);
       final arcRadius = width * 0.38; // adjust for best pointer fit
+      final pointerAngle = pi + value * pi;
       final pointerPos = _calcPointer(value, gaugeCenter.dx, gaugeCenter.dy, arcRadius);
 
       return pw.Container(
@@ -728,10 +734,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: pw.Stack(
           alignment: pw.Alignment.center,
           children: [
-            pw.Image(
-              gaugeImage,
-              width: width,
-              fit: pw.BoxFit.fitWidth,
+            pw.Padding(padding: pw.EdgeInsets.only(left: 12),
+            child:
+          pw.Image(
+          gaugeImage,
+          width: width,
+          fit: pw.BoxFit.fitWidth,
+        ),
             ),
             pw.Positioned(
               left: 0,
@@ -763,15 +772,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             pw.Positioned(
-              left: pointerPos.dx - 10,
-              top: pointerPos.dy - 10,
-              child: pw.Container(
-                width: 20,
-                height: 20,
-                decoration: pw.BoxDecoration(
-                  color: PdfColors.white,
-                  shape: pw.BoxShape.circle,
-                  border: pw.Border.all(color: PdfColors.black, width: 2),
+              left: pointerPos.dx - pointerSize / 2,
+              top: pointerPos.dy - pointerSize / 2,
+              child: pw.Transform.rotate(
+                angle: pointerAngle,
+                alignment: pw.Alignment.center,
+                child: pw.Image(
+                  pointerImage,
+                  width: pointerSize,
+                  height: pointerSize,
                 ),
               ),
             ),
@@ -991,11 +1000,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       pw.SizedBox(height: 10),
                       pw.Center(
                         child: gaugeWithOverlay(
-                          value: double.tryParse(riskScore) ?? 0.0,
+                          pointerSize: 20,
+                          value: double.tryParse(riskScore) ?? 50.0,
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
-                          score: double.tryParse(riskScore) ?? 0.0,
+                          score: double.tryParse(riskScore) ?? 50.0,
                           gaugeImage: rainbowGaugeImage,
-                          width: 520,
+                          pointerImage: gaugePointerImage,
+                          width: 500,
                           height: 220,
                         ),
                       ),
