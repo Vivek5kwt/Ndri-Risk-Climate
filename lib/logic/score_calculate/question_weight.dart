@@ -488,8 +488,107 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
 double computeVulnerabilityScore(Map<String, String> ans) =>
     computeScore(ans, vulnerabilityKeys);
 
-double computeExposureScore(Map<String, String> ans) =>
-    computeScore(ans, exposureKeys);
+const double _exposureTotalWeight = 54.10716636;
+
+/// Order in which exposure values should be listed when returning
+/// details for debugging. The keys map to the internal question keys
+/// used in [questionParams].
+const List<String> _orderedExposureKeys = [
+  '7_exp',
+  '8_exp',
+  '6_exp',
+  '4_exp',
+  '9_exp',
+  '19_exp',
+  '34_exp',
+  '20_exp',
+  '29_exp',
+  '10_exp',
+  '23_exp',
+  '24_exp',
+  '25_exp',
+  '26_exp',
+  '21_exp',
+  '22_exp',
+];
+
+/// Labels corresponding to [_orderedExposureKeys] so callers can
+/// display the accepted value for each question.
+const Map<String, String> _exposureLabels = {
+  '7_exp': 'Q7',
+  '8_exp': 'Q8',
+  '6_exp': 'Q6',
+  '4_exp': 'Q4',
+  '9_exp': 'Q9',
+  '19_exp': 'Q19',
+  '34_exp': 'Q34',
+  '20_exp': 'Q20',
+  '29_exp': 'Q29',
+  '10_exp': 'Q10',
+  '23_exp': 'Q23',
+  '24_exp': 'Q24',
+  '25_exp': 'Q25',
+  '26_exp': 'Q26',
+  '21_exp': 'Q21',
+  '22_exp': 'Q22',
+  'bw6': 'BW6',
+  'ci6': 'CI6',
+  'cu6': 'CU6',
+};
+
+double computeExposureScore(Map<String, String> ans) {
+  final details = computeExposureDetails(ans);
+  return details['score'] ?? 0.0;
+}
+
+/// Returns a map containing the raw sum of weighted exposure values,
+/// the total weight of all exposure questions and the final exposure
+/// score (sum divided by total weight).
+Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
+  double sum = 0.0;
+  final Map<String, double> values = {};
+  for (final k in _orderedExposureKeys) {
+    if (!questionParams.containsKey(k)) continue;
+    final v = _calcFor(k, ans);
+    values[_exposureLabels[k] ?? k] = v;
+    sum += v;
+  }
+  // Add aggregated exposure values derived from livestock questions
+  final bw6 = _aggregateExposure({
+    '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
+  }, 7, 1.620113125, ans);
+  values[_exposureLabels['bw6']!] = bw6;
+  sum += bw6;
+  final ci6 = _aggregateExposure({
+    '18.1', '18.2', '18.3', '18.4', '18.5', '18.6'
+  }, 8, 2.189443127, ans);
+  values[_exposureLabels['ci6']!] = ci6;
+  sum += ci6;
+  final cu6 = _aggregateExposure({
+    '18.13', '18.14', '18.15', '18.16', '18.17', '18.18'
+  }, 8, 3.712540828, ans);
+  values[_exposureLabels['cu6']!] = cu6;
+  sum += cu6;
+  final score = _exposureTotalWeight == 0 ? 0.0 : sum / _exposureTotalWeight;
+  return {
+    'sum': sum,
+    'weight': _exposureTotalWeight,
+    'score': score,
+    'values': values,
+  };
+}
+
+double _aggregateExposure(Set<String> keys, double max, double weight,
+    Map<String, String> ans) {
+  double input = 0.0;
+  for (final k in keys) {
+    input += double.tryParse(ans[k] ?? '') ?? 0.0;
+  }
+  double value = ((max - input) / max) * weight;
+  if (value > weight) value = weight;
+  if (value < 0) value = 0;
+  return value;
+}
 
 double? computeFinalValueForInput(String key, String input) {
   double? val = double.tryParse(input);
