@@ -652,9 +652,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final pointerArrowImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
-    final gaugePointerImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/pointer.png')).buffer.asUint8List(),
-    );
     final gaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
     );
@@ -704,12 +701,6 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    // Utility to calculate the pointer position (angle) for the value (0..1)
-    Offset _calcPointer(double value, double centerX, double centerY, double radius) {
-      final angle = pi + value * pi; // Left is 0, right is 1
-      final r = radius;
-      return Offset(centerX + r * cos(angle), centerY + r * sin(angle));
-    }
 
     pw.Widget gaugeWithOverlay({
       required double value, // 0..1
@@ -723,9 +714,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }) {
       // Adjust these to match your PNG dimensions and overlay requirements
       final gaugeCenter = Offset(width / 2, height - 52);
-      final arcRadius = width * 0.38; // adjust for best pointer fit
       final pointerAngle = pi + value * pi;
-      final pointerPos = _calcPointer(value, gaugeCenter.dx, gaugeCenter.dy, arcRadius);
+      final pointerPos = gaugeCenter; // place pointer at center of gauge
 
       return pw.Container(
         width: width,
@@ -1005,7 +995,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
                           score: double.tryParse(riskScore) ?? 50.0,
                           gaugeImage: rainbowGaugeImage,
-                          pointerImage: gaugePointerImage,
+                          pointerImage: pointerArrowImage,
                           width: 500,
                           height: 220,
                         ),
