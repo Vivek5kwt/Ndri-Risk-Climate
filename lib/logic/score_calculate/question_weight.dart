@@ -393,9 +393,9 @@ final Set<String> vulnerabilityKeys = {
 };
 
 final Set<String> exposureKeys = {
-  '7_exp', '8_exp', '6_exp', '4_exp', '9_exp',
-  '19_exp', '34_exp', '20_exp', '29_exp', '10_exp',
-  '23_exp', '24_exp', '25_exp', '26_exp', '21_exp', '22_exp'
+  '7', '8', '6', '4', '9',
+  '19', '34', '20', '29', '10',
+  '23', '24', '25', '26', '21', '22'
 };
 
 double _parseAnswer(String key, Map<String, String> ans) {
@@ -488,8 +488,186 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
 double computeVulnerabilityScore(Map<String, String> ans) =>
     computeScore(ans, vulnerabilityKeys);
 
-double computeExposureScore(Map<String, String> ans) =>
-    computeScore(ans, exposureKeys);
+const double _exposureTotalWeight = 54.10716636;
+
+/// Order in which exposure values should be listed when returning
+/// details for debugging. The keys map to the internal question keys
+/// used in [questionParams].
+const List<String> _orderedExposureKeys = [
+  '7',
+  '8',
+  '6',
+  '4',
+  '9',
+  '19',
+  '34',
+  '20',
+  '29',
+  '10',
+  '23',
+  '24',
+  '25',
+  '26',
+  '21',
+  '22',
+];
+
+/// Map from exposure question key to the parameter key used in
+/// [questionParams]. Most exposure questions share the same key for
+/// both the answer and parameter lookup except question 29 which uses
+/// `29_exp` internally.
+const Map<String, String> _exposureParamKeys = {
+  '7': '7_exp',
+  '8': '8_exp',
+  '6': '6_exp',
+  '4': '4_exp',
+  '9': '9_exp',
+  '19': '19_exp',
+  '34': '34_exp',
+  '20': '20_exp',
+  '29': '29_exp',
+  '10': '10_exp',
+  '23': '23_exp',
+  '24': '24_exp',
+  '25': '25_exp',
+  '26': '26_exp',
+  '21': '21_exp',
+  '22': '22_exp',
+};
+
+/// Labels corresponding to [_orderedExposureKeys] so callers can
+/// display the accepted value for each question.
+const Map<String, String> _exposureLabels = {
+  '7': 'Q7',
+  '8': 'Q8',
+  '6': 'Q6',
+  '4': 'Q4',
+  '9': 'Q9',
+  '19': 'Q19',
+  '34': 'Q34',
+  '20': 'Q20',
+  '29': 'Q29',
+  '10': 'Q10',
+  '23': 'Q23',
+  '24': 'Q24',
+  '25': 'Q25',
+  '26': 'Q26',
+  '21': 'Q21',
+  '22': 'Q22',
+  'bw6': 'BW6',
+  'ci6': 'CI6',
+  'cu6': 'CU6',
+};
+
+/// Weights used for livestock unit calculations when aggregating
+/// exposure values from individual animal counts.
+const Map<String, double> _livestockWeights = {
+  '18.1': 1.0,
+  '18.2': 0.8,
+  '18.3': 0.65,
+  '18.4': 0.4,
+  '18.5': 1.0,
+  '18.6': 1.26,
+  '18.7': 1.19,
+  '18.8': 0.85,
+  '18.9': 0.85,
+  '18.10': 0.48,
+  '18.11': 1.19,
+  '18.12': 1.26,
+  '18.13': 1.26,
+  '18.14': 1.01,
+  '18.15': 1.26,
+  '18.16': 0.5,
+  '18.17': 1.26,
+  '18.18': 1.26,
+};
+
+double computeExposureScore(Map<String, String> ans) {
+  final details = computeExposureDetails(ans);
+  return details['score'] ?? 0.0;
+}
+
+/// Returns a map containing the raw sum of weighted exposure values,
+/// the total weight of all exposure questions and the final exposure
+/// score (sum divided by total weight).
+Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
+  double sum = 0.0;
+  final Map<String, double> values = {};
+  for (final k in _orderedExposureKeys) {
+    final v = _calcExposure(k, ans);
+    values[_exposureLabels[k] ?? k] = v;
+    sum += v;
+  }
+  // Add aggregated exposure values derived from livestock questions
+  final bw6 = _aggregateExposure({
+    '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
+  }, 7, 1.620113125, ans, _livestockWeights);
+  values[_exposureLabels['bw6']!] = bw6;
+  sum += bw6;
+  final ci6 = _aggregateExposure({
+    '18.1', '18.2', '18.3', '18.4', '18.5', '18.6'
+  }, 8, 2.189443127, ans, _livestockWeights);
+  values[_exposureLabels['ci6']!] = ci6;
+  sum += ci6;
+  final cu6 = _aggregateExposure({
+    '18.13', '18.14', '18.15', '18.16', '18.17', '18.18'
+  }, 8, 3.712540828, ans, _livestockWeights);
+  values[_exposureLabels['cu6']!] = cu6;
+  sum += cu6;
+  final score = _exposureTotalWeight == 0 ? 0.0 : sum / _exposureTotalWeight;
+  return {
+    'sum': sum,
+    'weight': _exposureTotalWeight,
+    'score': score,
+    'values': values,
+  };
+}
+
+double _aggregateExposure(Set<String> keys, double max, double weight,
+    Map<String, String> ans, Map<String, double>? weights) {
+  double input = 0.0;
+  for (final k in keys) {
+    double val = double.tryParse(ans[k] ?? '') ?? 0.0;
+    if (weights != null && weights.containsKey(k)) {
+      val *= weights[k]!;
+    }
+    input += val;
+  }
+  double value = ((max - input) / max) * weight;
+  if (value > weight) value = weight;
+  if (value < 0) value = 0;
+  return value;
+}
+
+double _calcExposure(String key, Map<String, String> ans) {
+  final paramKey = _exposureParamKeys[key] ?? key;
+  if (!questionParams.containsKey(paramKey)) return 0.0;
+  String? raw = ans[key];
+  double? input = double.tryParse(raw ?? '');
+  if (input == null) {
+    if (key == '10') {
+      input = mapHouseType(raw ?? '').toDouble();
+    } else if (key == '20' || key == '29') {
+      if (raw == null || raw.trim().isEmpty) {
+        input = 0.0;
+      } else {
+        input = raw.split(',').where((e) => e.trim().isNotEmpty).length.toDouble();
+      }
+    } else {
+      input = 0.0;
+    }
+  }
+  final p = questionParams[paramKey]!;
+  final min = p['min'] as num;
+  final max = p['max'] as num;
+  final weight = p['weight'] as double;
+  final isPositive = p['isPositive'] as bool;
+  double norm = max == min ? 0.0 : ((input - min) / (max - min));
+  if (norm < 0.0) norm = 0.0;
+  if (norm > 1.0) norm = 1.0;
+  double value = (isPositive ? norm : (1 - norm)) * weight;
+  return value;
+}
 
 double? computeFinalValueForInput(String key, String input) {
   double? val = double.tryParse(input);
