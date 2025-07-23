@@ -488,8 +488,61 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
 double computeVulnerabilityScore(Map<String, String> ans) =>
     computeScore(ans, vulnerabilityKeys);
 
-double computeExposureScore(Map<String, String> ans) =>
-    computeScore(ans, exposureKeys);
+const double _exposureTotalWeight = 54.10716636;
+
+double computeExposureScore(Map<String, String> ans) {
+  final details = computeExposureDetails(ans);
+  return details['score'] ?? 0.0;
+}
+
+/// Returns a map containing the raw sum of weighted exposure values,
+/// the total weight of all exposure questions and the final exposure
+/// score (sum divided by total weight).
+Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
+  double sum = 0.0;
+  final List<double> values = [];
+  for (final k in exposureKeys) {
+    if (!questionParams.containsKey(k)) continue;
+    final v = _calcFor(k, ans);
+    values.add(v);
+    sum += v;
+  }
+  // Add aggregated exposure values derived from livestock questions
+  final bw6 = _aggregateExposure({
+    '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
+  }, 7, 1.620113125, ans);
+  values.add(bw6);
+  sum += bw6;
+  final ci6 = _aggregateExposure({
+    '18.1', '18.2', '18.3', '18.4', '18.5', '18.6'
+  }, 8, 2.189443127, ans);
+  values.add(ci6);
+  sum += ci6;
+  final cu6 = _aggregateExposure({
+    '18.13', '18.14', '18.15', '18.16', '18.17', '18.18'
+  }, 8, 3.712540828, ans);
+  values.add(cu6);
+  sum += cu6;
+  final score = _exposureTotalWeight == 0 ? 0.0 : sum / _exposureTotalWeight;
+  return {
+    'sum': sum,
+    'weight': _exposureTotalWeight,
+    'score': score,
+    'values': values,
+  };
+}
+
+double _aggregateExposure(Set<String> keys, double max, double weight,
+    Map<String, String> ans) {
+  double input = 0.0;
+  for (final k in keys) {
+    input += double.tryParse(ans[k] ?? '') ?? 0.0;
+  }
+  double value = ((max - input) / max) * weight;
+  if (value > weight) value = weight;
+  if (value < 0) value = 0;
+  return value;
+}
 
 double? computeFinalValueForInput(String key, String input) {
   double? val = double.tryParse(input);
