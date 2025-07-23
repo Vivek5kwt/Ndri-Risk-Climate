@@ -787,7 +787,15 @@ class _HomeScreenState extends State<HomeScreen> {
     String village = villageCtrl.text.trim();
 
     final answers = _localAnswers.map((k, v) => MapEntry(k, v.toString()));
-    final vulnVal = computeVulnerabilityScore(answers);
+    // Compute and log vulnerability values similar to exposure
+    final vulnDetails = computeVulnerabilityDetails(answers);
+    final vulnVal = vulnDetails['score'] as double;
+    final vulnMap = vulnDetails['values'] as Map<String, double>;
+    final vulnValuesStr = vulnMap.values.map((e) => e.toString()).join(' + ');
+    print('Vulnerability values -> $vulnValuesStr');
+    print(
+        'Vulnerability details -> sum: ${vulnDetails['sum']!.toStringAsFixed(2)}, weight: ${vulnDetails['weight']!.toStringAsFixed(2)}, score: ${vulnDetails['score']!.toStringAsFixed(2)}');
+
     final expDetails = computeExposureDetails(answers);
     final expVal = expDetails['score'] as double;
     final valMap = expDetails['values'] as Map<String, double>;
@@ -797,6 +805,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('Exposure values -> $valuesStr');
     print(
         'Exposure details -> sum: ${expDetails['sum']!.toStringAsFixed(2)}, weight: ${expDetails['weight']!.toStringAsFixed(2)}, score: ${expDetails['score']!.toStringAsFixed(2)}');
+
     String vulnerabilityScore = vulnVal.toStringAsFixed(2);
     String exposureScore = expVal.toStringAsFixed(2);
     String getTotalScore = asFixed(vulnerabilityScore).toString() + asFixed(exposureScore);
