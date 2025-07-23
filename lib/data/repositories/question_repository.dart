@@ -31,7 +31,7 @@ class QuestionRepository {
       QuestionModel(
         variableNumber: '5',
         questionText: 'Number of working members in the family',
-        questionType: QuestionType.exposure,
+        questionType: QuestionType.vulnerability,
         category: 'Demographic',
       ),
       QuestionModel(
