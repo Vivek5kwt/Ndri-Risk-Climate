@@ -485,8 +485,46 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
   return sum / wSum;
 }
 
-double computeVulnerabilityScore(Map<String, String> ans) =>
-    computeScore(ans, vulnerabilityKeys);
+/// Computes the final vulnerability score. The score is derived from
+/// the accepted values of all vulnerability questions and normalised
+/// by [_vulnerabilityTotalWeight].
+double computeVulnerabilityScore(Map<String, String> ans) {
+  final details = computeVulnerabilityDetails(ans);
+  return details['score'] ?? 0.0;
+}
+
+/// Total weight of all vulnerability questions. This value is treated
+/// as static for now.
+const double _vulnerabilityTotalWeight = 123.06;
+
+/// Order in which vulnerability values should be listed when returning
+/// details for debugging. The keys map to the internal question keys
+/// used in [questionParams].
+const List<String> _orderedVulnerabilityKeys = [
+  '2',
+  '13',
+  '15',
+  '18',
+  '18.1',
+  '18.8',
+  '18.14',
+  '28',
+  '26',
+];
+
+/// Labels corresponding to [_orderedVulnerabilityKeys] so callers can
+/// display the accepted value for each question.
+const Map<String, String> _vulnerabilityLabels = {
+  '2': 'Q2',
+  '13': 'Q13',
+  '15': 'Q15',
+  '18': 'Q18',
+  '18.1': 'Q18.1',
+  '18.8': 'Q18.8',
+  '18.14': 'Q18.14',
+  '28': 'Q28',
+  '26': 'Q26',
+};
 
 const double _exposureTotalWeight = 54.10716636;
 
@@ -618,6 +656,28 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   return {
     'sum': sum,
     'weight': _exposureTotalWeight,
+    'score': score,
+    'values': values,
+  };
+}
+
+/// Returns a map containing the raw sum of weighted vulnerability values,
+/// the total weight of all vulnerability questions and the final
+/// vulnerability score (sum divided by total weight).
+Map<String, dynamic> computeVulnerabilityDetails(Map<String, String> ans) {
+  double sum = 0.0;
+  final Map<String, double> values = {};
+  for (final k in _orderedVulnerabilityKeys) {
+    final v = _calcFor(k, ans);
+    values[_vulnerabilityLabels[k] ?? k] = v;
+    sum += v;
+  }
+  final score = _vulnerabilityTotalWeight == 0
+      ? 0.0
+      : sum / _vulnerabilityTotalWeight;
+  return {
+    'sum': sum,
+    'weight': _vulnerabilityTotalWeight,
     'score': score,
     'values': values,
   };
