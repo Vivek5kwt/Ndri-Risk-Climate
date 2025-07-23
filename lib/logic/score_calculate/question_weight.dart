@@ -488,8 +488,31 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
 double computeVulnerabilityScore(Map<String, String> ans) =>
     computeScore(ans, vulnerabilityKeys);
 
-double computeExposureScore(Map<String, String> ans) =>
-    computeScore(ans, exposureKeys);
+const double _exposureTotalWeight = 54.10716636;
+
+double computeExposureScore(Map<String, String> ans) {
+  final details = computeExposureDetails(ans);
+  return details['score'] ?? 0.0;
+}
+
+/// Returns a map containing the raw sum of weighted exposure values,
+/// the total weight of all exposure questions and the final exposure
+/// score (sum divided by total weight).
+Map<String, double> computeExposureDetails(Map<String, String> ans) {
+  double sum = 0.0;
+  for (final k in exposureKeys) {
+    if (!questionParams.containsKey(k)) continue;
+    sum += _calcFor(k, ans);
+  }
+  final score = _exposureTotalWeight == 0
+      ? 0.0
+      : sum / _exposureTotalWeight;
+  return {
+    'sum': sum,
+    'weight': _exposureTotalWeight,
+    'score': score,
+  };
+}
 
 /// Returns a map containing the raw sum of weighted exposure values,
 /// the total weight of all exposure questions and the final exposure
