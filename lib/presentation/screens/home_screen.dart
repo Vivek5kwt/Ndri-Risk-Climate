@@ -4712,12 +4712,12 @@ class _LivCardState extends State<_LivCard> {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
     final v = widget.question.variableNumber;
-    if (v == '31') {
+    if (v == '31' || v == '32' || v == '33') {
       final ans = context.read<RiskAssessmentBloc>().state.answers['30'];
       final total = double.tryParse(ans ?? '') ?? 0.0;
       final perc = double.tryParse(_ctrl.text) ?? 0.0;
       final computed = total * perc / 100.0;
-      finalValue = computeFinalValueForInput('31', computed.toString());
+      finalValue = computeFinalValueForInput(v, computed.toString());
     } else {
       finalValue = computeFinalValueForInput(v, _ctrl.text);
     }
@@ -4767,12 +4767,12 @@ class _LivCardState extends State<_LivCard> {
           keyboardType: TextInputType.number,
           onChanged: (txt) {
             setState(() {
-              if (v == '31') {
+              if (v == '31' || v == '32' || v == '33') {
                 final ans = context.read<RiskAssessmentBloc>().state.answers['30'];
                 final total = double.tryParse(ans ?? '') ?? 0.0;
                 final perc = double.tryParse(txt) ?? 0.0;
                 final computed = total * perc / 100.0;
-                finalValue = computeFinalValueForInput('31', computed.toString());
+                finalValue = computeFinalValueForInput(v, computed.toString());
               } else {
                 finalValue = computeFinalValueForInput(v, txt);
               }
