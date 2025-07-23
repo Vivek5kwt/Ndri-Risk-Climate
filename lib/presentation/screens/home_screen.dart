@@ -780,6 +780,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final vulnVal = computeVulnerabilityScore(st.answers);
     final expVal = computeExposureScore(st.answers);
+    final expDetails = computeExposureDetails(st.answers);
+    print(
+        'Exposure details -> sum: ${expDetails['sum']!.toStringAsFixed(2)}, weight: ${expDetails['weight']!.toStringAsFixed(2)}, score: ${expDetails['score']!.toStringAsFixed(2)}');
     String vulnerabilityScore = vulnVal.toStringAsFixed(2);
     String exposureScore = expVal.toStringAsFixed(2);
     String getTotalScore = asFixed(vulnerabilityScore).toString() + asFixed(exposureScore);
