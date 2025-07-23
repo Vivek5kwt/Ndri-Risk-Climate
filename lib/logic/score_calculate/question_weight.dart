@@ -191,6 +191,12 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 5.739753618,
     'isPositive': false,
   },
+  '31': {
+    'min': 0,
+    'max': 5885600,
+    'weight': 7.779105961,
+    'isPositive': false,
+  },
   '34': {
     'min': 0,
     'max': 1,
@@ -430,6 +436,10 @@ double _calcFor(String key, Map<String, String> ans) {
       });
       input = sum;
     }
+  } else if (key == '31') {
+    final total = _parseAnswer('30', ans);
+    final percent = _parseAnswer('31', ans);
+    input = total * percent / 100.0;
   }
   final min = p['min'] as num;
   final max = p['max'] as num;
