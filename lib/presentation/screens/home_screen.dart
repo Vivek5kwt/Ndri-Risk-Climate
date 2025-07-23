@@ -735,7 +735,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             pw.Positioned(
               left: 0,
-              right: 10,
+              right: 0,
               top: height * 0.33,
               child: pw.Column(
                 mainAxisSize: pw.MainAxisSize.min,
