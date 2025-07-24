@@ -73,6 +73,14 @@ class ReportGenerator {
       return 'Very High';
     }
 
+    String vulnerabilityLevelFromValue(double v) {
+      if (v < 0.6228) return 'Very Low';
+      if (v < 0.7023) return 'Low';
+      if (v < 0.7486) return 'Medium';
+      if (v < 0.7813) return 'High';
+      return 'Very High';
+    }
+
     PdfColor riskColor(String level) {
       switch (level.toLowerCase()) {
         case 'very low':
@@ -142,12 +150,41 @@ class ReportGenerator {
     // Log vulnerability values used in score calculation with question numbers
     final vulnValues = Map<String, double>.from(
         vulnDetails['values'] as Map<String, dynamic>);
+    final vulnSum = vulnDetails['sum'] as double;
+    final vulnWeight = vulnDetails['weight'] as double;
     int _idx = 1;
     print('Vulnerability calculation details:');
     vulnValues.forEach((label, value) {
-      print('$_idx. $label: ${value.toStringAsFixed(2)}');
+      // Print raw accepted value without rounding so users can see the
+      // precise contribution from each question.
+      print('$_idx. $label: $value');
       _idx++;
     });
+
+    // Additional accepted values for the key vulnerability questions
+    const selectedLabels = [
+      'Q5',
+      'Q3',
+      'Q11',
+      'Q16',
+      'Q17',
+      'Q35',
+      'Q37',
+      'Q38',
+      'Q45',
+      'Q46',
+      'Q47',
+    ];
+    print('Accepted values for selected questions:');
+    for (final label in selectedLabels) {
+      final value = vulnValues[label];
+      if (value != null) {
+        print('$label: $value');
+      }
+    }
+
+    // Vulnerability sum and weight
+    print('Vulnerability sum: $vulnSum, weight: $vulnWeight');
 
     final expDetails = computeExposureDetails(formattedAnswers);
     final expVal = expDetails['score'] as double;
@@ -313,11 +350,12 @@ class ReportGenerator {
                       value: double.tryParse(vulnerabilityScore) ?? 0.0,
                       barImage: barImage,
                       pointerImage: pointerArrowImage,
-                      level: hazardLevelFromValue(
+                      level: vulnerabilityLevelFromValue(
                           double.tryParse(vulnerabilityScore) ?? 0.0),
-                      levelColor: riskColor(hazardLevelFromValue(
+                      levelColor: riskColor(vulnerabilityLevelFromValue(
                           double.tryParse(vulnerabilityScore) ?? 0.0)),
                     ),
+                    pw.SizedBox(height: 4),
                     pw.SizedBox(height: 10),
                     ReportGenerator.imageScoreBarWithArrow(
                       label: '2. Exposure score',
@@ -493,6 +531,50 @@ class ReportGenerator {
         shape: pw.BoxShape.circle,
         border: pw.Border.all(color: PdfColors.blue, width: 2),
       ),
+    );
+  }
+
+  static pw.Widget vulnerabilityCategoriesTable() {
+    const headers = ['Category', 'Score range'];
+    const data = [
+      ['Very Low', '0.3967 - 0.6227'],
+      ['Low', '0.6228 - 0.7022'],
+      ['Medium', '0.7023 - 0.7485'],
+      ['High', '0.7486 - 0.7812'],
+      ['Very High', '0.7813 - 0.8565'],
+    ];
+    return pw.Table(
+      defaultVerticalAlignment: pw.TableCellVerticalAlignment.middle,
+      border: pw.TableBorder.all(color: PdfColors.grey, width: 0.5),
+      children: [
+        pw.TableRow(
+          children: headers
+              .map((h) => pw.Padding(
+            padding: const pw.EdgeInsets.all(2),
+            child: pw.Text(
+              h,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
+          ))
+              .toList(),
+        ),
+        ...data.map(
+              (row) => pw.TableRow(
+            children: row
+                .map((cell) => pw.Padding(
+              padding: const pw.EdgeInsets.all(2),
+              child: pw.Text(
+                cell,
+                style: const pw.TextStyle(fontSize: 10),
+              ),
+            ))
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 }

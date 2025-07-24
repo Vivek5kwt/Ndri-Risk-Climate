@@ -409,9 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: const Text(
                           "Continue",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.5,
-                            color: Colors.white
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.5,
+                              color: Colors.white
                           ),
                         ),
                       ),
@@ -3301,6 +3301,12 @@ class _AgCardState extends State<_AgCard> {
 
     if (v == '13.1' || v == '13.2' || v == '13.3') {
       _landAnswers[v] = input;
+
+      // Save the raw value for each sub-question so that the report
+      // generator can display accepted values for Q13.1, Q13.2 and
+      // Q13.3 individually.
+      bloc.add(SaveAnswerEvent(v, input));
+      widget.onSave?.call(v, input);
 
       final owned = double.tryParse(_landAnswers['13.1'] ?? '') ?? 0.0;
       final leasedIn = double.tryParse(_landAnswers['13.2'] ?? '') ?? 0.0;

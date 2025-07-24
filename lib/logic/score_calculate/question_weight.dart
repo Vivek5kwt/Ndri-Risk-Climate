@@ -389,7 +389,36 @@ int mapHouseType(String val) {
 
 // Keys for vulnerability and exposure questions used in score calculation
 final Set<String> vulnerabilityKeys = {
-  '2', '13', '15', '18', '18.1', '18.8', '18.14', '28', '26'
+  '2',
+  '13',
+  '15',
+  '18',
+  '18.1',
+  '18.8',
+  '18.14',
+  '28',
+  '5',
+  '3',
+  '11',
+  '16',
+  '17',
+  '35',
+  '37',
+  '38',
+  '13.1',
+  '27',
+  '31',
+  '32',
+  '33',
+  '39',
+  '40',
+  '41',
+  '42',
+  '43',
+  '44',
+  '45',
+  '46',
+  '47',
 };
 
 final Set<String> exposureKeys = {
@@ -465,6 +494,12 @@ double _calcFor(String key, Map<String, String> ans) {
   final max = p['max'] as num;
   final weight = p['weight'] as double;
   final isPositive = p['isPositive'] as bool;
+  if (key == '35') {
+    double calc = (max - input) / (max - min);
+    if (calc > weight) calc = weight;
+    if (calc < 0) calc = 0;
+    return calc;
+  }
   double norm = max == min ? 0.0 : ((input - min) / (max - min));
   if (norm < 0.0) norm = 0.0;
   if (norm > 1.0) norm = 1.0;
@@ -495,7 +530,7 @@ double computeVulnerabilityScore(Map<String, String> ans) {
 
 /// Total weight of all vulnerability questions. This value is treated
 /// as static for now.
-const double _vulnerabilityTotalWeight = 123.06;
+const double _vulnerabilityTotalWeight = 123.06090413954159;
 
 /// Order in which vulnerability values should be listed when returning
 /// details for debugging. The keys map to the internal question keys
@@ -509,7 +544,28 @@ const List<String> _orderedVulnerabilityKeys = [
   '18.8',
   '18.14',
   '28',
-  '26',
+  '5',
+  '3',
+  '11',
+  '16',
+  '17',
+  '35',
+  '37',
+  '38',
+  '13.1',
+  '27',
+  '31',
+  '32',
+  '33',
+  '39',
+  '40',
+  '41',
+  '42',
+  '43',
+  '44',
+  '45',
+  '46',
+  '47',
 ];
 
 /// Labels corresponding to [_orderedVulnerabilityKeys] so callers can
@@ -523,7 +579,28 @@ const Map<String, String> _vulnerabilityLabels = {
   '18.8': 'Q18.8',
   '18.14': 'Q18.14',
   '28': 'Q28',
-  '26': 'Q26',
+  '5': 'Q5',
+  '3': 'Q3',
+  '11': 'Q11',
+  '16': 'Q16',
+  '17': 'Q17',
+  '35': 'Q35',
+  '37': 'Q37',
+  '38': 'Q38',
+  '13.1': 'Q13.1',
+  '27': 'Q27',
+  '31': 'Q31',
+  '32': 'Q32',
+  '33': 'Q33',
+  '39': 'Q39',
+  '40': 'Q40',
+  '41': 'Q41',
+  '42': 'Q42',
+  '43': 'Q43',
+  '44': 'Q44',
+  '45': 'Q45',
+  '46': 'Q46',
+  '47': 'Q47',
 };
 
 const double _exposureTotalWeight = 54.10716636;
@@ -669,7 +746,16 @@ Map<String, dynamic> computeVulnerabilityDetails(Map<String, String> ans) {
   double sum = 0.0;
   final Map<String, double> values = {};
   for (final k in _orderedVulnerabilityKeys) {
-    final v = _calcFor(k, ans);
+    double v;
+    if (k == '45') {
+      v = computePerceptionAggregate(ans);
+    } else if (k == '46') {
+      v = computeAwarenessAggregate(ans);
+    } else if (k == '47') {
+      v = computePreparednessAggregate(ans);
+    } else {
+      v = _calcFor(k, ans);
+    }
     values[_vulnerabilityLabels[k] ?? k] = v;
     sum += v;
   }
@@ -767,4 +853,93 @@ double? computeFinalValueForInput(String key, String input) {
     return unweighted * weight;
   }
   return 0.0;
+}
+
+// --- Aggregated socio-climatic functions ---
+
+/// Question keys used for computing perception towards climate change (Q45).
+const List<String> _perceptionKeys = [
+  '44.1',
+  '44.2',
+  '44.3',
+  '44.4',
+  '44.5',
+  '44.6',
+  '44.7',
+  '44.8',
+  '44.9',
+  '44.10',
+  '44.11',
+  '44.12',
+  '44.13',
+  '44.14',
+  '44.15',
+  '44.16',
+];
+
+/// Question keys used for computing awareness towards climate change (Q46).
+const List<String> _awarenessKeys = [
+  '45.1',
+  '45.2',
+  '45.3',
+  '45.4',
+  '45.5',
+  '45.6',
+  '45.7',
+];
+
+/// Question keys used for computing preparedness towards climate change (Q47).
+const List<String> _preparednessKeys = [
+  '46.1',
+  '46.2',
+  '46.3',
+  '46.4',
+  '46.5',
+  '46.6',
+  '46.7',
+  '46.8',
+  '46.9',
+  '46.10',
+  '46.11',
+  '46.12',
+  '46.13',
+  '46.14',
+  '46.15',
+  '46.16',
+];
+
+/// Compute the accepted value for perception towards climate change (Q45).
+double computePerceptionAggregate(Map<String, String> ans) {
+  double sum = 0.0;
+  for (final key in _perceptionKeys) {
+    sum += double.tryParse(ans[key] ?? '0') ?? 0.0;
+  }
+  double val = ((45 - sum) / 45) * 3.259157652;
+  if (val > 3.259157652) val = 3.259157652;
+  if (val < 0) val = 0;
+  return val;
+}
+
+/// Compute the accepted value for awareness towards climate change (Q46).
+double computeAwarenessAggregate(Map<String, String> ans) {
+  double sum = 0.0;
+  for (final key in _awarenessKeys) {
+    sum += double.tryParse(ans[key] ?? '0') ?? 0.0;
+  }
+  double val = ((36 - sum) / 36) * 2.336440171;
+  if (val > 2.336440171) val = 2.336440171;
+  if (val < 0) val = 0;
+  return val;
+}
+
+/// Compute the accepted value for preparedness towards climate change (Q47).
+double computePreparednessAggregate(Map<String, String> ans) {
+  double sum = 0.0;
+  for (final key in _preparednessKeys) {
+    sum += double.tryParse(ans[key] ?? '0') ?? 0.0;
+  }
+  double val = ((15 - sum) / 14) * 5.852537611;
+  if (val > 5.852537611) val = 5.852537611;
+  if (val < 0) val = 0;
+  return val;
 }
