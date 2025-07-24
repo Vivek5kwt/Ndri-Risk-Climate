@@ -763,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             pw.Positioned(
               left: pointerPos.dx - pointerSize / 2,
-              top: pointerPos.dy - pointerSize / 2,
+              top: 10,
               child: pw.Transform.rotate(
                 angle: pointerAngle,
                 alignment: pw.Alignment.center,
