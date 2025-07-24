@@ -138,6 +138,37 @@ class ReportGenerator {
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final vulnVal = vulnDetails['score'] as double;
+
+    // Log vulnerability values used in score calculation with question numbers
+    final vulnValues = Map<String, double>.from(
+        vulnDetails['values'] as Map<String, dynamic>);
+    final vulnSum = vulnDetails['sum'] as double;
+    final vulnWeight = vulnDetails['weight'] as double;
+    int _idx = 1;
+    print('Vulnerability calculation details:');
+    vulnValues.forEach((label, value) {
+      print('$_idx. $label: ${value.toStringAsFixed(2)}');
+      _idx++;
+    });
+
+    // Additional question values that contribute to vulnerability
+    const otherKeys = ['5', '3', '11', '16', '17', '35', '37', '38'];
+    for (final k in otherKeys) {
+      final raw = answers[k]?.toString() ?? '';
+      final v = computeFinalValueForInput(k, raw) ?? 0.0;
+      print('$_idx. Q$k: ${v.toStringAsFixed(3)}');
+      _idx++;
+    }
+    final q45 = computePerceptionAggregate(formattedAnswers);
+    final q46 = computeAwarenessAggregate(formattedAnswers);
+    final q47 = computePreparednessAggregate(formattedAnswers);
+    print('$_idx. Q45: ${q45.toStringAsFixed(3)}');
+    _idx++;
+    print('$_idx. Q46: ${q46.toStringAsFixed(3)}');
+    _idx++;
+    print('$_idx. Q47: ${q47.toStringAsFixed(3)}');
+    print('Vulnerability sum: ${vulnSum.toStringAsFixed(2)}, weight: ${vulnWeight.toStringAsFixed(2)}');
+
     final expDetails = computeExposureDetails(formattedAnswers);
     final expVal = expDetails['score'] as double;
 
