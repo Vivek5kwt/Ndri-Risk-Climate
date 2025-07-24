@@ -725,9 +725,26 @@ class _HomeScreenState extends State<HomeScreen> {
       double height = 220,
       double pointerSize = 20,
     }) {
-      // Adjust these to match your PNG dimensions and overlay requirements
-      final gaugeCenter = Offset(width / 2, height - 52);
-      final pointerPos = gaugeCenter; // place pointer at center of gauge
+      // Ensure the incoming value is clamped and compute the pointer angle
+      value = value.clamp(0.0, 1.0);
+
+      // Use geometry similar to the custom gauge painter so the pointer
+      // follows the rainbow arc of the PNG.  Placing the centre slightly
+      // below the bottom keeps the pointer inside the gauge.
+      final gaugeCenter = Offset(width / 2, height * 1.02);
+
+      // Radius proportional to width keeps the pointer along the arc
+      // regardless of the rendered size of the image.
+      final radius = width * 0.45 - pointerSize;
+
+      // Value of 0 should point left, 1 to the right.
+      final angle = math.pi - value * math.pi;
+
+      // Calculate pointer position relative to the centre of the gauge.
+      final pointerPos = Offset(
+        gaugeCenter.dx + radius * math.cos(angle),
+        gaugeCenter.dy + radius * math.sin(angle),
+      );
 
       return pw.Container(
         width: width,
@@ -775,7 +792,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             pw.Positioned(
               left: pointerPos.dx - pointerSize / 2,
-              top: 10,
+              top: pointerPos.dy - pointerSize / 2,
               child: _pointerCircle(pointerSize),
             ),
           ],
