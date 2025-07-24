@@ -138,6 +138,17 @@ class ReportGenerator {
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final vulnVal = vulnDetails['score'] as double;
+
+    // Log vulnerability values used in score calculation with question numbers
+    final vulnValues = Map<String, double>.from(
+        vulnDetails['values'] as Map<String, dynamic>);
+    int _idx = 1;
+    print('Vulnerability calculation details:');
+    vulnValues.forEach((label, value) {
+      print('$_idx. $label: ${value.toStringAsFixed(2)}');
+      _idx++;
+    });
+
     final expDetails = computeExposureDetails(formattedAnswers);
     final expVal = expDetails['score'] as double;
 
