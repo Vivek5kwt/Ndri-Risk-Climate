@@ -725,9 +725,25 @@ class _HomeScreenState extends State<HomeScreen> {
       double height = 220,
       double pointerSize = 20,
     }) {
-      // Adjust these to match your PNG dimensions and overlay requirements
+      // Clamp value to [0,1] and calculate the circular position of the pointer
+      value = value.clamp(0.0, 1.0);
+
+      // The gauge image is a semi‑circular arc occupying the bottom of the
+      // container. `gaugeCenter` represents the centre of that circle.
       final gaugeCenter = Offset(width / 2, height - 52);
-      final pointerPos = gaugeCenter; // place pointer at center of gauge
+
+      // Radius slightly smaller than half width so the pointer sits inside the
+      // gauge arc.
+      final radius = width / 2 - pointerSize;
+
+      // Map the value (0..1) to an angle between pi and 2*pi.
+      final angle = math.pi + value * math.pi;
+
+      // Calculate pointer position relative to the centre of the gauge.
+      final pointerPos = Offset(
+        gaugeCenter.dx + radius * math.cos(angle),
+        gaugeCenter.dy + radius * math.sin(angle),
+      );
 
       return pw.Container(
         width: width,
@@ -775,7 +791,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             pw.Positioned(
               left: pointerPos.dx - pointerSize / 2,
-              top: 10,
+              top: pointerPos.dy - pointerSize / 2,
               child: _pointerCircle(pointerSize),
             ),
           ],
