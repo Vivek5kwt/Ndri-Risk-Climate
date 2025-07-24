@@ -562,12 +562,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+pw.Widget _pointerCircle(double size) {
+    return pw.Container(
+      width: size,
+      height: size,
+      decoration: pw.BoxDecoration(
+        color: PdfColors.white,
+        shape: pw.BoxShape.circle,
+        border: pw.Border.all(color: PdfColors.blue, width: 2),
+      ),
+    );
+  }
+
   pw.Widget imageScoreBarWithArrow({
     required String label,
     required String score,
     required double value,
     required pw.MemoryImage barImage,
-    required pw.MemoryImage pointerImage,
     double barWidth = 180,
     double barHeight = 33,
     String? level,
@@ -604,7 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 pw.Positioned(
                   left: (barWidth - 22) * value,
                   top: 0,
-                  child: pw.Image(pointerImage, width: 22, height: 22),
+                  child: _pointerCircle(22),
                 ),
               ],
             ),
@@ -648,9 +659,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final barImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/hazard_bar.png')).buffer.asUint8List(),
-    );
-    final pointerArrowImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
     final gaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
@@ -707,14 +715,12 @@ class _HomeScreenState extends State<HomeScreen> {
       required String dateText,
       required double score,
       required pw.MemoryImage gaugeImage,
-      required pw.MemoryImage pointerImage,
       double width = 540,
       double height = 220,
       double pointerSize = 20,
     }) {
       // Adjust these to match your PNG dimensions and overlay requirements
       final gaugeCenter = Offset(width / 2, height - 52);
-      final pointerAngle = pi + value * pi;
       final pointerPos = gaugeCenter; // place pointer at center of gauge
 
       return pw.Container(
@@ -764,15 +770,7 @@ class _HomeScreenState extends State<HomeScreen> {
             pw.Positioned(
               left: pointerPos.dx - pointerSize / 2,
               top: 10,
-              child: pw.Transform.rotate(
-                angle: pointerAngle,
-                alignment: pw.Alignment.center,
-                child: pw.Image(
-                  pointerImage,
-                  width: pointerSize,
-                  height: pointerSize,
-                ),
-              ),
+              child: _pointerCircle(pointerSize),
             ),
           ],
         ),
@@ -961,7 +959,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: vulnerabilityScore,
                         value: double.tryParse(vulnerabilityScore) ?? 0.0,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: hazardLevelFromValue(
                             double.tryParse(vulnerabilityScore) ?? 0.0),
                         levelColor: riskColor(hazardLevelFromValue(
@@ -973,7 +970,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: exposureScore,
                         value: exposureValueForBar,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: exposureLevel,
                         levelColor: riskColor(exposureLevel),
                       ),
@@ -983,7 +979,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: hazardScore,
                         value: hazardValueForBar,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: hazardLevel,
                         levelColor: riskColor(hazardLevel),
                       ),
@@ -995,7 +990,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
                           score: double.tryParse(riskScore) ?? 50.0,
                           gaugeImage: rainbowGaugeImage,
-                          pointerImage: pointerArrowImage,
                           width: 500,
                           height: 220,
                         ),
@@ -1061,93 +1055,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  Future<pw.MemoryImage> _loadArrowImage() async {
-    final bytes = await rootBundle.load('assets/images/score_arrow.png');
-    return pw.MemoryImage(bytes.buffer.asUint8List());
-  }
-
-  Future<pw.Widget> scoreBarWithLevel({
-    required String label,
-    required String score,
-    double barHeight = 16,
-    double barWidth = 210,
-  })
-  async {
-    double value = double.tryParse(score) ?? 0.0;
-    value = value.clamp(0.0, 1.0);
-    String level = _riskLevelFromValue(value);
-
-    final pointerImage = await _loadArrowImage();
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.center,
-        children: [
-          pw.SizedBox(
-            width: 180,
-            child: pw.Text(
-              label,
-              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-            ),
-          ),
-          pw.SizedBox(width: 8),
-          pw.Container(
-            width: barWidth,
-            height: barHeight + 18,
-            child: pw.Stack(
-              children: [
-                pw.Positioned(
-                  left: 0,
-                  top: 18,
-                  child: pw.Container(
-                    width: barWidth,
-                    height: barHeight,
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.blue900, width: 1),
-                      borderRadius: pw.BorderRadius.circular(barHeight / 2),
-                      gradient: const pw.LinearGradient(
-                        colors: [
-                          PdfColors.green,
-                          PdfColors.yellow,
-                          PdfColors.red
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                pw.Positioned(
-                  left: (barWidth - 22) * value,
-                  top: 0,
-                  child: pw.Image(pointerImage, width: 22, height: 18),
-                ),
-              ],
-            ),
-          ),
-          pw.SizedBox(width: 10),
-          pw.Container(
-            width: 44,
-            alignment: pw.Alignment.centerLeft,
-            child: pw.Text(
-              score,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-          ),
-          pw.SizedBox(width: 5),
-          pw.Container(
-            width: 54,
-            child: pw.Text(
-              level,
-              style: pw.TextStyle(
-                fontSize: 16,
-                color: _riskColor(level),
-                fontWeight: pw.FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
   String _riskLevelFromValue(double v) {
     if (v < 0.2) return 'Very Low';
     if (v < 0.4) return 'Low';
