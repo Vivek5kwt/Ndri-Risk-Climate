@@ -1,5 +1,6 @@
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -42,6 +43,9 @@ class ReportGenerator {
     );
     final rainbowGaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/rainbow_color.png')).buffer.asUint8List(),
+    );
+    final pointerArrowImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
 
     String asFixed(dynamic val) {
@@ -86,18 +90,27 @@ class ReportGenerator {
       }
     }
 
-    pw.Widget gaugeWithOverlay({
-      required double value,
-      required String dateText,
-      required double score,
+    /// --- Gauge with perfectly aligned pointer arrow ---
+    pw.Widget gaugeWithPointerArrow({
+      required double value, // from 0.0 to 1.0
       required pw.MemoryImage gaugeImage,
-      double width = 540,
-      double height = 220,
-      double pointerSize = 20,
+      required pw.MemoryImage pointerImage,
+      double width = 500,
+      double height = 250,
+      double arcRadius = 205, // radius of the rainbow arc (tune as per your PNG)
+      double centerYOffset = 75, // vertical offset from bottom (tune as per your PNG)
+      double arrowWidth = 30, // pointer PNG width
+      double arrowHeight = 110, // pointer PNG height (tip to base)
     }) {
-      final gaugeCenter = Offset(width / 2, height - 52);
-      final pointerPos = gaugeCenter;
+      // Center of the arc
+      final centerX = width / 2;
+      final centerY = height - centerYOffset;
 
+      // Angle from left (π) to right (0)
+      final angle = pi * (1 - value.clamp(0.0, 1.0));
+
+      // The base of the arrow is at (centerX, centerY)
+      // The pointer is rotated to match the arc angle
       return pw.Container(
         width: width,
         height: height,
@@ -105,53 +118,23 @@ class ReportGenerator {
         child: pw.Stack(
           alignment: pw.Alignment.center,
           children: [
-            pw.Padding(
-              padding: const pw.EdgeInsets.only(left: 12),
-              child: pw.Image(
-                gaugeImage,
-                width: width,
-                fit: pw.BoxFit.fitWidth,
-              ),
-            ),
+            pw.Image(gaugeImage, width: width, height: height, fit: pw.BoxFit.contain),
+            // Pointer arrow (base at center, rotated to point at value)
             pw.Positioned(
-              left: 0,
-              right: 0,
-              top: height * 0.33,
-              child: pw.Column(
-                mainAxisSize: pw.MainAxisSize.min,
-                crossAxisAlignment: pw.CrossAxisAlignment.center,
-                children: [
-                  pw.Text(
-                    dateText,
-                    textAlign: pw.TextAlign.center,
-                    style: pw.TextStyle(
-                      fontSize: 22,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.SizedBox(height: 8),
-                  pw.Text(
-                    score.toStringAsFixed(2),
-                    textAlign: pw.TextAlign.center,
-                    style: pw.TextStyle(
-                      fontSize: 40,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.blue,
-                    ),
-                  ),
-                ],
+              left: centerX - arrowWidth / 2,
+              top: centerY - arrowHeight,
+              child: pw.Transform.rotate(
+                angle: -angle,
+                //origin: pw.Offset(arrowWidth / 2, arrowHeight),
+                child: pw.Image(pointerImage, width: arrowWidth, height: arrowHeight),
               ),
-            ),
-            pw.Positioned(
-              left: pointerPos.dx - pointerSize / 2,
-              top: 10,
-              child: _pointerCircle(pointerSize),
             ),
           ],
         ),
       );
     }
 
+    // --- Main calculation logic ---
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final vulnVal = vulnDetails['score'] as double;
@@ -313,42 +296,49 @@ class ReportGenerator {
                       ),
                     ),
                     pw.SizedBox(height: 10),
-                    imageScoreBarWithArrow(
+                    ReportGenerator.imageScoreBarWithArrow(
                       label: '1. Vulnerability score',
                       score: vulnerabilityScore,
                       value: double.tryParse(vulnerabilityScore) ?? 0.0,
                       barImage: barImage,
-                      level: hazardLevelFromValue(double.tryParse(vulnerabilityScore) ?? 0.0),
-                      levelColor: riskColor(hazardLevelFromValue(double.tryParse(vulnerabilityScore) ?? 0.0)),
+                      pointerImage: pointerArrowImage,
+                      level: hazardLevelFromValue(
+                          double.tryParse(vulnerabilityScore) ?? 0.0),
+                      levelColor: riskColor(hazardLevelFromValue(
+                          double.tryParse(vulnerabilityScore) ?? 0.0)),
                     ),
                     pw.SizedBox(height: 10),
-                    imageScoreBarWithArrow(
+                    ReportGenerator.imageScoreBarWithArrow(
                       label: '2. Exposure score',
                       score: exposureScore,
                       value: exposureValueForBar,
                       barImage: barImage,
+                      pointerImage: pointerArrowImage,
                       level: exposureLevel,
                       levelColor: riskColor(exposureLevel),
                     ),
                     pw.SizedBox(height: 10),
-                    imageScoreBarWithArrow(
+                    ReportGenerator.imageScoreBarWithArrow(
                       label: '3. Hazard score',
                       score: hazardScore,
                       value: hazardValueForBar,
                       barImage: barImage,
+                      pointerImage: pointerArrowImage,
                       level: hazardLevel,
                       levelColor: riskColor(hazardLevel),
                     ),
                     pw.SizedBox(height: 10),
                     pw.Center(
-                      child: gaugeWithOverlay(
-                        pointerSize: 20,
-                        value: double.tryParse(riskScore) ?? 50.0,
-                        dateText: DateFormat('dd MMM yyyy').format(DateTime.now()),
-                        score: double.tryParse(riskScore) ?? 50.0,
+                      child: gaugeWithPointerArrow(
+                        value: double.tryParse(riskScore) ?? 0.0,
                         gaugeImage: rainbowGaugeImage,
+                        pointerImage: pointerArrowImage,
                         width: 500,
-                        height: 220,
+                        height: 250,
+                        arcRadius: 205,      // <---- Tune for your PNG for perfect fit
+                        centerYOffset: 75,   // <---- Tune for your PNG for perfect fit
+                        arrowWidth: 30,
+                        arrowHeight: 110,
                       ),
                     ),
                     pw.SizedBox(height: 10),
@@ -415,6 +405,7 @@ class ReportGenerator {
     required String score,
     required double value,
     required pw.MemoryImage barImage,
+    required pw.MemoryImage pointerImage,
     double barWidth = 180,
     double barHeight = 33,
     String? level,
@@ -431,7 +422,8 @@ class ReportGenerator {
             width: 190,
             child: pw.Text(
               label,
-              style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
+              style:
+              pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold),
             ),
           ),
           pw.SizedBox(width: 6),
@@ -443,12 +435,13 @@ class ReportGenerator {
                 pw.Positioned(
                   left: 0,
                   top: 14,
-                  child: pw.Image(barImage, width: barWidth, height: barHeight),
+                  child:
+                  pw.Image(barImage, width: barWidth, height: barHeight),
                 ),
                 pw.Positioned(
                   left: (barWidth - 22) * value,
                   top: 0,
-                  child: _pointerCircle(22),
+                  child: pw.Image(pointerImage, width: 22, height: 22),
                 ),
               ],
             ),
@@ -459,7 +452,8 @@ class ReportGenerator {
             alignment: pw.Alignment.centerLeft,
             child: pw.Text(
               score,
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              style:
+              pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
           ),
           pw.SizedBox(width: 6),
