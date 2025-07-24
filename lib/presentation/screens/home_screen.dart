@@ -1,5 +1,4 @@
 
-
 import 'dart:convert';
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
@@ -581,7 +580,6 @@ class _HomeScreenState extends State<HomeScreen> {
     required String score,
     required double value,
     required pw.MemoryImage barImage,
-    required pw.MemoryImage pointerImage,
     double barWidth = 180,
     double barHeight = 33,
     String? level,
@@ -618,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 pw.Positioned(
                   left: (barWidth - 22) * value,
                   top: 0,
-                  child: pw.Image(pointerImage, width: 22, height: 22),
+                  child: _pointerCircle(22),
                 ),
               ],
             ),
@@ -662,9 +660,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final barImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/hazard_bar.png')).buffer.asUint8List(),
-    );
-    final pointerArrowImage = pw.MemoryImage(
-      (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
     final gaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
@@ -725,25 +720,9 @@ class _HomeScreenState extends State<HomeScreen> {
       double height = 220,
       double pointerSize = 20,
     }) {
-      // Clamp value to [0,1] and calculate the circular position of the pointer
-      value = value.clamp(0.0, 1.0);
-
-      // The gauge image is a semi‑circular arc occupying the bottom of the
-      // container. `gaugeCenter` represents the centre of that circle.
+      // Adjust these to match your PNG dimensions and overlay requirements
       final gaugeCenter = Offset(width / 2, height - 52);
-
-      // Radius slightly smaller than half width so the pointer sits inside the
-      // gauge arc.
-      final radius = width / 2 - pointerSize;
-
-      // Map the value (0..1) to an angle between pi and 2*pi.
-      final angle = math.pi + value * math.pi;
-
-      // Calculate pointer position relative to the centre of the gauge.
-      final pointerPos = Offset(
-        gaugeCenter.dx + radius * math.cos(angle),
-        gaugeCenter.dy + radius * math.sin(angle),
-      );
+      final pointerPos = gaugeCenter; // place pointer at center of gauge
 
       return pw.Container(
         width: width,
@@ -791,7 +770,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             pw.Positioned(
               left: pointerPos.dx - pointerSize / 2,
-              top: pointerPos.dy - pointerSize / 2,
+              top: 10,
               child: _pointerCircle(pointerSize),
             ),
           ],
@@ -810,47 +789,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final vulnDetails = computeVulnerabilityDetails(answers);
     final vulnVal = vulnDetails['score'] as double;
     final vulnMap = vulnDetails['values'] as Map<String, double>;
-
-    final expDetails = computeExposureDetails(answers);
-    final expVal = expDetails['score'] as double;
-    final valMap = expDetails['values'] as Map<String, double>;
-
-    // Combine vulnerability values with selected additional question values
-    final combined = <String, double>{};
-    combined.addAll(vulnMap);
-    const extraOrder = [
-      'Q7',
-      'Q8',
-      'Q6',
-      'Q5',
-      'Q9',
-      'Q10',
-      'Q19',
-      'Q21',
-      'Q22',
-      'Q23',
-      'Q24',
-      'Q25',
-      'Q34',
-      'Q20',
-      'Q29',
-    ];
-    for (final key in extraOrder) {
-      if (key == 'Q5') {
-        final raw = answers['5'] ?? '';
-        final val = computeFinalValueForInput('5', raw) ?? 0.0;
-        combined[key] = val;
-      } else if (valMap.containsKey(key)) {
-        combined[key] = valMap[key]!;
-      }
-    }
-    final vulnValuesStr = combined.entries
+    final vulnValuesStr = vulnMap.entries
         .map((e) => '${e.key}: ${e.value}')
         .join(' + ');
     print('Vulnerability values -> $vulnValuesStr');
     print(
         'Vulnerability details -> sum: ${vulnDetails['sum']!.toStringAsFixed(2)}, weight: ${vulnDetails['weight']!.toStringAsFixed(2)}, score: ${vulnDetails['score']!.toStringAsFixed(2)}');
 
+    final expDetails = computeExposureDetails(answers);
+    final expVal = expDetails['score'] as double;
+    final valMap = expDetails['values'] as Map<String, double>;
     final valuesStr = valMap.entries
         .map((e) => '${e.key}: ${e.value}')
         .join(' + ');
@@ -1012,7 +960,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: vulnerabilityScore,
                         value: double.tryParse(vulnerabilityScore) ?? 0.0,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: hazardLevelFromValue(
                             double.tryParse(vulnerabilityScore) ?? 0.0),
                         levelColor: riskColor(hazardLevelFromValue(
@@ -1024,7 +971,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: exposureScore,
                         value: exposureValueForBar,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: exposureLevel,
                         levelColor: riskColor(exposureLevel),
                       ),
@@ -1034,7 +980,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         score: hazardScore,
                         value: hazardValueForBar,
                         barImage: barImage,
-                        pointerImage: pointerArrowImage,
                         level: hazardLevel,
                         levelColor: riskColor(hazardLevel),
                       ),
