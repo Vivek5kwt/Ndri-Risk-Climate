@@ -793,16 +793,47 @@ class _HomeScreenState extends State<HomeScreen> {
     final vulnDetails = computeVulnerabilityDetails(answers);
     final vulnVal = vulnDetails['score'] as double;
     final vulnMap = vulnDetails['values'] as Map<String, double>;
-    final vulnValuesStr = vulnMap.entries
+
+    final expDetails = computeExposureDetails(answers);
+    final expVal = expDetails['score'] as double;
+    final valMap = expDetails['values'] as Map<String, double>;
+
+    // Combine vulnerability values with selected additional question values
+    final combined = <String, double>{};
+    combined.addAll(vulnMap);
+    const extraOrder = [
+      'Q7',
+      'Q8',
+      'Q6',
+      'Q5',
+      'Q9',
+      'Q10',
+      'Q19',
+      'Q21',
+      'Q22',
+      'Q23',
+      'Q24',
+      'Q25',
+      'Q34',
+      'Q20',
+      'Q29',
+    ];
+    for (final key in extraOrder) {
+      if (key == 'Q5') {
+        final raw = answers['5'] ?? '';
+        final val = computeFinalValueForInput('5', raw) ?? 0.0;
+        combined[key] = val;
+      } else if (valMap.containsKey(key)) {
+        combined[key] = valMap[key]!;
+      }
+    }
+    final vulnValuesStr = combined.entries
         .map((e) => '${e.key}: ${e.value}')
         .join(' + ');
     print('Vulnerability values -> $vulnValuesStr');
     print(
         'Vulnerability details -> sum: ${vulnDetails['sum']!.toStringAsFixed(2)}, weight: ${vulnDetails['weight']!.toStringAsFixed(2)}, score: ${vulnDetails['score']!.toStringAsFixed(2)}');
 
-    final expDetails = computeExposureDetails(answers);
-    final expVal = expDetails['score'] as double;
-    final valMap = expDetails['values'] as Map<String, double>;
     final valuesStr = valMap.entries
         .map((e) => '${e.key}: ${e.value}')
         .join(' + ');
