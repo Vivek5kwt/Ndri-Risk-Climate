@@ -138,6 +138,46 @@ class ReportGenerator {
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final vulnVal = vulnDetails['score'] as double;
+
+    // Log vulnerability values used in score calculation with question numbers
+    final vulnValues = Map<String, double>.from(
+        vulnDetails['values'] as Map<String, dynamic>);
+    final vulnSum = vulnDetails['sum'] as double;
+    final vulnWeight = vulnDetails['weight'] as double;
+    int _idx = 1;
+    print('Vulnerability calculation details:');
+    vulnValues.forEach((label, value) {
+      // Print raw accepted value without rounding so users can see the
+      // precise contribution from each question.
+      print('$_idx. $label: $value');
+      _idx++;
+    });
+
+    // Additional accepted values for the key vulnerability questions
+    const selectedLabels = [
+      'Q5',
+      'Q3',
+      'Q11',
+      'Q16',
+      'Q17',
+      'Q35',
+      'Q37',
+      'Q38',
+      'Q45',
+      'Q46',
+      'Q47',
+    ];
+    print('Accepted values for selected questions:');
+    for (final label in selectedLabels) {
+      final value = vulnValues[label];
+      if (value != null) {
+        print('$label: $value');
+      }
+    }
+
+    // Vulnerability sum and weight
+    print('Vulnerability sum: $vulnSum, weight: $vulnWeight');
+
     final expDetails = computeExposureDetails(formattedAnswers);
     final expVal = expDetails['score'] as double;
 
