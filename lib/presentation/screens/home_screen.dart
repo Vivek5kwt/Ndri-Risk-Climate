@@ -1,4 +1,5 @@
 
+
 import 'dart:convert';
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
@@ -562,7 +563,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-pw.Widget _pointerCircle(double size) {
+  pw.Widget _pointerCircle(double size) {
     return pw.Container(
       width: size,
       height: size,
@@ -579,6 +580,7 @@ pw.Widget _pointerCircle(double size) {
     required String score,
     required double value,
     required pw.MemoryImage barImage,
+    required pw.MemoryImage pointerImage,
     double barWidth = 180,
     double barHeight = 33,
     String? level,
@@ -615,7 +617,7 @@ pw.Widget _pointerCircle(double size) {
                 pw.Positioned(
                   left: (barWidth - 22) * value,
                   top: 0,
-                  child: _pointerCircle(22),
+                  child: pw.Image(pointerImage, width: 22, height: 22),
                 ),
               ],
             ),
@@ -659,6 +661,9 @@ pw.Widget _pointerCircle(double size) {
     );
     final barImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/hazard_bar.png')).buffer.asUint8List(),
+    );
+    final pointerArrowImage = pw.MemoryImage(
+      (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
     final gaugeImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/socio_gauge.png')).buffer.asUint8List(),
@@ -731,12 +736,12 @@ pw.Widget _pointerCircle(double size) {
           alignment: pw.Alignment.center,
           children: [
             pw.Padding(padding: pw.EdgeInsets.only(left: 12),
-            child:
-          pw.Image(
-          gaugeImage,
-          width: width,
-          fit: pw.BoxFit.fitWidth,
-        ),
+              child:
+              pw.Image(
+                gaugeImage,
+                width: width,
+                fit: pw.BoxFit.fitWidth,
+              ),
             ),
             pw.Positioned(
               left: 0,
@@ -959,6 +964,7 @@ pw.Widget _pointerCircle(double size) {
                         score: vulnerabilityScore,
                         value: double.tryParse(vulnerabilityScore) ?? 0.0,
                         barImage: barImage,
+                        pointerImage: pointerArrowImage,
                         level: hazardLevelFromValue(
                             double.tryParse(vulnerabilityScore) ?? 0.0),
                         levelColor: riskColor(hazardLevelFromValue(
@@ -970,6 +976,7 @@ pw.Widget _pointerCircle(double size) {
                         score: exposureScore,
                         value: exposureValueForBar,
                         barImage: barImage,
+                        pointerImage: pointerArrowImage,
                         level: exposureLevel,
                         levelColor: riskColor(exposureLevel),
                       ),
@@ -979,6 +986,7 @@ pw.Widget _pointerCircle(double size) {
                         score: hazardScore,
                         value: hazardValueForBar,
                         barImage: barImage,
+                        pointerImage: pointerArrowImage,
                         level: hazardLevel,
                         levelColor: riskColor(hazardLevel),
                       ),
