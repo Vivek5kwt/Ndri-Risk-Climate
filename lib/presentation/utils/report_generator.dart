@@ -175,6 +175,10 @@ class ReportGenerator {
     String exposureScore = expVal.toStringAsFixed(2);
     String riskScore = asFixed(st.answers['riskScore']);
 
+    // Calculate the final risk score using the standard methodology.
+    double finalRisk = vulnVal * expVal * hazardVal;
+    String finalRiskScore = finalRisk.toStringAsFixed(4);
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -375,6 +379,14 @@ class ReportGenerator {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                    pw.SizedBox(height: 6),
+                    pw.Text(
+                      'Final Risk Value: $finalRiskScore',
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
                       ),
                     ),
                   ],
