@@ -1977,19 +1977,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           } else {
                             val = _computePreparednessValue();
                           }
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Accepted Value: ${val.toStringAsFixed(3)}',
-                                style: TextStyle(
-                                  color: Colors.teal.shade700,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                            ],
-                          );
+                          return SizedBox();
                         },
                       ),
                     ),
@@ -3151,20 +3139,7 @@ class _HumanCardState extends State<_HumanCard> {
           child: field,
         ),
         if (extraField != null) extraField!,
-        if (widget.showFinal && finalValue != null) ...[
 
-          Padding(
-            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
-            child: Text(
-              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5.sp,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -3496,20 +3471,7 @@ class _AgCardState extends State<_AgCard> {
             },
           ),
         ),
-        if (widget.showFinal && finalValue != null) ...[
 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14, left: 8),
-            child: Text(
-              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-        ],
         if (v == '18')
           Container(
             margin: const EdgeInsets.only(bottom: 20),
@@ -3982,20 +3944,7 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                 const SizedBox(height: 2),
               ],
             )),
-        if (widget.showFinal && finalValue != null) ...[
 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14, left: 8),
-            child: Text(
-              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-        ],
       ]);
 }
 
@@ -4095,20 +4044,7 @@ class _LivCardState extends State<_LivCard> {
           },
         ),
       ),
-      if (finalValue != null) ...[
 
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14, left: 8),
-          child: Text(
-            'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-            style: TextStyle(
-              color: Colors.teal.shade700,
-              fontWeight: FontWeight.bold,
-              fontSize: 13.5,
-            ),
-          ),
-        ),
-      ],
     ]);
   }
 }
@@ -4523,20 +4459,7 @@ class _InfraCardState extends State<_InfraCard> {
           },
         ),
       ),
-      if (finalValue != null) ...[
 
-        Padding(
-          padding: const EdgeInsets.only(bottom: 14, left: 8),
-          child: Text(
-            'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-            style: TextStyle(
-              color: Colors.teal.shade700,
-              fontWeight: FontWeight.bold,
-              fontSize: 13.5,
-            ),
-          ),
-        ),
-      ],
     ]);
   }
 }
@@ -4665,20 +4588,7 @@ class _YesNoCircleState extends State<_YesNoCircle> {
               ],
             ),
           ),
-          if (widget.showFinal && finalValue != null) ...[
 
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14, left: 8),
-              child: Text(
-                'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-                style: TextStyle(
-                  color: Colors.teal.shade700,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.5,
-                ),
-              ),
-            ),
-          ],
         ],
       );
 
@@ -4969,20 +4879,7 @@ class _RatingCircleState extends State<_RatingCircle>
             }),
           ),
         ),
-        if (finalValue != null) ...[
 
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14, left: 8),
-            child: Text(
-              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -5146,17 +5043,7 @@ Widget _line(String q, Color barColor,
               ),
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(bottom: 14.h, left: 8.w),
-            child: Text(
-              'Accepted Value: ${(finalValue! < 0 ? 0 : finalValue!).toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5.sp,
-              ),
-            ),
-          ),
+
         ],
       ],
     );

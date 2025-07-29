@@ -98,27 +98,20 @@ class ReportGenerator {
       }
     }
 
-    /// --- Gauge with perfectly aligned pointer arrow ---
     pw.Widget gaugeWithPointerArrow({
-      required double value, // from 0.0 to 1.0
+      required double value,
       required pw.MemoryImage gaugeImage,
       required pw.MemoryImage pointerImage,
       double width = 500,
       double height = 250,
-      double arcRadius = 205, // radius of the rainbow arc (tune as per your PNG)
-      double centerYOffset = 75, // vertical offset from bottom (tune as per your PNG)
-      double arrowWidth = 30, // pointer PNG width
-      double arrowHeight = 110, // pointer PNG height (tip to base)
+      double arcRadius = 205,
+      double centerYOffset = 75,
+      double arrowWidth = 30,
+      double arrowHeight = 110,
     }) {
-      // Center of the arc
       final centerX = width / 2;
       final centerY = height - centerYOffset;
-
-      // Angle from left (π) to right (0)
       final angle = pi * (1 - value.clamp(0.0, 1.0));
-
-      // The base of the arrow is at (centerX, centerY)
-      // The pointer is rotated to match the arc angle
       return pw.Container(
         width: width,
         height: height,
@@ -127,13 +120,11 @@ class ReportGenerator {
           alignment: pw.Alignment.center,
           children: [
             pw.Image(gaugeImage, width: width, height: height, fit: pw.BoxFit.contain),
-            // Pointer arrow (base at center, rotated to point at value)
             pw.Positioned(
               left: centerX - arrowWidth / 2,
               top: centerY - arrowHeight,
               child: pw.Transform.rotate(
                 angle: -angle,
-                //origin: pw.Offset(arrowWidth / 2, arrowHeight),
                 child: pw.Image(pointerImage, width: arrowWidth, height: arrowHeight),
               ),
             ),
@@ -142,12 +133,9 @@ class ReportGenerator {
       );
     }
 
-    // --- Main calculation logic ---
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final vulnVal = vulnDetails['score'] as double;
-
-    // Log vulnerability values used in score calculation with question numbers
     final vulnValues = Map<String, double>.from(
         vulnDetails['values'] as Map<String, dynamic>);
     final vulnSum = vulnDetails['sum'] as double;
@@ -155,13 +143,9 @@ class ReportGenerator {
     int _idx = 1;
     print('Vulnerability calculation details:');
     vulnValues.forEach((label, value) {
-      // Print raw accepted value without rounding so users can see the
-      // precise contribution from each question.
       print('$_idx. $label: $value');
       _idx++;
     });
-
-    // Additional accepted values for the key vulnerability questions
     const selectedLabels = [
       'Q5',
       'Q3',
@@ -182,13 +166,9 @@ class ReportGenerator {
         print('$label: $value');
       }
     }
-
-    // Vulnerability sum and weight
     print('Vulnerability sum: $vulnSum, weight: $vulnWeight');
-
     final expDetails = computeExposureDetails(formattedAnswers);
     final expVal = expDetails['score'] as double;
-
     double hazardVal = LocationService().hazardFor(district ?? '');
     String hazardScore = hazardVal.toStringAsFixed(2);
     String vulnerabilityScore = vulnVal.toStringAsFixed(2);
@@ -377,19 +357,6 @@ class ReportGenerator {
                       levelColor: riskColor(hazardLevel),
                     ),
                     pw.SizedBox(height: 10),
-                    pw.Center(
-                      child: gaugeWithPointerArrow(
-                        value: double.tryParse(riskScore) ?? 0.0,
-                        gaugeImage: rainbowGaugeImage,
-                        pointerImage: pointerArrowImage,
-                        width: 500,
-                        height: 250,
-                        arcRadius: 205,      // <---- Tune for your PNG for perfect fit
-                        centerYOffset: 75,   // <---- Tune for your PNG for perfect fit
-                        arrowWidth: 30,
-                        arrowHeight: 110,
-                      ),
-                    ),
                     pw.SizedBox(height: 10),
                     pw.RichText(
                       text: const pw.TextSpan(
@@ -411,6 +378,28 @@ class ReportGenerator {
                       ),
                     ),
                   ],
+                ),
+              ),
+              /// LEGEND AT BOTTOM RIGHT
+              pw.Positioned(
+                right: 25,
+                bottom: 25,
+                child: pw.Container(
+                  padding: pw.EdgeInsets.all(8),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.deepOrange, width: 2),
+                    borderRadius: pw.BorderRadius.circular(6),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      legendRow(PdfColors.green, "Very low"),
+                      legendRow(PdfColors.lightGreen, "Low"),
+                      legendRow(PdfColors.yellow, "Moderate"),
+                      legendRow(PdfColors.orange, "High"),
+                      legendRow(PdfColors.red, "Very high"),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -446,6 +435,29 @@ class ReportGenerator {
       'Tap to open your PDF',
       const NotificationDetails(android: androidDetails),
       payload: outFile.path,
+    );
+  }
+
+  /// Helper to create a legend row (color box + label)
+  static pw.Widget legendRow(PdfColor color, String label) {
+    return pw.Padding(
+      padding: pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: [
+          pw.Container(
+            width: 18,
+            height: 18,
+            decoration: pw.BoxDecoration(
+              color: color,
+              borderRadius: pw.BorderRadius.circular(3),
+              border: pw.Border.all(color: PdfColors.black, width: 1.2),
+            ),
+          ),
+          pw.SizedBox(width: 7),
+          pw.Text(label, style: pw.TextStyle(fontSize: 15)),
+        ],
+      ),
     );
   }
 
