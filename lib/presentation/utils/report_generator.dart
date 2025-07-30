@@ -47,6 +47,9 @@ class ReportGenerator {
     final pointerArrowImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/score_arrow.png')).buffer.asUint8List(),
     );
+    final pointerArrowImages = pw.MemoryImage(
+      (await rootBundle.load('assets/images/white_dot.png')).buffer.asUint8List(),
+    );
 
     String asFixed(dynamic val) {
       if (val == null) return '0.00';
@@ -361,6 +364,19 @@ class ReportGenerator {
                       levelColor: riskColor(hazardLevel),
                     ),
                     pw.SizedBox(height: 10),
+                    pw.Center(
+                      child: gaugeWithPointerArrow(
+                        value: double.tryParse(riskScore) ?? 0.0,
+                        gaugeImage: rainbowGaugeImage,
+                        pointerImage: pointerArrowImages,
+                        width: 500,
+                        height: 250,
+                        arcRadius: 205,      // <---- Tune for your PNG for perfect fit
+                        centerYOffset: 75,   // <---- Tune for your PNG for perfect fit
+                        arrowWidth: 30,
+                        arrowHeight: 110,
+                      ),
+                    ),
                     pw.SizedBox(height: 10),
                     pw.RichText(
                       text: const pw.TextSpan(
