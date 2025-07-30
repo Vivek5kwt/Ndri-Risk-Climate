@@ -303,21 +303,23 @@ class _HomeScreenState extends State<HomeScreen> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) =>
-          Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28)),
-            backgroundColor: Colors.white,
-            elevation: 14,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 30, vertical: 34),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 14,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 30,
+                vertical: 34,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                       AnimatedScale(
                         scale: 1,
                         duration: const Duration(milliseconds: 700),
@@ -393,10 +395,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ElevatedButton(
                         onPressed: () {
                           Navigator.of(ctx).pop();
-                          if (context.mounted) {
-                            (context as Element).markNeedsBuild();
-                          }
-                          setState(() => step = 99);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepOrange,
@@ -442,6 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
     );
+    if (mounted) setState(() => step = 99);
   }
 
   Future<void> _loadLocalAnswers() async {
