@@ -16,7 +16,11 @@ class LocationCubit extends Cubit<LocationState> {
   final _svc = LocationService();
 
   Future<void> _init() async {
-    await _svc.prefetchStates();
+    try {
+      await _svc.prefetchStates();
+    } catch (_) {
+      // ignore errors during initialization
+    }
     emit(LocReady());
   }
 
