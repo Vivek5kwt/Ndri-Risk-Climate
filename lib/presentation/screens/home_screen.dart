@@ -5032,19 +5032,6 @@ Widget _line(String q, Color barColor,
           alignment: Alignment.centerLeft,
           child: child,
         ),
-        if (finalValue != null) ...[
-          Padding(
-            padding: EdgeInsets.only(bottom: 4.h, left: 8.w),
-            child: Text(
-              'Final Value: ${finalValue!.toStringAsFixed(3)}',
-              style: TextStyle(
-                color: Colors.teal.shade700,
-                fontWeight: FontWeight.bold,
-                fontSize: 13.5.sp,
-              ),
-            ),
-          ),
 
-        ],
       ],
     );
