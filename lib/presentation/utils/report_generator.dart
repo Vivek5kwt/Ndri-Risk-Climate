@@ -364,18 +364,47 @@ class ReportGenerator {
                       levelColor: riskColor(hazardLevel),
                     ),
                     pw.SizedBox(height: 10),
-                    pw.Center(
-                      child: gaugeWithPointerArrow(
-                        value: double.tryParse(riskScore) ?? 0.0,
-                        gaugeImage: rainbowGaugeImage,
-                        pointerImage: pointerArrowImages,
-                        width: 500,
-                        height: 250,
-                        arcRadius: 205,      // <---- Tune for your PNG for perfect fit
-                        centerYOffset: 75,   // <---- Tune for your PNG for perfect fit
-                        arrowWidth: 30,
-                        arrowHeight: 110,
-                      ),
+
+                    pw.Row(
+                      children: [
+                        pw.Center(
+                          child: gaugeWithPointerArrow(
+                            value: double.tryParse(riskScore) ?? 0.0,
+                            gaugeImage: rainbowGaugeImage,
+                            pointerImage: pointerArrowImages,
+                            width: 500,
+                            height: 250,
+                            arcRadius: 205,      // <---- Tune for your PNG for perfect fit
+                            centerYOffset: 75,   // <---- Tune for your PNG for perfect fit
+                            arrowWidth: 30,
+                            arrowHeight: 110,
+                          ),
+                        ),
+                        pw.Positioned(
+                          right: 25,
+                          bottom: 25,
+                          child: pw.Container(
+                            padding: const pw.EdgeInsets.all(8),
+                            decoration: pw.BoxDecoration(
+                              border: pw.Border.all(color: PdfColors.deepOrange, width: 2),
+                              borderRadius: pw.BorderRadius.circular(6),
+                            ),
+                            child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.start,
+                              children: [
+                                legendRow(PdfColors.green, "Very low"),
+                                legendRow(PdfColors.lightGreen, "Low"),
+                                legendRow(PdfColors.yellow, "Moderate"),
+                                legendRow(PdfColors.orange, "High"),
+                                legendRow(PdfColors.red, "Very high"),
+                              ],
+                            ),
+                          ),
+                        ),
+                        pw.SizedBox(
+                          width: 10
+                        ),
+                      ]
                     ),
                     pw.SizedBox(height: 10),
                     pw.RichText(
@@ -408,28 +437,7 @@ class ReportGenerator {
                   ],
                 ),
               ),
-              /// LEGEND AT BOTTOM RIGHT
-              pw.Positioned(
-                right: 25,
-                bottom: 25,
-                child: pw.Container(
-                  padding: pw.EdgeInsets.all(8),
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.deepOrange, width: 2),
-                    borderRadius: pw.BorderRadius.circular(6),
-                  ),
-                  child: pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      legendRow(PdfColors.green, "Very low"),
-                      legendRow(PdfColors.lightGreen, "Low"),
-                      legendRow(PdfColors.yellow, "Moderate"),
-                      legendRow(PdfColors.orange, "High"),
-                      legendRow(PdfColors.red, "Very high"),
-                    ],
-                  ),
-                ),
-              ),
+
             ],
           );
         },
