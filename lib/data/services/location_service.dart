@@ -209,11 +209,16 @@ class LocationService {
   List<String>? cachedDistricts(String state) => _distCache[state];
 
   Future<void> prefetchStates() async {
-    final r = await _dio.get('/admin/location/states');
-    final raw = (r.data?['states'] as List<dynamic>);
-    _states = raw.map((e) => e['state_name'] as String).toList()..sort();
-    for (var e in raw) {
-      _stateId[e['state_name']] = e['state_id'];
+    try {
+      final r = await _dio.get('/admin/location/states');
+      final raw = (r.data?['states'] as List<dynamic>);
+      _states = raw.map((e) => e['state_name'] as String).toList()..sort();
+      for (var e in raw) {
+        _stateId[e['state_name']] = e['state_id'];
+      }
+    } catch (_) {
+      // Ensure lists are initialized even if the request fails
+      _states = [];
     }
   }
 
