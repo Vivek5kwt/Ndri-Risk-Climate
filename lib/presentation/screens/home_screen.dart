@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ndri_dairy_risk/presentation/screens/preview_answers_screen.dart';
 import 'package:ndri_dairy_risk/presentation/widgets/app_text.dart';
 import 'package:open_file/open_file.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/app_colors.dart';
 import '../../config/app_strings.dart';
@@ -207,12 +208,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initPermissions() async {
     if (!Platform.isAndroid) return;
-
-/*    await Permission.storage.request();
-    if (await Permission.manageExternalStorage.isDenied) {
-
-      await Permission.manageExternalStorage.request();
-    }*/
+    var status = await Permission.manageExternalStorage.status;
+    if (!status.isGranted) {
+      status = await Permission.manageExternalStorage.request();
+    }
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    }
   }
 
   Future<void> _initNotifications() async {
