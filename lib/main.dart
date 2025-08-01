@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io' show Platform;
 
 import 'config/router/go_router.dart';
 import 'data/services/location_state.dart';
@@ -27,7 +28,15 @@ Future<void> main() async {
     ignoreSsl: true,
   );
 
-  await Permission.storage.request();
+  if (Platform.isAndroid) {
+    var status = await Permission.manageExternalStorage.status;
+    if (!status.isGranted) {
+      status = await Permission.manageExternalStorage.request();
+    }
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    }
+  }
 
   final locCubit = LocationCubit();
 
