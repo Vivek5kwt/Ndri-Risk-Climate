@@ -450,10 +450,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final data = json.decode(jsonString);
       final storedState = data['stateName'];
       final storedDistrict = data['district'];
-      while (loc.states.isEmpty) {
-        await Future.delayed(const Duration(milliseconds: 40));
+      int tries = 0;
+      while (loc.states.isEmpty && tries < 50) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        tries++;
       }
-      if (storedState != null) {
+      if (storedState != null && loc.states.isNotEmpty) {
         await loc.districts(storedState);
       }
 
