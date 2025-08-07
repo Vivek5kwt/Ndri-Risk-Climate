@@ -192,6 +192,196 @@ class LocationService {
     "Tarn Taran": 0.383540753,
   };
 
+  static const Map<String, List<String>> _fallbackStateDistricts = {
+    'Haryana': [
+      'Ambala',
+      'Bhiwani',
+      'Faridabad',
+      'Fatehabad',
+      'Gurgaon',
+      'Hisar',
+      'Jhajjar',
+      'Jind',
+      'Kaithal',
+      'Karnal',
+      'Kurukshetra',
+      'Mahendragarh',
+      'Mewat',
+      'Palwal',
+      'Panchkula',
+      'Panipat',
+      'Rewari',
+      'Rohtak',
+      'Sirsa',
+      'Sonipat',
+      'Yamunanagar',
+    ],
+    'Rajasthan': [
+      'Ganganagar',
+      'Hanumangarh',
+    ],
+    'Uttar Pradesh': [
+      'Agra',
+      'Aligarh',
+      'Allahabad',
+      'Ambedkar Nagar',
+      'Auraiya',
+      'Azamgarh',
+      'Baghpat',
+      'Bahraich',
+      'Ballia',
+      'Balrampur',
+      'Banda',
+      'Bara Banki',
+      'Bareilly',
+      'Basti',
+      'Bijnor',
+      'Budaun',
+      'Bulandshahr',
+      'Chandauli',
+      'Chitrakoot',
+      'Deoria',
+      'Etah',
+      'Etawah',
+      'Faizabad',
+      'Farrukhabad',
+      'Fatehpur',
+      'Firozabad',
+      'Gautam Buddha Nagar',
+      'Ghaziabad',
+      'Ghazipur',
+      'Gonda',
+      'Gorakhpur',
+      'Hamirpur',
+      'Hardoi',
+      'Jalaun',
+      'Jaunpur',
+      'Jhansi',
+      'Jyotiba Phule Nagar',
+      'Kannauj',
+      'Kanpur Nagar',
+      'Kanshiram Nagar',
+      'Kaushambi',
+      'Kheri',
+      'Kushinagar',
+      'Lalitpur',
+      'Lucknow',
+      'Mahamaya Nagar',
+      'Mahoba',
+      'Mahrajganj',
+      'Mainpuri',
+      'Mathura',
+      'Mau',
+      'Meerut',
+      'Mirzapur',
+      'Moradabad',
+      'Muzaffarnagar',
+      'Pilibhit',
+      'Pratapgarh',
+      'Rae Bareli',
+      'Ramabai Nagar',
+      'Rampur',
+      'Saharanpur',
+      'Sant Kabir Nagar',
+      'Sant Ravidas Nagar (Bhadohi)',
+      'Shahjahanpur',
+      'Shrawasti',
+      'Siddharthnagar',
+      'Sitapur',
+      'Sonbhadra',
+      'Sultanpur',
+      'Unnao',
+      'Varanasi',
+    ],
+    'Bihar': [
+      'Araria',
+      'Arwal',
+      'Aurangabad',
+      'Banka',
+      'Begusarai',
+      'Bhagalpur',
+      'Bhojpur',
+      'Buxar',
+      'Darbhanga',
+      'Gaya',
+      'Gopalganj',
+      'Jamui',
+      'Jehanabad',
+      'Kaimur (Bhabua)',
+      'Katihar',
+      'Khagaria',
+      'Kishanganj',
+      'Lakhisarai',
+      'Madhepura',
+      'Madhubani',
+      'Munger',
+      'Muzaffarpur',
+      'Nalanda',
+      'Nawada',
+      'Pashchim Champaran',
+      'Patna',
+      'Purba Champaran',
+      'Purnia',
+      'Rohtas',
+      'Saharsa',
+      'Samastipur',
+      'Saran',
+      'Sheikhpura',
+      'Sheohar',
+      'Sitamarhi',
+      'Siwan',
+      'Supaul',
+      'Vaishali',
+    ],
+    'West Bengal': [
+      'Bankura',
+      'Barddhaman',
+      'Birbhum',
+      'Dakshin Dinajpur',
+      'Darjiling',
+      'Haora',
+      'Hugli',
+      'Jalpaiguri',
+      'Koch Bihar',
+      'Kolkata',
+      'Maldah',
+      'Murshidabad',
+      'Nadia',
+      'North Twenty Four Parganas',
+      'Paschim Medinipur',
+      'Purba Medinipur',
+      'Puruliya',
+      'South Twenty Four Parganas',
+      'Uttar Dinajpur',
+    ],
+    'Uttarakhand': [
+      'Hardwar',
+      'Udham Singh Nagar',
+    ],
+    'Punjab': [
+      'Amritsar',
+      'Barnala',
+      'Bathinda',
+      'Faridkot',
+      'Fatehgarh Sahib',
+      'Firozpur',
+      'Gurdaspur',
+      'Hoshiarpur',
+      'Jalandhar',
+      'Kapurthala',
+      'Ludhiana',
+      'Mansa',
+      'Moga',
+      'Mohali',
+      'Muktsar',
+      'Patiala',
+      'Rupnagar',
+      'Sahibzada Ajit Singh Nagar',
+      'Sangrur',
+      'Tarn Taran',
+    ],
+  };
+
   double hazardFor(String district) {
     final normalized = district.trim().toLowerCase();
     for (final entry in _hazard.entries) {
@@ -217,20 +407,29 @@ class LocationService {
         _stateId[e['state_name']] = e['state_id'];
       }
     } catch (_) {
-      // Ensure lists are initialized even if the request fails
-      _states = [];
+      _states = _fallbackStateDistricts.keys.toList()..sort();
+      for (final entry in _fallbackStateDistricts.entries) {
+        _distCache[entry.key] = List<String>.from(entry.value)..sort();
+      }
     }
   }
 
   Future<List<String>> districts(String state) async {
     if (_distCache.containsKey(state)) return _distCache[state]!;
-    final r = await _dio.get('/admin/location/districts/${_stateId[state]}');
-    final list = (r.data?['districts'] as List<dynamic>)
-        .map((e) => e['district_name'] as String)
-        .toList()
-      ..sort();
-    _distCache[state] = list;
-    return list;
+    try {
+      final r = await _dio.get('/admin/location/districts/${_stateId[state]}');
+      final list = (r.data?['districts'] as List<dynamic>)
+          .map((e) => e['district_name'] as String)
+          .toList()
+        ..sort();
+      _distCache[state] = list;
+      return list;
+    } catch (_) {
+      final list = List<String>.from(
+          _fallbackStateDistricts[state] ?? const <String>[])..sort();
+      _distCache[state] = list;
+      return list;
+    }
   }
 
   Map<String, double> get hazardMap => _hazard;
