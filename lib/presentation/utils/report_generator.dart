@@ -35,7 +35,6 @@ class ReportGenerator {
 
     final pdf = pw.Document();
 
-    // Load images
     final bgImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/ic_socio_climatic_dia.webp'))
           .buffer
@@ -62,7 +61,6 @@ class ReportGenerator {
           .asUint8List(),
     );
 
-    // Helpers
     String asFixed(dynamic val) {
       if (val == null) return '0.00';
       if (val is num) return val.toStringAsFixed(2);
@@ -72,7 +70,6 @@ class ReportGenerator {
       return '0.00';
     }
 
-    // Level determination
     String hazardLevelFromValue(double v) {
       if (v < 0.254952719) return 'Very Low';
       if (v < 0.359426855) return 'Low';
@@ -97,7 +94,6 @@ class ReportGenerator {
       return 'Very High';
     }
 
-    // Color mapping
     PdfColor riskColor(String level) {
       switch (level.toLowerCase()) {
         case 'very low':
@@ -115,7 +111,6 @@ class ReportGenerator {
       }
     }
 
-    // Gauge widget
     pw.Widget gaugeWithPointerArrow({
       required double value,
       required pw.MemoryImage gaugeImage,
@@ -149,7 +144,6 @@ class ReportGenerator {
       );
     }
 
-    // Compute scores
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final expDetails = computeExposureDetails(formattedAnswers);
@@ -162,10 +156,9 @@ class ReportGenerator {
     final String exposureScore = expVal.toStringAsFixed(2);
     final String riskScore = asFixed(st.answers['riskScore']);
 
-    // Final risk
     final double finalRisk = vulnVal * expVal * hazardVal;
     final String finalRiskScore = finalRisk.toStringAsFixed(4);
-    final String riskLevel = 'High'; // static for now
+    final String riskLevel = 'High';
 
     pdf.addPage(
       pw.Page(
@@ -186,7 +179,6 @@ class ReportGenerator {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    // Header
                     pw.Container(
                       width: double.infinity,
                       height: 90,
@@ -223,7 +215,6 @@ class ReportGenerator {
 
                     pw.SizedBox(height: 10),
 
-                    // Farmer info
                     pw.Padding(
                       padding: pw.EdgeInsets.symmetric(horizontal: 20),
                       child: pw.Column(
@@ -255,7 +246,6 @@ class ReportGenerator {
 
                     pw.SizedBox(height: 12),
 
-                    // Score bars
                     imageScoreBarWithArrow(
                       label: '1. Vulnerability',
                       score: vulnerabilityScore,
@@ -288,7 +278,6 @@ class ReportGenerator {
 
                     pw.SizedBox(height: 20),
 
-                    // Gauge with date and final score overlay
                     pw.Stack(
                       alignment: pw.Alignment.center,
                       children: [
@@ -316,7 +305,7 @@ class ReportGenerator {
                           pw.SizedBox(height: 4),
                           pw.Text(riskLevel, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.red)),
                           pw.RichText(
-                            text: pw.TextSpan(
+                            text: const pw.TextSpan(
                               style: pw.TextStyle(fontSize: 12, color: PdfColors.black),
                               children: [
                                 pw.TextSpan(text: '('),
@@ -337,9 +326,8 @@ class ReportGenerator {
                       ),
                     ),
 
-                    // Conditional remark
                     if (riskLevel == 'High' || riskLevel == 'Very High') pw.Padding(
-                      padding: pw.EdgeInsets.only(top: 12),
+                      padding: const pw.EdgeInsets.only(top: 12),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
@@ -352,10 +340,8 @@ class ReportGenerator {
                       ),
                     ),
 
-                    // Legend
                     pw.SizedBox(height: 20),
 
-                    // Legend below gauge
                     pw.Wrap(
                       spacing: 24,
                       runSpacing: 8,
@@ -371,7 +357,6 @@ class ReportGenerator {
 
                     pw.SizedBox(height: 24),
 
-                    // Disclaimer
                     pw.Text(
                       'Disclaimer: Above risk score is based on farmer responses.',
                       style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
@@ -385,7 +370,6 @@ class ReportGenerator {
       ),
     );
 
-    // Save PDF
     Directory downloadsDir;
     if (Platform.isAndroid) {
       downloadsDir = Directory('/storage/emulated/0/Download');
@@ -398,7 +382,6 @@ class ReportGenerator {
     final outFile = File('${downloadsDir.path}/$fileName');
     await outFile.writeAsBytes(await pdf.save());
 
-    // Notification
     const androidDetails = AndroidNotificationDetails(
       'reports', 'Reports',
       channelDescription: 'Your report is ready',
@@ -414,7 +397,6 @@ class ReportGenerator {
     );
   }
 
-  // Legend row helper
   static pw.Widget legendRow(PdfColor color, String label) {
     return pw.Padding(
       padding: pw.EdgeInsets.symmetric(vertical: 2),
@@ -436,8 +418,6 @@ class ReportGenerator {
       ),
     );
   }
-
-  // Score bar helper
   static pw.Widget imageScoreBarWithArrow({
     required String label,
     required String score,
@@ -450,7 +430,7 @@ class ReportGenerator {
     double barHeight = 33,
   }) {
     return pw.Padding(
-      padding: pw.EdgeInsets.symmetric(vertical: 2),
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
