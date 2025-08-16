@@ -324,6 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                       AnimatedScale(
                         scale: 1,
+
                         duration: const Duration(milliseconds: 700),
                         curve: Curves.elasticOut,
                         child: Container(
@@ -393,6 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         textAlign: TextAlign.center,
                       ),
+
                       const SizedBox(height: 28),
                       ElevatedButton(
                         onPressed: () {

@@ -1,20 +1,29 @@
 plugins {
     id "com.android.application"
     // FlutterFire - Google services
-    id 'com.google.gms.google-services'
+    id "com.google.gms.google-services"
     id "kotlin-android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Load keystore credentials from android/key.properties
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+} else {
+    logger.lifecycle("Warning: key.properties not found; release signing will fail if you try to upload.")
+}
+
 android {
-    namespace = "com.example.ndri_dairy_risk"
+    namespace = "com.ndri.dairyrisk"
     compileSdk = 35
     // if you use native code, keep this:
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {
-        applicationId = "com.example.ndri_dairy_risk"
+        applicationId = "com.ndri.dairyrisk"
         minSdk        = flutter.minSdkVersion
         targetSdk     = flutter.targetSdkVersion
         versionCode   = flutter.versionCode
@@ -22,7 +31,7 @@ android {
 
         // This tells the manifest merger to replace android:name="${applicationName}"
         manifestPlaceholders = [
-                applicationName: "com.example.ndri_dairy_risk.App"
+                applicationName: "com.ndri.dairyrisk.App"
         ]
     }
 
@@ -36,12 +45,27 @@ android {
         jvmTarget = "17"
     }
 
+    // ✅ Real release signing config (reads from key.properties)
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
     buildTypes {
         debug {
             // picks up manifestPlaceholders from defaultConfig
         }
         release {
-            signingConfig = signingConfigs.debug
+            // ✅ Use the real release keystore, NOT debug
+            signingConfig signingConfigs.release
+            // Optional: keep as needed
+            minifyEnabled false
+            shrinkResources false
+            debuggable false
             // also picks up manifestPlaceholders from defaultConfig
         }
     }

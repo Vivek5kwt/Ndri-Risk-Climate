@@ -34,7 +34,21 @@ class ReportGenerator {
     if (st is! RiskAssessmentLoaded) return;
 
     final pdf = pw.Document();
-
+    final garamondRegular = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/EBGaramond-Regular.ttf'),
+    );
+    final garamondBold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/EBGaramond-Bold.ttf'),
+    );
+    final garamondMedium = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/EBGaramond-Medium.ttf'),
+    );
+    final garamondSemiBold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/EBGaramond-SemiBold.ttf'),
+    );
+    final garamondExtraBold = pw.Font.ttf(
+      await rootBundle.load('assets/fonts/EBGaramond-ExtraBold.ttf'),
+    );
     final bgImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/ic_socio_climatic_dia.webp'))
           .buffer
@@ -61,6 +75,16 @@ class ReportGenerator {
           .asUint8List(),
     );
 
+    // Use this exact color for "State:" and "Block:" labels.
+    final stateBlockLabelColor = PdfColor.fromHex('#843b0c');
+    final yellowLabelColor = PdfColor.fromHex('#ffff03');
+    final bgBlueColor = PdfColor.fromHex('#01949a');
+    final greenColor = PdfColor.fromHex('#03cd03');
+    final veryHighColor = PdfColor.fromHex('#c10303');
+    final highColor = PdfColor.fromHex('#ff0303');
+    final moderatorColor = PdfColor.fromHex('#0303ff');
+    final veryLowColor = PdfColor.fromHex('#1d4517');
+
     String asFixed(dynamic val) {
       if (val == null) return '0.00';
       if (val is num) return val.toStringAsFixed(2);
@@ -73,7 +97,7 @@ class ReportGenerator {
     String hazardLevelFromValue(double v) {
       if (v < 0.254952719) return 'Very Low';
       if (v < 0.359426855) return 'Low';
-      if (v < 0.419781228) return 'Medium';
+      if (v < 0.419781228) return 'Moderate';
       if (v < 0.512033541) return 'High';
       return 'Very High';
     }
@@ -81,7 +105,7 @@ class ReportGenerator {
     String exposureLevelFromValue(double v) {
       if (v < 0.3629) return 'Very Low';
       if (v < 0.4252) return 'Low';
-      if (v < 0.4670) return 'Medium';
+      if (v < 0.4670) return 'Moderate';
       if (v < 0.5131) return 'High';
       return 'Very High';
     }
@@ -89,7 +113,7 @@ class ReportGenerator {
     String vulnerabilityLevelFromValue(double v) {
       if (v < 0.6228) return 'Very Low';
       if (v < 0.7023) return 'Low';
-      if (v < 0.7486) return 'Medium';
+      if (v < 0.7486) return 'Moderate';
       if (v < 0.7813) return 'High';
       return 'Very High';
     }
@@ -97,15 +121,15 @@ class ReportGenerator {
     PdfColor riskColor(String level) {
       switch (level.toLowerCase()) {
         case 'very low':
-          return PdfColors.green;
+          return veryLowColor;
         case 'low':
-          return PdfColors.lightGreen;
-        case 'medium':
-          return PdfColors.yellow;
+          return greenColor;
+        case 'Moderate':
+          return moderatorColor;
         case 'high':
-          return PdfColors.orange;
+          return highColor;
         case 'very high':
-          return PdfColors.red;
+          return veryHighColor;
         default:
           return PdfColors.grey;
       }
@@ -174,159 +198,167 @@ class ReportGenerator {
                   child: pw.Image(bgImage, fit: pw.BoxFit.contain),
                 ),
               ),
-              pw.Padding(
-                padding: pw.EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Container(
-                      width: double.infinity,
-                      height: 90,
-                      decoration: pw.BoxDecoration(
-                        color: PdfColor.fromHex('#009688'),
-                        borderRadius: pw.BorderRadius.only(
-                          bottomLeft: pw.Radius.circular(100),
-                          bottomRight: pw.Radius.circular(100),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(
+                    width: double.infinity,
+                    height: 130,
+                    decoration: pw.BoxDecoration(
+                      color: bgBlueColor,
+                      borderRadius: pw.BorderRadius.only(
+                        bottomLeft: pw.Radius.circular(80),
+                        bottomRight: pw.Radius.circular(80),
+                      ),
+                    ),
+                    alignment: pw.Alignment.center,
+                    child: pw.Column(
+                      mainAxisAlignment: pw.MainAxisAlignment.center,
+                      children: [
+                        pw.Text(
+                          'Socio-climatic Risk of',
+                          style: pw.TextStyle(
+                            fontSize: 46,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white,
+                            font: garamondBold,
+                          ),
                         ),
-                      ),
-                      alignment: pw.Alignment.center,
-                      child: pw.Column(
-                        mainAxisAlignment: pw.MainAxisAlignment.center,
-                        children: [
+                        pw.Text(
+                          'Smallholder Dairy Farmer',
+                          style: pw.TextStyle(
+                            fontSize: 36,
+                            fontWeight: pw.FontWeight.bold,
+                            color: yellowLabelColor,
+                            font: garamondSemiBold,
+                          ),
+                        ),
+                        pw.SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+
+                  pw.SizedBox(height: 10),
+
+                  pw.Padding(
+                    padding: pw.EdgeInsets.symmetric(horizontal: 20),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Row(children: [
+                          pw.Text('Name of the dairy farmer: ', style: pw.TextStyle(fontSize: 22, font: garamondExtraBold)),
+                          pw.Text(name, style: pw.TextStyle(fontSize: 22, color: moderatorColor, font: garamondSemiBold)),
+                        ]),
+                        pw.SizedBox(height: 8),
+                        pw.Row(children: [
+                          // State label in #843b0c
                           pw.Text(
-                            'Socio-climatic Risk of',
+                            'State: ',
                             style: pw.TextStyle(
-                              fontSize: 32,
-                              fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.white,
+                              fontSize: 22,
+                              color: stateBlockLabelColor,
+                              font: garamondBold,
                             ),
                           ),
+                          pw.Text(stateName ?? '', style: pw.TextStyle(fontSize: 22, color: moderatorColor, font: garamondSemiBold)),
+                          pw.Spacer(),
+                          // Block label in #843b0c
                           pw.Text(
-                            'Smallholder Dairy Farmer',
+                            'Block: ',
                             style: pw.TextStyle(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: pw.FontWeight.bold,
-                              color: PdfColors.yellow,
+                              color: stateBlockLabelColor,
+                              font: garamondBold,
                             ),
                           ),
-                        ],
-                      ),
+                          pw.Text(block, style: pw.TextStyle(fontSize: 22, color: moderatorColor, font: garamondSemiBold)),
+                        ]),
+                        pw.SizedBox(height: 5),
+                        pw.Row(children: [
+                          // Keep District/Village as before
+                          pw.Text('District: ', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: stateBlockLabelColor, font: garamondBold)),
+                          pw.Text(district ?? '', style: pw.TextStyle(fontSize: 22, color: moderatorColor, font: garamondSemiBold)),
+                          pw.Spacer(),
+                          pw.Text('Village: ', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: stateBlockLabelColor, font: garamondBold)),
+                          pw.Text(village, style: pw.TextStyle(fontSize: 22, color: moderatorColor, font: garamondSemiBold)),
+                        ]),
+                      ],
                     ),
+                  ),
 
-                    pw.SizedBox(height: 10),
+                  pw.SizedBox(height: 12),
 
-                    pw.Padding(
-                      padding: pw.EdgeInsets.symmetric(horizontal: 20),
-                      child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          pw.Row(children: [
-                            pw.Text('Name: ', style: pw.TextStyle(fontSize: 20)),
-                            pw.Text(name, style: pw.TextStyle(fontSize: 18, color: PdfColors.blueAccent)),
-                          ]),
-                          pw.SizedBox(height: 8),
-                          pw.Row(children: [
-                            pw.Text('State: ', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.brown400)),
-                            pw.Text(stateName ?? '', style: pw.TextStyle(fontSize: 18, color: PdfColors.blueAccent)),
-                            pw.Spacer(),
-                            pw.Text('Block: ', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.brown400)),
-                            pw.Text(block, style: pw.TextStyle(fontSize: 18, color: PdfColors.blueAccent)),
-                          ]),
-                          pw.SizedBox(height: 5),
-                          pw.Row(children: [
-                            pw.Text('District: ', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.brown400)),
-                            pw.Text(district ?? '', style: pw.TextStyle(fontSize: 18, color: PdfColors.blueAccent)),
-                            pw.Spacer(),
-                            pw.Text('Village: ', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.brown400)),
-                            pw.Text(village, style: pw.TextStyle(fontSize: 18, color: PdfColors.blueAccent)),
-                          ]),
-                        ],
-                      ),
-                    ),
-
-                    pw.SizedBox(height: 12),
-
-                    imageScoreBarWithArrow(
-                      label: '1. Vulnerability',
+                  imageScoreBarWithArrow(
+                      label: '1. Vulnerability score',
                       score: vulnerabilityScore,
                       value: vulnVal,
                       barImage: barImage,
                       pointerImage: pointerArrowImage,
                       level: vulnerabilityLevelFromValue(vulnVal),
                       levelColor: riskColor(vulnerabilityLevelFromValue(vulnVal)),
-                    ),
-                    pw.SizedBox(height: 6),
-                    imageScoreBarWithArrow(
-                      label: '2. Exposure',
+                      levelFont: garamondBold,
+                      scoreFont: garamondBold
+                  ),
+                  pw.SizedBox(height: 6),
+                  imageScoreBarWithArrow(
+                      label: '2. Exposure score',
                       score: exposureScore,
                       value: expVal,
                       barImage: barImage,
                       pointerImage: pointerArrowImage,
                       level: exposureLevelFromValue(expVal),
                       levelColor: riskColor(exposureLevelFromValue(expVal)),
-                    ),
-                    pw.SizedBox(height: 6),
-                    imageScoreBarWithArrow(
-                      label: '3. Hazard',
+                      levelFont: garamondBold,
+                      scoreFont: garamondBold
+                  ),
+                  pw.SizedBox(height: 6),
+                  imageScoreBarWithArrow(
+                      label: '3. Hazard score',
                       score: hazardScore,
                       value: hazardVal.clamp(0.0, 1.0),
                       barImage: barImage,
                       pointerImage: pointerArrowImage,
                       level: hazardLevelFromValue(hazardVal),
                       levelColor: riskColor(hazardLevelFromValue(hazardVal)),
-                    ),
+                      levelFont: garamondBold,
+                      scoreFont: garamondBold
+                  ),
 
-                    pw.SizedBox(height: 20),
+                  pw.SizedBox(height: 20),
 
-                    pw.Stack(
-                      alignment: pw.Alignment.center,
-                      children: [
-                        gaugeWithPointerArrow(
-                          value: double.tryParse(riskScore) ?? 0,
-                          gaugeImage: rainbowGaugeImage,
-                          pointerImage: pointerDotImage,
-                        ),
-                        pw.Column(
-                          mainAxisSize: pw.MainAxisSize.min,
-                          children: [
-                            pw.Text(date, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                            pw.SizedBox(height: 6),
-                            pw.Text(finalRiskScore, style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: PdfColors.blue)),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    pw.SizedBox(height: 20),
-                    pw.Center(
-                      child: pw.Column(
+                  pw.Stack(
+                    alignment: pw.Alignment.center,
+                    children: [
+                      gaugeWithPointerArrow(
+                        value: double.tryParse(riskScore) ?? 0,
+                        gaugeImage: rainbowGaugeImage,
+                        pointerImage: pointerDotImage,
+                      ),
+                      pw.Column(
+                        mainAxisSize: pw.MainAxisSize.min,
                         children: [
-                          pw.Text('Your socio-climatic risk is calculated to be', style: pw.TextStyle(fontSize: 16)),
-                          pw.SizedBox(height: 4),
-                          pw.Text(riskLevel, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.red)),
-                          pw.RichText(
-                            text: const pw.TextSpan(
-                              style: pw.TextStyle(fontSize: 12, color: PdfColors.black),
-                              children: [
-                                pw.TextSpan(text: '('),
-                                pw.TextSpan(text: 'very low', style: pw.TextStyle(color: PdfColors.green)),
-                                pw.TextSpan(text: ' / '),
-                                pw.TextSpan(text: 'low', style: pw.TextStyle(color: PdfColors.lightGreen)),
-                                pw.TextSpan(text: ' / '),
-                                pw.TextSpan(text: 'moderate', style: pw.TextStyle(color: PdfColors.yellow)),
-                                pw.TextSpan(text: ' / '),
-                                pw.TextSpan(text: 'high', style: pw.TextStyle(color: PdfColors.orange)),
-                                pw.TextSpan(text: ' / '),
-                                pw.TextSpan(text: 'very high', style: pw.TextStyle(color: PdfColors.red)),
-                                pw.TextSpan(text: ')'),
-                              ],
-                            ),
-                          ),
+                          pw.Text(date, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                          pw.SizedBox(height: 6),
+                          pw.Text(finalRiskScore, style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: moderatorColor)),
                         ],
                       ),
-                    ),
+                    ],
+                  ),
 
-                    if (riskLevel == 'High' || riskLevel == 'Very High') pw.Padding(
+                  pw.SizedBox(height: 20),
+                  pw.Center(
+                    child: pw.Column(
+                      children: [
+                        pw.Text('Your socio-climatic risk is calculated to be', style: pw.TextStyle(fontSize: 16)),
+                        pw.SizedBox(height: 4),
+                        pw.Text(riskLevel, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.red)),
+                      ],
+                    ),
+                  ),
+
+                  if (riskLevel == 'High' || riskLevel == 'Very High')
+                    pw.Padding(
                       padding: const pw.EdgeInsets.only(top: 12),
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -340,29 +372,28 @@ class ReportGenerator {
                       ),
                     ),
 
-                    pw.SizedBox(height: 20),
+                  pw.SizedBox(height: 20),
 
-                    pw.Wrap(
-                      spacing: 24,
-                      runSpacing: 8,
-                      alignment: pw.WrapAlignment.center,
-                      children: [
-                        legendRow(PdfColors.green, 'Very Low'),
-                        legendRow(PdfColors.lightGreen, 'Low'),
-                        legendRow(PdfColors.yellow, 'Medium'),
-                        legendRow(PdfColors.orange, 'High'),
-                        legendRow(PdfColors.red, 'Very High'),
-                      ],
-                    ),
+                  pw.Wrap(
+                    spacing: 24,
+                    runSpacing: 8,
+                    alignment: pw.WrapAlignment.center,
+                    children: [
+                      legendRow(veryLowColor  , 'Very Low'),
+                      legendRow(greenColor, 'Low'),
+                      legendRow(moderatorColor, 'Moderate'),
+                      legendRow(highColor, 'High'),
+                      legendRow(veryHighColor, 'Very High'),
+                    ],
+                  ),
 
-                    pw.SizedBox(height: 24),
+                  pw.SizedBox(height: 24),
 
-                    pw.Text(
-                      'Disclaimer: Above risk score is based on farmer responses.',
-                      style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
-                    ),
-                  ],
-                ),
+                  pw.Text(
+                    'Disclaimer: Above risk score is based on farmer responses.',
+                    style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+                  ),
+                ],
               ),
             ],
           );
@@ -383,7 +414,8 @@ class ReportGenerator {
     await outFile.writeAsBytes(await pdf.save());
 
     const androidDetails = AndroidNotificationDetails(
-      'reports', 'Reports',
+      'reports',
+      'Reports',
       channelDescription: 'Your report is ready',
       importance: Importance.high,
       priority: Priority.high,
@@ -418,6 +450,7 @@ class ReportGenerator {
       ),
     );
   }
+
   static pw.Widget imageScoreBarWithArrow({
     required String label,
     required String score,
@@ -426,17 +459,20 @@ class ReportGenerator {
     required pw.MemoryImage pointerImage,
     String? level,
     PdfColor? levelColor,
-    double barWidth = 180,
+    pw.Font? levelFont,
+    pw.Font? scoreFont,
+    double barWidth = 190,
     double barHeight = 33,
   }) {
+    final clamped = value.clamp(0.0, 1.0);
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      padding: const pw.EdgeInsets.symmetric(vertical: 2,horizontal: 15),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.SizedBox(
-            width: 190,
-            child: pw.Text(label, style: pw.TextStyle(fontSize: 17, fontWeight: pw.FontWeight.bold)),
+            width: 220,
+            child: pw.Text(label, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, font: levelFont)),
           ),
           pw.SizedBox(width: 6),
           pw.Container(
@@ -450,25 +486,30 @@ class ReportGenerator {
                   child: pw.Image(barImage, width: barWidth, height: barHeight),
                 ),
                 pw.Positioned(
-                  left: (barWidth - 22) * value,
+                  left: (barWidth - 22) * clamped,
                   top: 0,
                   child: pw.Image(pointerImage, width: 22, height: 22),
                 ),
               ],
             ),
           ),
-          pw.SizedBox(width: 10),
+          pw.SizedBox(width: 7),
           pw.Container(
             width: 40,
             alignment: pw.Alignment.centerLeft,
-            child: pw.Text(score, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            child: pw.Text(score, style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: scoreFont)),
           ),
           pw.SizedBox(width: 6),
           pw.Container(
-            width: 50,
+            width: 55,
             child: pw.Text(
               level ?? '',
-              style: pw.TextStyle(fontSize: 15, color: levelColor ?? PdfColors.black, fontWeight: pw.FontWeight.bold),
+              style: pw.TextStyle(
+                fontSize: 24,
+                color: levelColor ?? PdfColors.black,
+                fontWeight: pw.FontWeight.bold,
+                font: levelFont,
+              ),
             ),
           ),
         ],

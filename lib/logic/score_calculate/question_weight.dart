@@ -269,7 +269,6 @@ final Map<String, Map<String, dynamic>> questionParams  = {
     'weight': 3.240973601,
     'isPositive': true,
   },
-  // Exposure indicators
   '7_exp': {
     'min': 0,
     'max': 9,
@@ -387,7 +386,6 @@ int mapHouseType(String val) {
   return 3;
 }
 
-// Keys for vulnerability and exposure questions used in score calculation
 final Set<String> vulnerabilityKeys = {
   '2',
   '13',
@@ -442,7 +440,6 @@ double _calcFor(String key, Map<String, String> ans) {
   if (!questionParams.containsKey(key)) return 0.0;
   final p = questionParams[key]!;
   double input = _parseAnswer(key, ans);
-  // Special cases for derived inputs
   if (key == '13') {
     input = _parseAnswer('13', ans);
     if (input == 0.0) {
@@ -702,9 +699,7 @@ double computeExposureScore(Map<String, String> ans) {
   return details['score'] ?? 0.0;
 }
 
-/// Returns a map containing the raw sum of weighted exposure values,
 /// the total weight of all exposure questions and the final exposure
-/// score (sum divided by total weight).
 Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   double sum = 0.0;
   final Map<String, double> values = {};
@@ -713,7 +708,7 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
     values[_exposureLabels[k] ?? k] = v;
     sum += v;
   }
-  // Add aggregated exposure values derived from livestock questions
+  /// Add aggregated exposure values derived from livestock questions
   final bw6 = _aggregateExposure({
     '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
   }, 7, 1.620113125, ans, _livestockWeights);
@@ -738,10 +733,8 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   };
 }
 
-/// Returns a map containing the raw sum of weighted vulnerability values,
-/// the total weight of all vulnerability questions and the final
-/// vulnerability score (sum divided by total weight). This helper is
-/// primarily used for logging and debugging in the UI.
+/// The total weight of all vulnerability questions and the final
+/// vulnerability score (sum divided by total weight).
 Map<String, dynamic> computeVulnerabilityDetails(Map<String, String> ans) {
   double sum = 0.0;
   final Map<String, double> values = {};
@@ -855,9 +848,7 @@ double? computeFinalValueForInput(String key, String input) {
   return 0.0;
 }
 
-// --- Aggregated socio-climatic functions ---
 
-/// Question keys used for computing perception towards climate change (Q45).
 const List<String> _perceptionKeys = [
   '44.1',
   '44.2',
@@ -877,7 +868,6 @@ const List<String> _perceptionKeys = [
   '44.16',
 ];
 
-/// Question keys used for computing awareness towards climate change (Q46).
 const List<String> _awarenessKeys = [
   '45.1',
   '45.2',
@@ -888,7 +878,6 @@ const List<String> _awarenessKeys = [
   '45.7',
 ];
 
-/// Question keys used for computing preparedness towards climate change (Q47).
 const List<String> _preparednessKeys = [
   '46.1',
   '46.2',
@@ -908,7 +897,6 @@ const List<String> _preparednessKeys = [
   '46.16',
 ];
 
-/// Compute the accepted value for perception towards climate change (Q45).
 double computePerceptionAggregate(Map<String, String> ans) {
   double sum = 0.0;
   for (final key in _perceptionKeys) {
@@ -920,7 +908,6 @@ double computePerceptionAggregate(Map<String, String> ans) {
   return val;
 }
 
-/// Compute the accepted value for awareness towards climate change (Q46).
 double computeAwarenessAggregate(Map<String, String> ans) {
   double sum = 0.0;
   for (final key in _awarenessKeys) {
@@ -932,7 +919,6 @@ double computeAwarenessAggregate(Map<String, String> ans) {
   return val;
 }
 
-/// Compute the accepted value for preparedness towards climate change (Q47).
 double computePreparednessAggregate(Map<String, String> ans) {
   double sum = 0.0;
   for (final key in _preparednessKeys) {
