@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
@@ -174,6 +175,13 @@ class ReportGenerator {
     final double vulnVal = vulnDetails['score'] as double;
     final double expVal = expDetails['score'] as double;
     final double hazardVal = LocationService().hazardFor(district ?? '');
+
+    final Map<String, double> exposureValues =
+        Map<String, double>.from(expDetails['values'] as Map);
+    for (final entry in exposureValues.entries) {
+      debugPrint('Exposure ${entry.key}: ${entry.value.toStringAsFixed(2)}');
+    }
+    debugPrint('Total Exposure Score: ${expVal.toStringAsFixed(2)}');
 
     final String hazardScore = hazardVal.toStringAsFixed(2);
     final String vulnerabilityScore = vulnVal.toStringAsFixed(2);
