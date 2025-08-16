@@ -628,7 +628,7 @@ const List<String> _orderedExposureKeys = [
 /// [questionParams]. Most exposure questions share the same key for
 /// both the answer and parameter lookup except question 29 which uses
 /// `29_exp` internally.
-const Map<String, String> _exposureParamKeys = {
+const Map<String, String> exposureParamKeys = {
   '7': '7_exp',
   '8': '8_exp',
   '6': '6_exp',
@@ -671,6 +671,13 @@ const Map<String, String> _exposureLabels = {
   'cu6': 'CU6',
 };
 
+/// Weights for aggregated exposure questions derived from livestock data.
+const Map<String, double> exposureAggregatedWeights = {
+  'BW6': 1.620113125,
+  'CI6': 2.189443127,
+  'CU6': 3.712540828,
+};
+
 /// Weights used for livestock unit calculations when aggregating
 /// exposure values from individual animal counts.
 const Map<String, double> _livestockWeights = {
@@ -711,17 +718,17 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   /// Add aggregated exposure values derived from livestock questions
   final bw6 = _aggregateExposure({
     '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
-  }, 7, 1.620113125, ans, _livestockWeights);
+  }, 7, exposureAggregatedWeights['BW6']!, ans, _livestockWeights);
   values[_exposureLabels['bw6']!] = bw6;
   sum += bw6;
   final ci6 = _aggregateExposure({
     '18.1', '18.2', '18.3', '18.4', '18.5', '18.6'
-  }, 8, 2.189443127, ans, _livestockWeights);
+  }, 8, exposureAggregatedWeights['CI6']!, ans, _livestockWeights);
   values[_exposureLabels['ci6']!] = ci6;
   sum += ci6;
   final cu6 = _aggregateExposure({
     '18.13', '18.14', '18.15', '18.16', '18.17', '18.18'
-  }, 8, 3.712540828, ans, _livestockWeights);
+  }, 8, exposureAggregatedWeights['CU6']!, ans, _livestockWeights);
   values[_exposureLabels['cu6']!] = cu6;
   sum += cu6;
   final score = _exposureTotalWeight == 0 ? 0.0 : sum / _exposureTotalWeight;
@@ -780,7 +787,7 @@ double _aggregateExposure(Set<String> keys, double max, double weight,
 }
 
 double _calcExposure(String key, Map<String, String> ans) {
-  final paramKey = _exposureParamKeys[key] ?? key;
+  final paramKey = exposureParamKeys[key] ?? key;
   if (!questionParams.containsKey(paramKey)) return 0.0;
   String? raw = ans[key];
   double? input = double.tryParse(raw ?? '');

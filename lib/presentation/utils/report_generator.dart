@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../data/repositories/question_repository.dart';
 import '../../data/services/location_service.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_bloc.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_state.dart';
@@ -178,9 +179,24 @@ class ReportGenerator {
 
     final Map<String, double> exposureValues =
         Map<String, double>.from(expDetails['values'] as Map);
+
+    // Map question numbers to their text for easier debugging output.
+    final questionMap = {
+      for (final q in QuestionRepository.getQuestions()) q.variableNumber: q.questionText
+    };
+
     for (final entry in exposureValues.entries) {
-      debugPrint('Exposure ${entry.key}: ${entry.value.toStringAsFixed(3)}');
+      final label = entry.key;
+      final qNum = label.startsWith('Q') ? label.substring(1) : label;
+      final paramKey = exposureParamKeys[qNum] ?? qNum;
+      final double? weight =
+          (questionParams[paramKey]?['weight'] as double?) ??
+              exposureAggregatedWeights[label];
+      final questionText = questionMap[qNum] ?? label;
+      debugPrint(
+          'Exposure $label: ${entry.value.toStringAsFixed(3)} | Question: $questionText | Weight: ${weight?.toStringAsFixed(3) ?? 'N/A'}');
     }
+
     debugPrint('Total Exposure Score: ${expVal.toStringAsFixed(3)}');
 
     final String hazardScore = hazardVal.toStringAsFixed(2);
