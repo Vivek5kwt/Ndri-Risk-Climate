@@ -179,13 +179,13 @@ class ReportGenerator {
     final Map<String, double> exposureValues =
         Map<String, double>.from(expDetails['values'] as Map);
     for (final entry in exposureValues.entries) {
-      debugPrint('Exposure ${entry.key}: ${entry.value.toStringAsFixed(3)}');
+      debugPrint('Exposure ${entry.key}: ${entry.value.toStringAsFixed(9)}');
     }
-    debugPrint('Total Exposure Score: ${expVal.toStringAsFixed(3)}');
+    debugPrint('Total Exposure Score: ${expVal.toStringAsFixed(9)}');
 
     final String hazardScore = hazardVal.toStringAsFixed(2);
     final String vulnerabilityScore = vulnVal.toStringAsFixed(2);
-    final String exposureScore = expVal.toStringAsFixed(3);
+    final String exposureScore = expVal.toStringAsFixed(9);
     final String riskScore = asFixed(st.answers['riskScore']);
 
     final double finalRisk = vulnVal * expVal * hazardVal;
@@ -503,7 +503,7 @@ class ReportGenerator {
           ),
           pw.SizedBox(width: 7),
           pw.Container(
-            width: 40,
+            width: 80,
             alignment: pw.Alignment.centerLeft,
             child: pw.Text(score, style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: scoreFont)),
           ),
