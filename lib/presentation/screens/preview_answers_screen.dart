@@ -8,7 +8,6 @@ class PreviewAnswersScreen extends StatelessWidget {
   final VoidCallback onEditFirstQuestion;
   final VoidCallback onSubmit;
 
-  // Questions that expect yes/no answers stored as 1 or 0.
   static const Set<String> yesNoVars = {
     '34',
     '46.1',
@@ -29,7 +28,6 @@ class PreviewAnswersScreen extends StatelessWidget {
     '46.16',
   };
 
-  // Questions that act as section headings and don't need answers displayed
   static const Set<String> headingVars = {
     '13',
     '18',
@@ -44,7 +42,6 @@ class PreviewAnswersScreen extends StatelessWidget {
     required this.onSubmit,
   });
 
-  // Robust variable number sorting
   List<QuestionModel> getSortedQuestions() {
     List<QuestionModel> sorted = List<QuestionModel>.from(allQuestions);
     sorted.sort((a, b) {
@@ -53,7 +50,6 @@ class PreviewAnswersScreen extends StatelessWidget {
       int aMain = int.tryParse(aParts[0]) ?? 0;
       int bMain = int.tryParse(bParts[0]) ?? 0;
       if (aMain != bMain) return aMain.compareTo(bMain);
-      // Now compare sub-parts (handles e.g. 13.10 > 13.2)
       if (aParts.length > 1 && bParts.length > 1) {
         int aSub = int.tryParse(aParts[1]) ?? 0;
         int bSub = int.tryParse(bParts[1]) ?? 0;
@@ -107,14 +103,10 @@ class PreviewAnswersScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final question = sortedQuestions[index];
               final bool isHeading = headingVars.contains(question.variableNumber);
-              // --- This is the fix: always get answer using variableNumber! ---
               final rawAnswer = isHeading
                   ? ''
                   : allAnswers[question.variableNumber]?.toString() ?? 'Not Answered';
-              // For yes/no questions convert stored 1/0 values into
-              // human readable "Yes"/"No". Other questions may legitimately
-              // use numeric answers like 0 or 1 (e.g. rating scale), so
-              // we leave those values untouched.
+
               final answer = yesNoVars.contains(question.variableNumber)
                   ? (rawAnswer == '1'
                   ? 'Yes'

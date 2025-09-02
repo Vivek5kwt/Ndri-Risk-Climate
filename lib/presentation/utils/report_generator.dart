@@ -20,12 +20,15 @@ import '../../logic/score_calculate/question_weight.dart';
 
 class ReportGenerator {
   // ==== Excel normalization constants ====
+  // Exposure (B3):
   static const double _expMin = 0.1964;
   static const double _expMax = 0.6196;
 
+  // Hazard:
   static const double _hazMin = 0.1125;
   static const double _hazMax = 0.5672;
 
+  // Vulnerability (D3):
   static const double _vulnMin = 0.3967;
   static const double _vulnMax = 0.857;
 
@@ -43,26 +46,32 @@ class ReportGenerator {
     return 'Very High';
   }
 
-  // Exposure specific bands based on raw exposure value (B3)
+  // Exposure specific bands based on RAW exposure value (B3)
   // Very Low (0.1694 – 0.3628)
   // Low       (0.3629 – 0.4251)
   // Medium    (0.4252 – 0.4669)
   // High      (0.4670 – 0.5130)
   // Very High (0.5131 – 0.6196)
-  static String _exposureBandLabel(double v) {
-    if (v <= 0.3628) return 'Very Low';
-    if (v <= 0.4251) return 'Low';
-    if (v <= 0.4669) return 'Medium';
-    if (v <= 0.5130) return 'High';
+  static String _exposureBandLabel(double b3) {
+    if (b3 < 0.1694) return 'Very Low';
+    if (b3 <= 0.3628) return 'Very Low';
+    if (b3 <= 0.4251) return 'Low';
+    if (b3 <= 0.4669) return 'Medium';
+    if (b3 <= 0.5130) return 'High';
     return 'Very High';
   }
 
-  static String _asFixed(dynamic val, {int digits = 3}) {
-    if (val == null) return '0.${'0' * digits}';
-    if (val is num) return val.toStringAsFixed(digits);
-    if (val is String)
-      return (double.tryParse(val) ?? 0).toStringAsFixed(digits);
-    return '0.${'0' * digits}';
+  /// Standard rounding (used for the big risk number with 2 decimals).
+  static String _asFixed(num val, {int digits = 3}) {
+    return (val).toStringAsFixed(digits);
+  }
+
+  /// Truncate (floor) to N decimals (Excel-like for your display need).
+  static String _toFixedTrunc(num val, {int digits = 3}) {
+    if (digits < 0) digits = 0;
+    final p = pow(10, digits).toDouble();
+    final t = (val * p).floor() / p;
+    return t.toStringAsFixed(digits);
   }
 
   static PdfColor _riskColor(String level) {
@@ -99,15 +108,12 @@ class ReportGenerator {
     String? district,
   }) async {
     await initPermissions();
-    final st = context
-        .read<RiskAssessmentBloc>()
-        .state;
+    final st = context.read<RiskAssessmentBloc>().state;
     if (st is! RiskAssessmentLoaded) return;
 
-    // ==== 1) Get RAW model scores (0..1) ====
+    // ==== 1) RAW scores ====
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
 
-    // These come from your existing scoring fns (pre-accepted 0..1)
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final expDetails = computeExposureDetails(formattedAnswers);
 
@@ -121,33 +127,35 @@ class ReportGenerator {
         .forEach((k, v) => debugPrint('$k: $v'));
     debugPrint('Vulnerability sum: ${vulnDetails['sum']}');
 
-    final double rawVuln = (vulnDetails['score'] as double?) ?? 0.0;
-    final double rawExp = (expDetails['score'] as double?) ?? 0.0;
-
-    // IMPORTANT: raw hazard from LocationService (e.g., "Ambala")
+    // Assumed: these 'score' fields are the final averages B3 (Exposure) and D3 (Vulnerability)
+    final double b3Exposure = (expDetails['score'] as double?) ?? 0.0; // e.g., 0.598357015
+    final double d3Vulnerability = (vulnDetails['score'] as double?) ?? 0.0; // e.g., 0.664
     final double rawHazard = LocationService().hazardFor(district ?? '');
 
-    // ==== 2) Convert to ACCEPTED values using your Excel formulas ====
-    final double acceptedExposure = _clamp01(
-        _normalize(rawExp, _expMin, _expMax));
-    final double acceptedHazard = _clamp01(
-        _normalize(rawHazard, _hazMin, _hazMax));
-    final double acceptedVulnerability = _clamp01(
-        _normalize(rawVuln, _vulnMin, _vulnMax));
+    // ==== 2) Normalize per Excel ====
+    final double acceptedExposure =
+    _clamp01(_normalize(b3Exposure, _expMin, _expMax));            // (B3 - 0.1964) / (0.6196 - 0.1964)
+    final double acceptedVulnerability =
+    _clamp01(_normalize(d3Vulnerability, _vulnMin, _vulnMax));     // (D3 - 0.3967) / (0.857 - 0.3967)
+    final double acceptedHazard =
+    _clamp01(_normalize(rawHazard, _hazMin, _hazMax));
 
-    debugPrint('Accepted Exposure value: $acceptedExposure');
-    debugPrint('Accepted Vulnerability value: $acceptedVulnerability');
+    // Logs to verify against Excel
+    debugPrint('B3 (raw exposure)..................: ${b3Exposure.toStringAsFixed(9)}');
+    debugPrint('Accepted Exposure (0-1).............: ${acceptedExposure.toStringAsFixed(9)}');
+    debugPrint('D3 (raw vulnerability)..............: ${d3Vulnerability.toStringAsFixed(9)}');
+    debugPrint('Accepted Vulnerability (0-1)........: ${acceptedVulnerability.toStringAsFixed(9)}'); // expect 0.580708234…
+    debugPrint('Accepted Hazard (0-1)...............: ${acceptedHazard.toStringAsFixed(9)}');
 
     // ==== 3) Status labels ====
-    final String exposureStatus = _exposureBandLabel(rawExp);
-    final String hazardStatus = _bandLabel(acceptedHazard);
+    final String exposureStatus = _exposureBandLabel(b3Exposure); // raw-based bands
     final String vulnerabilityStatus = _bandLabel(acceptedVulnerability);
+    final String hazardStatus = _bandLabel(acceptedHazard);
 
-    // ==== 4) Risk (Calculated + Accepted) ====
-    final double calculatedRisk = acceptedExposure * acceptedHazard *
-        acceptedVulnerability;
-    final double acceptedRisk = calculatedRisk /
-        _riskDivisor; // no clamp (per Excel)
+    // ==== 4) Risk ====
+    final double calculatedRisk =
+        acceptedExposure * acceptedHazard * acceptedVulnerability;
+    final double acceptedRisk = calculatedRisk / _riskDivisor; // per Excel (no clamp)
     final String riskStatus = _bandLabel(acceptedRisk);
 
     // ==== 5) Build PDF ====
@@ -218,8 +226,7 @@ class ReportGenerator {
               ),
             ),
             pw.SizedBox(width: 7),
-            pw.Text(label, style: pw.TextStyle(
-                fontSize: 18, font: garamondSemiBold)),
+            pw.Text(label, style: pw.TextStyle(fontSize: 18, font: garamondSemiBold)),
           ],
         ),
       );
@@ -234,7 +241,6 @@ class ReportGenerator {
       double centerYOffset = 75,
       double dotSize = 22,
     }) {
-      // Pointer is clamped for drawing only.
       final clamped = _clamp01(value);
       final centerX = width / 2;
       final centerY = height - centerYOffset;
@@ -246,9 +252,7 @@ class ReportGenerator {
         alignment: pw.Alignment.center,
         child: pw.Stack(
           children: [
-            pw.Image(gaugeImage, width: width,
-                height: height,
-                fit: pw.BoxFit.contain),
+            pw.Image(gaugeImage, width: width, height: height, fit: pw.BoxFit.contain),
             pw.Positioned(
               left: centerX - dotSize / 4,
               right: 0,
@@ -265,9 +269,9 @@ class ReportGenerator {
 
     pw.Widget _imageScoreBarWithArrow({
       required String label,
-      required String scoreText, // accepted value
-      required double value, // accepted value for pointer
-      required String status, // band label
+      required String scoreText, // (formatted string)
+      required double value,     // accepted 0..1 (for pointer)
+      required String status,
       required pw.MemoryImage barImage,
       required pw.MemoryImage pointerImage,
       pw.Font? font,
@@ -283,9 +287,7 @@ class ReportGenerator {
             pw.SizedBox(
               width: 220,
               child: pw.Text(label,
-                  style: pw.TextStyle(fontSize: 24,
-                      fontWeight: pw.FontWeight.bold,
-                      font: font)),
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, font: font)),
             ),
             pw.SizedBox(width: 6),
             pw.Container(
@@ -296,8 +298,7 @@ class ReportGenerator {
                   pw.Positioned(
                     left: 0,
                     top: 14,
-                    child: pw.Image(
-                        barImage, width: barWidth, height: barHeight),
+                    child: pw.Image(barImage, width: barWidth, height: barHeight),
                   ),
                   pw.Positioned(
                     left: (barWidth - 22) * clamped,
@@ -312,9 +313,7 @@ class ReportGenerator {
               width: 62,
               alignment: pw.Alignment.center,
               child: pw.Text(scoreText,
-                  style: pw.TextStyle(fontSize: 22,
-                      fontWeight: pw.FontWeight.bold,
-                      font: font)),
+                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: font)),
             ),
             pw.SizedBox(width: 6),
             pw.Container(
@@ -334,11 +333,10 @@ class ReportGenerator {
       );
     }
 
-    // ---- Single extra-long page so NO content is cut off (no font weight change) ----
+    // ---- Single extra-long page ----
     final PdfPageFormat longA4 = PdfPageFormat.a4.copyWith(
       width: PdfPageFormat.a4.width,
       height: PdfPageFormat.a4.height * 1.4,
-      // ~2.6x taller than A4 to fit everything
       marginLeft: 0,
       marginRight: 0,
       marginTop: 0,
@@ -351,6 +349,12 @@ class ReportGenerator {
         margin: pw.EdgeInsets.zero,
         build: (pw.Context ctx) {
           final date = DateFormat('MMM d, yyyy').format(DateTime.now());
+
+          // 3-decimal TRUNCATION for the bars (matches your Excel intent)
+          final vulnText = _toFixedTrunc(acceptedVulnerability, digits: 3); // e.g., 0.580708234 -> "0.580"
+          final expoText = _toFixedTrunc(acceptedExposure, digits: 3);
+          final hazText  = _toFixedTrunc(acceptedHazard, digits: 3);
+
           return pw.Stack(
             children: [
               // Background image centered
@@ -360,7 +364,7 @@ class ReportGenerator {
                     opacity: 0.1,
                     child: pw.Image(
                       bgImage,
-                      fit: pw.BoxFit.contain, // keep aspect ratio and center
+                      fit: pw.BoxFit.contain,
                     ),
                   ),
                 ),
@@ -408,17 +412,15 @@ class ReportGenerator {
 
                   pw.SizedBox(height: 10),
 
-                  // Farmer meta (wrap-safe, no truncation)
+                  // Farmer meta
                   pw.Padding(
                     padding: pw.EdgeInsets.symmetric(horizontal: 20),
                     child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        // Name line (wrap value)
                         pw.Row(children: [
                           pw.Text('Name of the dairy farmer: ',
-                              style: pw.TextStyle(
-                                  fontSize: 22, font: garamondExtraBold)),
+                              style: pw.TextStyle(fontSize: 22, font: garamondExtraBold)),
                           pw.Expanded(
                             child: pw.Text(
                               name,
@@ -431,7 +433,6 @@ class ReportGenerator {
                         ]),
                         pw.SizedBox(height: 8),
 
-                        // State | Block (both wrap independently)
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
@@ -441,7 +442,8 @@ class ReportGenerator {
                                 children: [
                                   pw.Text(
                                     'State: ',
-                                    style: pw.TextStyle(fontSize: 22,
+                                    style: pw.TextStyle(
+                                        fontSize: 22,
                                         color: stateBlockLabelColor,
                                         font: garamondBold),
                                   ),
@@ -464,7 +466,8 @@ class ReportGenerator {
                                 children: [
                                   pw.Text(
                                     'Block: ',
-                                    style: pw.TextStyle(fontSize: 22,
+                                    style: pw.TextStyle(
+                                        fontSize: 22,
                                         color: stateBlockLabelColor,
                                         font: garamondBold),
                                   ),
@@ -484,7 +487,6 @@ class ReportGenerator {
                         ),
                         pw.SizedBox(height: 5),
 
-                        // District | Village
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
@@ -539,10 +541,10 @@ class ReportGenerator {
 
                   pw.SizedBox(height: 12),
 
-                  // === Show ACCEPTED values + Status ===
+                  // === Bars (3 dp truncated) ===
                   _imageScoreBarWithArrow(
                     label: '1. Vulnerability score',
-                    scoreText: _asFixed(acceptedVulnerability, digits: 3),
+                    scoreText: vulnText,                  // "0.580"
                     value: acceptedVulnerability,
                     status: vulnerabilityStatus,
                     barImage: barImage,
@@ -552,9 +554,9 @@ class ReportGenerator {
                   pw.SizedBox(height: 6),
                   _imageScoreBarWithArrow(
                     label: '2. Exposure score',
-                    scoreText: _asFixed(acceptedExposure, digits: 3),
+                    scoreText: expoText,                  // e.g., "0.949"
                     value: acceptedExposure,
-                    status: exposureStatus,
+                    status: exposureStatus,               // status from RAW B3 bands
                     barImage: barImage,
                     pointerImage: pointerArrowImage,
                     font: garamondBold,
@@ -562,7 +564,7 @@ class ReportGenerator {
                   pw.SizedBox(height: 6),
                   _imageScoreBarWithArrow(
                     label: '3. Hazard score',
-                    scoreText: _asFixed(acceptedHazard, digits: 3),
+                    scoreText: hazText,
                     value: acceptedHazard,
                     status: hazardStatus,
                     barImage: barImage,
@@ -572,8 +574,7 @@ class ReportGenerator {
 
                   pw.SizedBox(height: 18),
 
-                  // === Gauge uses ACCEPTED RISK ===
-                  // Centered, larger meter, and final score with 2 decimals
+                  // === Gauge uses accepted risk (2 dp rounded) ===
                   pw.Center(
                     child: pw.Stack(
                       alignment: pw.Alignment.center,
@@ -583,28 +584,23 @@ class ReportGenerator {
                           gaugeImage: rainbowGaugeImage,
                           pointerImage: pointerDotImage,
                           width: 640,
-                          // increased size
                           height: 340,
-                          // increased size
                           centerYOffset: 78,
-                          // tweak pointer center for larger height
-                          dotSize: 26, // slightly bigger pointer
+                          dotSize: 26,
                         ),
                         pw.Column(
                           mainAxisSize: pw.MainAxisSize.min,
                           children: [
                             pw.Text(
                               date,
-                              style: pw.TextStyle(
-                                  fontSize: 14, fontWeight: pw.FontWeight.bold),
+                              style:
+                              pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
                             ),
                             pw.SizedBox(height: 6),
                             pw.Text(
-                              _asFixed(acceptedRisk, digits: 2),
-                              // show up to two digits
+                              _asFixed(acceptedRisk, digits: 2), // keep 2 dp rounded
                               style: pw.TextStyle(
                                 fontSize: 36,
-                                // a bit larger to match bigger meter
                                 fontWeight: pw.FontWeight.bold,
                                 color: PdfColor.fromHex('#0303ff'),
                               ),
@@ -621,8 +617,8 @@ class ReportGenerator {
                     child: pw.Column(
                       children: [
                         pw.Text('Your socio-climatic risk is calculated to be',
-                            style: pw.TextStyle(
-                                fontSize: 24, font: garamondBold)),
+                            style:
+                            pw.TextStyle(fontSize: 24, font: garamondBold)),
                         pw.SizedBox(height: 4),
                         pw.Text(
                           riskStatus,
@@ -644,7 +640,8 @@ class ReportGenerator {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Text('Remarks:',
-                              style: pw.TextStyle(fontSize: 24,
+                              style: pw.TextStyle(
+                                  fontSize: 24,
                                   fontWeight: pw.FontWeight.bold,
                                   font: garamondExtraBold,
                                   color: stateBlockLabelColor)),
@@ -659,7 +656,7 @@ class ReportGenerator {
 
                   pw.SizedBox(height: 8),
 
-                  // Legend centered
+                  // Legend
                   pw.Center(
                     child: pw.Wrap(
                       spacing: 24,
@@ -684,15 +681,13 @@ class ReportGenerator {
                       children: [
                         pw.Text(
                           'Disclaimer: ',
-                          style: pw.TextStyle(fontSize: 24,
-                              color: disclaimerColor,
-                              font: garamondExtraBold),
+                          style: pw.TextStyle(
+                              fontSize: 24, color: disclaimerColor, font: garamondExtraBold),
                         ),
                         pw.Text(
                           'Above socio-climatic risk score is calculated based on information provided by the farmer.',
                           style: pw.TextStyle(
-                              fontSize: 20, color: PdfColors.black,font: garamondMedium),
-
+                              fontSize: 20, color: PdfColors.black, font: garamondMedium),
                         ),
                       ],
                     ),
@@ -712,12 +707,9 @@ class ReportGenerator {
     } else {
       downloadsDir = (await getDownloadsDirectory())!;
     }
-    if (!await downloadsDir.exists()) await downloadsDir.create(
-        recursive: true);
+    if (!await downloadsDir.exists()) await downloadsDir.create(recursive: true);
 
-    final fileName = 'report_${DateTime
-        .now()
-        .millisecondsSinceEpoch}.pdf';
+    final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}.pdf';
     final outFile = File('${downloadsDir.path}/$fileName');
     await outFile.writeAsBytes(await pdf.save());
 

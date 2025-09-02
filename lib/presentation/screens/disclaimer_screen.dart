@@ -42,7 +42,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SizedBox(height: 18.h),
-            // Title
             Center(
               child: AppText(
                 text: AppString.disclaimer,
@@ -72,7 +71,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Info Box
                       Container(
                         padding: EdgeInsets.all(12.w),
                         decoration: BoxDecoration(
@@ -83,7 +81,7 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                               color: Colors.black26,
                               blurRadius: 8,
                               spreadRadius: 1,
-                              offset: Offset(0, 0), // shadow all sides
+                              offset: Offset(0, 0),
                             ),
                           ],
                         ),
@@ -112,7 +110,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                         ),
                       ),
                       SizedBox(height: 14.h),
-                      // Image with reduced height
                       Container(
                         padding: EdgeInsets.all(8.w),
                         decoration: BoxDecoration(
@@ -136,7 +133,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                         ),
                       ),
                       SizedBox(height: 16.h),
-                      // Agreement checkbox
                       GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () => setState(() => _isAgreed = !_isAgreed),
@@ -189,7 +185,6 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                         ),
                       ),
                       SizedBox(height: 18.h),
-                      // Continue button
                       Center(
                         child: SizedBox(
                           width: 160.w,
