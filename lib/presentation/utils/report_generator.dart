@@ -43,6 +43,20 @@ class ReportGenerator {
     return 'Very High';
   }
 
+  // Exposure specific bands based on raw exposure value (B3)
+  // Very Low (0.1694 – 0.3628)
+  // Low       (0.3629 – 0.4251)
+  // Medium    (0.4252 – 0.4669)
+  // High      (0.4670 – 0.5130)
+  // Very High (0.5131 – 0.6196)
+  static String _exposureBandLabel(double v) {
+    if (v <= 0.3628) return 'Very Low';
+    if (v <= 0.4251) return 'Low';
+    if (v <= 0.4669) return 'Medium';
+    if (v <= 0.5130) return 'High';
+    return 'Very High';
+  }
+
   static String _asFixed(dynamic val, {int digits = 3}) {
     if (val == null) return '0.${'0' * digits}';
     if (val is num) return val.toStringAsFixed(digits);
@@ -125,7 +139,7 @@ class ReportGenerator {
     debugPrint('Accepted Vulnerability value: $acceptedVulnerability');
 
     // ==== 3) Status labels ====
-    final String exposureStatus = _bandLabel(acceptedExposure);
+    final String exposureStatus = _exposureBandLabel(rawExp);
     final String hazardStatus = _bandLabel(acceptedHazard);
     final String vulnerabilityStatus = _bandLabel(acceptedVulnerability);
 
