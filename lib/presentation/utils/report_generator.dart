@@ -97,6 +97,16 @@ class ReportGenerator {
     final vulnDetails = computeVulnerabilityDetails(formattedAnswers);
     final expDetails = computeExposureDetails(formattedAnswers);
 
+    debugPrint('Exposure question values:');
+    (expDetails['values'] as Map<String, double>)
+        .forEach((k, v) => debugPrint('$k: $v'));
+    debugPrint('Exposure sum: ${expDetails['sum']}');
+
+    debugPrint('Vulnerability question values:');
+    (vulnDetails['values'] as Map<String, double>)
+        .forEach((k, v) => debugPrint('$k: $v'));
+    debugPrint('Vulnerability sum: ${vulnDetails['sum']}');
+
     final double rawVuln = (vulnDetails['score'] as double?) ?? 0.0;
     final double rawExp = (expDetails['score'] as double?) ?? 0.0;
 
@@ -110,6 +120,9 @@ class ReportGenerator {
         _normalize(rawHazard, _hazMin, _hazMax));
     final double acceptedVulnerability = _clamp01(
         _normalize(rawVuln, _vulnMin, _vulnMax));
+
+    debugPrint('Accepted Exposure value: $acceptedExposure');
+    debugPrint('Accepted Vulnerability value: $acceptedVulnerability');
 
     // ==== 3) Status labels ====
     final String exposureStatus = _bandLabel(acceptedExposure);
