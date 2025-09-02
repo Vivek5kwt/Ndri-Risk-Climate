@@ -3048,7 +3048,7 @@ class _HumanCardState extends State<_HumanCard> {
             ),
             Container(
               height: 38.h,
-              margin: EdgeInsets.only(bottom: 6.h),
+              margin: EdgeInsets.only(bottom: 16.h),
               decoration: BoxDecoration(
                   color: Colors.white,
                   border: Border.all(color: AppColors.greenColor, width: 1.4)),
@@ -3135,7 +3135,7 @@ class _HumanCardState extends State<_HumanCard> {
         ),
         Container(
           height: 38.h,
-          margin: EdgeInsets.only(bottom: 6.h),
+          margin: EdgeInsets.only(bottom: 16.h),
           decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(color: AppColors.greenColor, width: 1.4)),

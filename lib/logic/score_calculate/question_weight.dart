@@ -517,21 +517,14 @@ double computeScore(Map<String, String> ans, Set<String> keys) {
   return sum / wSum;
 }
 
-/// Computes the final vulnerability score. The score is derived from
-/// the accepted values of all vulnerability questions and normalised
-/// by [_vulnerabilityTotalWeight].
+
 double computeVulnerabilityScore(Map<String, String> ans) {
   final details = computeVulnerabilityDetails(ans);
   return details['score'] ?? 0.0;
 }
 
-/// Total weight of all vulnerability questions. This value is treated
-/// as static for now.
 const double _vulnerabilityTotalWeight = 123.06090413954159;
 
-/// Order in which vulnerability values should be listed when returning
-/// details for debugging. The keys map to the internal question keys
-/// used in [questionParams].
 const List<String> _orderedVulnerabilityKeys = [
   '2',
   '13',
@@ -565,8 +558,7 @@ const List<String> _orderedVulnerabilityKeys = [
   '47',
 ];
 
-/// Labels corresponding to [_orderedVulnerabilityKeys] so callers can
-/// display the accepted value for each question.
+
 const Map<String, String> _vulnerabilityLabels = {
   '2': 'Q2',
   '13': 'Q13',
@@ -602,9 +594,6 @@ const Map<String, String> _vulnerabilityLabels = {
 
 const double _exposureTotalWeight = 54.10716636;
 
-/// Order in which exposure values should be listed when returning
-/// details for debugging. The keys map to the internal question keys
-/// used in [questionParams].
 const List<String> _orderedExposureKeys = [
   '7',
   '8',
@@ -624,10 +613,7 @@ const List<String> _orderedExposureKeys = [
   '22',
 ];
 
-/// Map from exposure question key to the parameter key used in
-/// [questionParams]. Most exposure questions share the same key for
-/// both the answer and parameter lookup except question 29 which uses
-/// `29_exp` internally.
+
 const Map<String, String> _exposureParamKeys = {
   '7': '7_exp',
   '8': '8_exp',
@@ -647,8 +633,7 @@ const Map<String, String> _exposureParamKeys = {
   '22': '22_exp',
 };
 
-/// Labels corresponding to [_orderedExposureKeys] so callers can
-/// display the accepted value for each question.
+
 const Map<String, String> _exposureLabels = {
   '7': 'Q7',
   '8': 'Q8',
@@ -671,8 +656,7 @@ const Map<String, String> _exposureLabels = {
   'cu6': 'CU6',
 };
 
-/// Weights used for livestock unit calculations when aggregating
-/// exposure values from individual animal counts.
+
 const Map<String, double> _livestockWeights = {
   '18.1': 1.0,
   '18.2': 0.8,
@@ -699,7 +683,6 @@ double computeExposureScore(Map<String, String> ans) {
   return details['score'] ?? 0.0;
 }
 
-/// the total weight of all exposure questions and the final exposure
 Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   double sum = 0.0;
   final Map<String, double> values = {};
@@ -708,7 +691,6 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
     values[_exposureLabels[k] ?? k] = v;
     sum += v;
   }
-  /// Add aggregated exposure values derived from livestock questions
   final bw6 = _aggregateExposure({
     '18.7', '18.8', '18.9', '18.10', '18.11', '18.12'
   }, 7, 1.620113125, ans, _livestockWeights);
@@ -733,8 +715,6 @@ Map<String, dynamic> computeExposureDetails(Map<String, String> ans) {
   };
 }
 
-/// The total weight of all vulnerability questions and the final
-/// vulnerability score (sum divided by total weight).
 Map<String, dynamic> computeVulnerabilityDetails(Map<String, String> ans) {
   double sum = 0.0;
   final Map<String, double> values = {};

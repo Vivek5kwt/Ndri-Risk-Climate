@@ -125,11 +125,21 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Image.asset(
-                    Assets.iCarLogo,
-                    height: 110.h,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        Assets.iCarLogo,
+                        height: 116.h,
+                      ),
+                      SizedBox(width: 18.w),
+                      Image.asset(
+                        Assets.appLogo,
+                        height: 116.h,
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 6.h),
+                  SizedBox(height: 10.h),
                   AppText(
                     text: AppString.iCarAdd,
                     textAlign: TextAlign.center,
@@ -137,11 +147,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     textSize: 15.sp,
                     fontWeight: FontWeight.w600,
                     lineHeight: 1.4,
-                  ),
-                  SizedBox(height: 6.h),
-                  Image.asset(
-                    Assets.appLogo,
-                    height: 120.h,
                   ),
                 ],
               ),
