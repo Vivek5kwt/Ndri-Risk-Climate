@@ -47,8 +47,6 @@
   <true/>
 
   <!-- Firebase and Notifications Setup -->
-  <key>FirebaseAppDelegateProxyEnabled</key>
-  <false/>
   <key>NSFirebaseLocalNotificationUsageDescription</key>
   <string>We use notifications to update you.</string>
   <key>NSLocalNetworkUsageDescription</key>

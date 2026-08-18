@@ -65,10 +65,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBhuwnd3BmUNLVbPOaXJ8Uy3c3YyF4Qtno',
-    appId: '1:1001685338819:ios:25b610ea596d3575277076',
+    appId: '1:1001685338819:ios:b941dbed92463da9277076',
     messagingSenderId: '1001685338819',
     projectId: 'ndri-risk-app',
     storageBucket: 'ndri-risk-app.firebasestorage.app',
-    iosBundleId: 'com.example.ndriDairyRisk',
+    iosBundleId: 'com.ndri.dairyrisk',
   );
 }

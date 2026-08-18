@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:dropdown_search/dropdown_search.dart';
@@ -52,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? selectedState, selectedDistrict;
   late FlutterLocalNotificationsPlugin _localNotifications;
   bool _loadingBasicInfo = true;
+  bool _generatingReport = false;
 
   Map<String, dynamic> _localAnswers = {};
   bool _initializingFields = false;
@@ -217,6 +217,36 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _generateReport() async {
+    if (_generatingReport) return;
+    setState(() => _generatingReport = true);
+
+    try {
+      await ReportGenerator.generate(
+        context: context,
+        answers: _localAnswers,
+        notifications: _localNotifications,
+        initPermissions: _initPermissions,
+        name: nameCtrl.text.trim(),
+        block: blockCtrl.text.trim(),
+        village: villageCtrl.text.trim(),
+        stateName: selectedState,
+        district: selectedDistrict,
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not create the report: $error'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _generatingReport = false);
+    }
+  }
+
   Future<void> _initNotifications() async {
     final flutterLocal = FlutterLocalNotificationsPlugin();
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -236,70 +266,67 @@ class _HomeScreenState extends State<HomeScreen> {
     _localNotifications = flutterLocal;
   }
 
-  Future<void> _showSubmitResultDialog(BuildContext context) async
-  {
+  Future<void> _showSubmitResultDialog(BuildContext context) async {
     final shouldSubmit = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) =>
-          Dialog(
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            backgroundColor: Colors.white,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.help_outline_rounded,
+                  size: 60, color: Colors.amber),
+              const SizedBox(height: 16),
+              const Text(
+                'Are you sure to submit?',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Once submitted, you cannot make changes.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 15, color: Colors.black54),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Icon(Icons.help_outline_rounded,
-                      size: 60, color: Colors.amber),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Are you sure to submit?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.black87,
+                  TextButton.icon(
+                    icon: const Icon(Icons.edit),
+                    label: const Text("Edit"),
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Once submitted, you cannot make changes.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Colors.black54),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text("Yes"),
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton.icon(
-                        icon: const Icon(Icons.edit),
-                        label: const Text("Edit"),
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue,
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.check_circle),
-                        label: const Text("Yes"),
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ],
-                  )
                 ],
-              ),
-            ),
+              )
+            ],
           ),
+        ),
+      ),
     );
     if (shouldSubmit != true) return;
     await showDialog(
@@ -322,127 +349,124 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                      AnimatedScale(
-                        scale: 1,
-
-                        duration: const Duration(milliseconds: 700),
-                        curve: Curves.elasticOut,
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              colors: [Colors.green, Colors.blue],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.green.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
+                  AnimatedScale(
+                    scale: 1,
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.elasticOut,
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Colors.green, Colors.blue],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 6),
                           ),
-                          child: const Icon(Icons.verified_rounded,
-                              color: Colors.white, size: 58),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      Text(
-                        "Thank you for your submission!",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.orange.shade800,
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: "Your answers have been securely submitted.\n\n",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.green.shade900,
-                                fontSize: 15.2,
-                              ),
-                            ),
-                            TextSpan(
-                              text: "Please note:\n",
-                              style: TextStyle(
-                                color: Colors.blue.shade800,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                              ),
-                            ),
-                            const TextSpan(
-                              text:
-                              "• Your responses are final and cannot be edited.\n"
-                                  "• Your socio-climatic risk result has been calculated based on your answers.",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 15,
-                                height: 1.5,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-
-                      const SizedBox(height: 28),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(ctx).pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          padding:
-                          const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text(
-                          "Continue",
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16.5,
-                              color: Colors.white
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Material(
-                    color: Colors.transparent,
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      splashColor: Colors.red.withOpacity(0.15),
-                      onTap: () {
-                        Navigator.of(ctx).pop();
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.all(8),
-                        child:
-                        Icon(Icons.close_rounded, color: Colors.red, size: 28),
-                      ),
+                      child: const Icon(Icons.verified_rounded,
+                          color: Colors.white, size: 58),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Text(
+                    "Thank you for your submission!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontSize: 21,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text:
+                              "Your answers have been securely submitted.\n\n",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade900,
+                            fontSize: 15.2,
+                          ),
+                        ),
+                        TextSpan(
+                          text: "Please note:\n",
+                          style: TextStyle(
+                            color: Colors.blue.shade800,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const TextSpan(
+                          text:
+                              "• Your responses are final and cannot be edited.\n"
+                              "• Your socio-climatic risk result has been calculated based on your answers.",
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 15,
+                            height: 1.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 28),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepOrange,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text(
+                      "Continue",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.5,
+                          color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  splashColor: Colors.red.withOpacity(0.15),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(8),
+                    child:
+                        Icon(Icons.close_rounded, color: Colors.red, size: 28),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
     if (mounted) setState(() => step = 99);
   }
@@ -540,16 +564,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   _ => Assets.bgBasicInfo,
                 },
                 fit: BoxFit.cover,
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .height,
+                height: MediaQuery.of(context).size.height,
               ),
               Container(
-                height: MediaQuery
-                    .of(context)
-                    .size
-                    .height,
+                height: MediaQuery.of(context).size.height,
                 color: Colors.white.withOpacity(0.75),
               ),
             ],
@@ -636,7 +654,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderSide: const BorderSide(color: Colors.black),
                 ),
                 contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
             dropdownBuilder: (context, value) {
@@ -673,7 +691,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.black,
                   ),
                   prefixIcon:
-                  const Icon(Icons.search, color: Color(0xFF58B19F)),
+                      const Icon(Icons.search, color: Color(0xFF58B19F)),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8)),
                   contentPadding: const EdgeInsets.all(12),
@@ -693,186 +711,179 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               constraints: const BoxConstraints(maxHeight: 420),
-              itemBuilder: (context, state, isSelected) =>
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF58B19F).withOpacity(0.13)
-                          : Colors.white.withOpacity(0.97),
-                      borderRadius: BorderRadius.circular(8),
-                      border: isSelected
-                          ? Border.all(
-                          color: const Color(0xFF58B19F), width: 2.1)
-                          : Border.all(color: Colors.transparent),
-                      boxShadow: isSelected
-                          ? [
-                        BoxShadow(
-                          color: const Color(0xFF58B19F).withOpacity(0.16),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        )
-                      ]
-                          : [],
-                    ),
-                    child: ListTile(
-                      leading: const Icon(Icons.location_city_rounded,
-                          color: Color(0xFF58B19F)),
-                      title: Text(
-                        state,
-                        style: TextStyle(
-                          fontWeight:
+              itemBuilder: (context, state, isSelected) => AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF58B19F).withOpacity(0.13)
+                      : Colors.white.withOpacity(0.97),
+                  borderRadius: BorderRadius.circular(8),
+                  border: isSelected
+                      ? Border.all(color: const Color(0xFF58B19F), width: 2.1)
+                      : Border.all(color: Colors.transparent),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF58B19F).withOpacity(0.16),
+                            blurRadius: 5,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
+                      : [],
+                ),
+                child: ListTile(
+                  leading: const Icon(Icons.location_city_rounded,
+                      color: Color(0xFF58B19F)),
+                  title: Text(
+                    state,
+                    style: TextStyle(
+                      fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
-                          color:
+                      color:
                           isSelected ? const Color(0xFF58B19F) : Colors.black87,
-                          fontSize: 16,
-                        ),
-                      ),
+                      fontSize: 16,
                     ),
                   ),
+                ),
+              ),
             ),
           ),
           SizedBox(height: 18.h),
           _bar(AppString.district, AppColors.greenColor),
           if (selectedState == null)
             _disabled('Select district')
+          else if (_loadingDists)
+            const Center(child: CircularProgressIndicator())
           else
-            if (_loadingDists)
-              const Center(child: CircularProgressIndicator())
-            else
-              DropdownSearch<String>(
-                items: loc.cachedDistricts(selectedState!) ?? [],
-                selectedItem: selectedDistrict,
-                onChanged: (v) {
-                  setState(() {
-                    selectedDistrict = v;
-                  });
-                  _saveFieldAnswers();
-                },
-                dropdownDecoratorProps: DropDownDecoratorProps(
-                  dropdownSearchDecoration: InputDecoration(
-                    hintText: "Select District",
-                    hintStyle: const TextStyle(
+            DropdownSearch<String>(
+              items: loc.cachedDistricts(selectedState!) ?? [],
+              selectedItem: selectedDistrict,
+              onChanged: (v) {
+                setState(() {
+                  selectedDistrict = v;
+                });
+                _saveFieldAnswers();
+              },
+              dropdownDecoratorProps: DropDownDecoratorProps(
+                dropdownSearchDecoration: InputDecoration(
+                  hintText: "Select District",
+                  hintStyle: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: const BorderSide(color: Colors.black),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: const BorderSide(color: Colors.black),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6),
+                    borderSide: const BorderSide(color: Colors.black),
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              dropdownBuilder: (context, value) {
+                if (value == null || value.isEmpty) {
+                  return const Text(
+                    "Select District",
+                    style: TextStyle(
                       color: Colors.grey,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
+                  );
+                }
+                return Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w400,
+                    fontSize: 16,
+                  ),
+                );
+              },
+              popupProps: PopupProps.bottomSheet(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: InputDecoration(
+                    hintText: 'Type to search District...',
+                    hintStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                    prefixIcon: const Icon(Icons.search, color: Colors.orange),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Colors.black),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Colors.black),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Colors.black),
-                    ),
-                    contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    contentPadding: const EdgeInsets.all(12),
                   ),
                 ),
-                dropdownBuilder: (context, value) {
-                  if (value == null || value.isEmpty) {
-                    return const Text(
-                      "Select District",
+                title: const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Text(
+                      'Select District',
                       style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    );
-                  }
-                  return Text(
-                    value,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 16,
-                    ),
-                  );
-                },
-                popupProps: PopupProps.bottomSheet(
-                  showSearchBox: true,
-                  searchFieldProps: TextFieldProps(
-                    decoration: InputDecoration(
-                      hintText: 'Type to search District...',
-                      hintStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                      prefixIcon: const Icon(
-                          Icons.search, color: Colors.orange),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                  title: const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text(
-                        'Select District',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Color(0xFF222f3e),
-                        ),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF222f3e),
                       ),
                     ),
                   ),
-                  constraints: const BoxConstraints(maxHeight: 420),
-                  itemBuilder: (context, district, isSelected) =>
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        margin:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.orange.withOpacity(0.14)
-                              : Colors.white.withOpacity(0.97),
-                          borderRadius: BorderRadius.circular(8),
-                          border: isSelected
-                              ? Border.all(color: Colors.orange, width: 2.1)
-                              : Border.all(color: Colors.transparent),
-                          boxShadow: isSelected
-                              ? [
+                ),
+                constraints: const BoxConstraints(maxHeight: 420),
+                itemBuilder: (context, district, isSelected) =>
+                    AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.orange.withOpacity(0.14)
+                        : Colors.white.withOpacity(0.97),
+                    borderRadius: BorderRadius.circular(8),
+                    border: isSelected
+                        ? Border.all(color: Colors.orange, width: 2.1)
+                        : Border.all(color: Colors.transparent),
+                    boxShadow: isSelected
+                        ? [
                             BoxShadow(
                               color: Colors.orange.withOpacity(0.12),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             )
                           ]
-                              : [],
-                        ),
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.pin_drop_rounded,
-                            color:
-                            isSelected ? Colors.orange : const Color(
-                                0xFFb26221),
-                          ),
-                          title: Text(
-                            district,
-                            style: TextStyle(
-                              fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.w600,
-                              color: isSelected ? Colors.orange : Colors
-                                  .black87,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                        : [],
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.pin_drop_rounded,
+                      color:
+                          isSelected ? Colors.orange : const Color(0xFFb26221),
+                    ),
+                    title: Text(
+                      district,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.w600,
+                        color: isSelected ? Colors.orange : Colors.black87,
+                        fontSize: 16,
                       ),
+                    ),
+                  ),
                 ),
               ),
+            ),
           SizedBox(height: 18.h),
           _bar(AppString.block, AppColors.yellowColor, textColor: Colors.black),
           _outlined(
@@ -887,52 +898,52 @@ class _HomeScreenState extends State<HomeScreen> {
             child: GestureDetector(
               onTap: _validBasic()
                   ? () {
-                context.read<RiskAssessmentBloc>().add(
-                  SaveBasicInfoEvent(
-                    name: nameCtrl.text.trim(),
-                    gender: '',
-                    stateName: selectedState!,
-                    district: selectedDistrict!,
-                    block: blockCtrl.text.trim(),
-                    village: villageCtrl.text.trim(),
-                  ),
-                );
-                _saveFieldAnswers();
-                setState(() => step = 1);
-              }
+                      context.read<RiskAssessmentBloc>().add(
+                            SaveBasicInfoEvent(
+                              name: nameCtrl.text.trim(),
+                              gender: '',
+                              stateName: selectedState!,
+                              district: selectedDistrict!,
+                              block: blockCtrl.text.trim(),
+                              village: villageCtrl.text.trim(),
+                            ),
+                          );
+                      _saveFieldAnswers();
+                      setState(() => step = 1);
+                    }
                   : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.info_outline_rounded,
-                            color: Colors.amber, size: 24),
-                        SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            "Please fill all the required fields to continue.",
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  color: Colors.amber, size: 24),
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  "Please fill all the required fields to continue.",
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFF4E4376),
+                          behavior: SnackBarBehavior.floating,
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 26, vertical: 22),
+                          action: SnackBarAction(
+                            label: 'Dismiss',
+                            textColor: Colors.amber.withOpacity(0.7),
+                            onPressed: () {},
                           ),
                         ),
-                      ],
-                    ),
-                    backgroundColor: const Color(0xFF4E4376),
-                    behavior: SnackBarBehavior.floating,
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 26, vertical: 22),
-                    action: SnackBarAction(
-                      label: 'Dismiss',
-                      textColor: Colors.amber.withOpacity(0.7),
-                      onPressed: () {},
-                    ),
-                  ),
-                );
-              },
+                      );
+                    },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
                 width: 160,
@@ -993,15 +1004,11 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
 
     final allHumanAnswers =
-    qs.map((q) => _getSavedAnswer(q.variableNumber)).toList();
+        qs.map((q) => _getSavedAnswer(q.variableNumber)).toList();
 
     bool isAllAnswered = allHumanAnswers.isNotEmpty &&
         allHumanAnswers
-            .every((ans) =>
-        ans != null && ans
-            .toString()
-            .trim()
-            .isNotEmpty);
+            .every((ans) => ans != null && ans.toString().trim().isNotEmpty);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1015,29 +1022,28 @@ class _HomeScreenState extends State<HomeScreen> {
         Expanded(
           child: qs.isEmpty
               ? const Center(
-              child: Text("No questions found.",
-                  style: TextStyle(fontSize: 16)))
+                  child: Text("No questions found.",
+                      style: TextStyle(fontSize: 16)))
               : ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            itemCount: qs.length,
-            itemBuilder: (context, idx) =>
-                AnimatedEntrance(
-                  delay: Duration(milliseconds: 100 * idx),
-                  child: _HumanCard(
-                    question: qs[idx],
-                    savedAnswer: _getSavedAnswer(qs[idx].variableNumber),
-                    savedEdu: qs[idx].variableNumber == '3'
-                        ? _getSavedAnswer('3_level')
-                        : null,
-                    onGenderSelected: (val) {
-                      setState(() => _selectedGender = val);
-                      _saveFieldAnswers();
-                    },
-                    onSave: (variable, value) =>
-                        _saveAnswer(variable.toString(), value),
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  itemCount: qs.length,
+                  itemBuilder: (context, idx) => AnimatedEntrance(
+                    delay: Duration(milliseconds: 100 * idx),
+                    child: _HumanCard(
+                      question: qs[idx],
+                      savedAnswer: _getSavedAnswer(qs[idx].variableNumber),
+                      savedEdu: qs[idx].variableNumber == '3'
+                          ? _getSavedAnswer('3_level')
+                          : null,
+                      onGenderSelected: (val) {
+                        setState(() => _selectedGender = val);
+                        _saveFieldAnswers();
+                      },
+                      onSave: (variable, value) =>
+                          _saveAnswer(variable.toString(), value),
+                    ),
                   ),
                 ),
-          ),
         ),
         Padding(
           padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 18.w),
@@ -1089,38 +1095,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: isAllAnswered
                     ? () => setState(() => step = 2)
                     : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.info_outline_rounded,
-                              color: Colors.amber, size: 24),
-                          SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              "Please answer all Human Capital questions to continue.",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Row(
+                              children: [
+                                Icon(Icons.info_outline_rounded,
+                                    color: Colors.amber, size: 24),
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    "Please answer all Human Capital questions to continue.",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF4E4376),
+                            behavior: SnackBarBehavior.floating,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 26, vertical: 22),
+                            action: SnackBarAction(
+                              label: 'Dismiss',
+                              textColor: Colors.amber.withOpacity(0.7),
+                              onPressed: () {},
                             ),
                           ),
-                        ],
-                      ),
-                      backgroundColor: const Color(0xFF4E4376),
-                      behavior: SnackBarBehavior.floating,
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 26, vertical: 22),
-                      action: SnackBarAction(
-                        label: 'Dismiss',
-                        textColor: Colors.amber.withOpacity(0.7),
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -1168,8 +1174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 9),
                       Icon(Icons.arrow_forward_rounded,
-                          color: isAllAnswered ? Colors.brown.shade500 : Colors
-                              .brown.shade200, size: 22),
+                          color: isAllAnswered
+                              ? Colors.brown.shade500
+                              : Colors.brown.shade200,
+                          size: 22),
                     ],
                   ),
                 ),
@@ -1182,9 +1190,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _agriDairy(RiskAssessmentState st) {
-    final qs = st.questions
-        .where((q) => agVars.contains(q.variableNumber))
-        .toList();
+    final qs =
+        st.questions.where((q) => agVars.contains(q.variableNumber)).toList();
 
     final List<Map<String, int>> pageRanges = [
       {'start': 0, 'end': 10},
@@ -1219,26 +1226,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 final List<QuestionModel> pageQuestions = pageSlice.where((q) {
                   final varNum = q.variableNumber.toString();
-                  return varNum
-                      .trim()
-                      .isNotEmpty &&
+                  return varNum.trim().isNotEmpty &&
                       !agHeadings.contains(varNum);
                 }).toList();
-
 
                 final List<String> pageVars = pageQuestions
                     .map((q) => q.variableNumber.toString())
                     .toList();
 
                 final List<String?> pageAnswers =
-                pageVars.map((v) => _getSavedAnswer(v)).toList();
+                    pageVars.map((v) => _getSavedAnswer(v)).toList();
 
                 final int answeredCount = pageAnswers
                     .where((ans) =>
-                ans != null && ans
-                    .toString()
-                    .trim()
-                    .isNotEmpty)
+                        ans != null && ans.toString().trim().isNotEmpty)
                     .length;
                 final int totalQuestions = pageVars.length;
 
@@ -1266,7 +1267,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-
                     Expanded(
                       child: ListView(
                         padding: EdgeInsets.zero,
@@ -1282,14 +1282,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onSave: (variable, value) =>
                                     _saveAnswer(variable.toString(), value),
                               ),
-
                             ),
                         ],
                       ),
                     ),
                     Padding(
                       padding:
-                      EdgeInsets.symmetric(vertical: 14.h, horizontal: 4.w),
+                          EdgeInsets.symmetric(vertical: 14.h, horizontal: 4.w),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -1320,7 +1319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 boxShadow: [
                                   BoxShadow(
                                     color:
-                                    Colors.brown.shade100.withOpacity(0.7),
+                                        Colors.brown.shade100.withOpacity(0.7),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -1349,55 +1348,55 @@ class _HomeScreenState extends State<HomeScreen> {
                           GestureDetector(
                             onTap: isPageAnswered
                                 ? () {
-                              if (i < pageRanges.length - 1) {
-                                setState(() => agPageIdx = i + 1);
-                                _agPageCtrl.animateToPage(
-                                  i + 1,
-                                  duration:
-                                  const Duration(milliseconds: 320),
-                                  curve: Curves.easeInOut,
-                                );
-                              } else {
-                                setState(() => step = 3);
-                              }
-                            }
+                                    if (i < pageRanges.length - 1) {
+                                      setState(() => agPageIdx = i + 1);
+                                      _agPageCtrl.animateToPage(
+                                        i + 1,
+                                        duration:
+                                            const Duration(milliseconds: 320),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    } else {
+                                      setState(() => step = 3);
+                                    }
+                                  }
                                 : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Row(
-                                    children: [
-                                      Icon(Icons.info_outline_rounded,
-                                          color: Colors.amber, size: 24),
-                                      SizedBox(width: 14),
-                                      Expanded(
-                                        child: Text(
-                                          "Please answer all questions on this page to continue.",
-                                          style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight:
-                                              FontWeight.w500),
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: const Row(
+                                          children: [
+                                            Icon(Icons.info_outline_rounded,
+                                                color: Colors.amber, size: 24),
+                                            SizedBox(width: 14),
+                                            Expanded(
+                                              child: Text(
+                                                "Please answer all questions on this page to continue.",
+                                                style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight:
+                                                        FontWeight.w500),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        backgroundColor:
+                                            const Color(0xFF4E4376),
+                                        behavior: SnackBarBehavior.floating,
+                                        elevation: 8,
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(16)),
+                                        margin: const EdgeInsets.symmetric(
+                                            horizontal: 26, vertical: 22),
+                                        action: SnackBarAction(
+                                          label: 'Dismiss',
+                                          textColor:
+                                              Colors.amber.withOpacity(0.7),
+                                          onPressed: () {},
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                  backgroundColor:
-                                  const Color(0xFF4E4376),
-                                  behavior: SnackBarBehavior.floating,
-                                  elevation: 8,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(16)),
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 26, vertical: 22),
-                                  action: SnackBarAction(
-                                    label: 'Dismiss',
-                                    textColor:
-                                    Colors.amber.withOpacity(0.7),
-                                    onPressed: () {},
-                                  ),
-                                ),
-                              );
-                            },
+                                    );
+                                  },
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 220),
                               width: 144,
@@ -1446,8 +1445,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   const SizedBox(width: 9),
                                   Icon(Icons.arrow_forward_rounded,
-                                      color: isPageAnswered ? Colors.brown
-                                          .shade500 : Colors.brown.shade200,
+                                      color: isPageAnswered
+                                          ? Colors.brown.shade500
+                                          : Colors.brown.shade200,
                                       size: 22),
                                 ],
                               ),
@@ -1478,20 +1478,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ].where((v) => !socialHeadings.contains(v)).toList();
 
     final List<String?> requiredAnswers =
-    requiredSocialVars.map((v) => _getSavedAnswer(v)).toList();
+        requiredSocialVars.map((v) => _getSavedAnswer(v)).toList();
 
     final int answeredCount = requiredAnswers
-        .where((ans) =>
-    ans != null && ans
-        .toString()
-        .trim()
-        .isNotEmpty)
+        .where((ans) => ans != null && ans.toString().trim().isNotEmpty)
         .length;
     final int totalRequired = requiredSocialVars.length;
     bool isPageAnswered = totalRequired > 0 && answeredCount == totalRequired;
 
     final multiOfficials = st.questions.firstWhere(
-          (q) => q.variableNumber == '36',
+      (q) => q.variableNumber == '36',
       orElse: () =>
           QuestionModel(variableNumber: '36', questionText: 'Placeholder'),
     );
@@ -1507,7 +1503,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (st.questions.any((q) => q.variableNumber == '34'))
             _SocialCardYesNo(
               question:
-              st.questions.firstWhere((q) => q.variableNumber == '34'),
+                  st.questions.firstWhere((q) => q.variableNumber == '34'),
               savedAnswer: _getSavedAnswer('34'),
               onSave: (variable, value) =>
                   _saveAnswer(variable.toString(), value),
@@ -1515,7 +1511,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (st.questions.any((q) => q.variableNumber == '35'))
             _SocialCardNum(
               question:
-              st.questions.firstWhere((q) => q.variableNumber == '35'),
+                  st.questions.firstWhere((q) => q.variableNumber == '35'),
               yellow: true,
               savedAnswer: _getSavedAnswer('35'),
               onSave: (variable, value) =>
@@ -1524,7 +1520,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (st.questions.any((q) => q.variableNumber == '36'))
             _OfficialMulti(
               question:
-              st.questions.firstWhere((q) => q.variableNumber == '36'),
+                  st.questions.firstWhere((q) => q.variableNumber == '36'),
               savedAnswer: _getSavedAnswer('36'),
               onSave: (num variable, dynamic value) =>
                   _saveAnswer(variable.toString(), value),
@@ -1539,7 +1535,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (st.questions.any((q) => q.variableNumber == '37'))
             _SocialCardNum(
               question:
-              st.questions.firstWhere((q) => q.variableNumber == '37'),
+                  st.questions.firstWhere((q) => q.variableNumber == '37'),
               yellow: true,
               savedAnswer: _getSavedAnswer('37'),
               onSave: (variable, value) =>
@@ -1548,7 +1544,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (st.questions.any((q) => q.variableNumber == '38'))
             _SocialCardNum(
               question:
-              st.questions.firstWhere((q) => q.variableNumber == '38'),
+                  st.questions.firstWhere((q) => q.variableNumber == '38'),
               yellow: false,
               savedAnswer: _getSavedAnswer('38'),
               onSave: (variable, value) =>
@@ -1603,38 +1599,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: isPageAnswered
                     ? () => setState(() => step = 5)
                     : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.info_outline_rounded,
-                              color: Colors.amber, size: 24),
-                          SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              "Please answer all questions to continue.",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Row(
+                              children: [
+                                Icon(Icons.info_outline_rounded,
+                                    color: Colors.amber, size: 24),
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    "Please answer all questions to continue.",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF4E4376),
+                            behavior: SnackBarBehavior.floating,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 26, vertical: 22),
+                            action: SnackBarAction(
+                              label: 'Dismiss',
+                              textColor: Colors.amber.withOpacity(0.7),
+                              onPressed: () {},
                             ),
                           ),
-                        ],
-                      ),
-                      backgroundColor: const Color(0xFF4E4376),
-                      behavior: SnackBarBehavior.floating,
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 26, vertical: 22),
-                      action: SnackBarAction(
-                        label: 'Dismiss',
-                        textColor: Colors.amber.withOpacity(0.7),
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -1682,8 +1678,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 9),
                       Icon(Icons.arrow_forward_rounded,
-                          color: isPageAnswered ? Colors.brown.shade500 : Colors
-                              .brown.shade200, size: 22),
+                          color: isPageAnswered
+                              ? Colors.brown.shade500
+                              : Colors.brown.shade200,
+                          size: 22),
                     ],
                   ),
                 ),
@@ -1707,17 +1705,13 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
 
     final List<String> inputVars =
-    inputQuestions.map((q) => q.variableNumber.toString()).toList();
+        inputQuestions.map((q) => q.variableNumber.toString()).toList();
 
     final List<String?> inputAnswers =
-    inputVars.map((v) => _getSavedAnswer(v)).toList();
+        inputVars.map((v) => _getSavedAnswer(v)).toList();
 
     final int answeredCount = inputAnswers
-        .where((ans) =>
-    ans != null && ans
-        .toString()
-        .trim()
-        .isNotEmpty)
+        .where((ans) => ans != null && ans.toString().trim().isNotEmpty)
         .length;
     final int totalQuestions = inputVars.length;
 
@@ -1731,11 +1725,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _bar('E. INFRASTRUCTURAL ACCESSIBILITY', AppColors.headerBlueColor,
               textColor: AppColors.yellowColor, height: 50.h),
           SizedBox(height: 14.h),
-          ...qs
-              .asMap()
-              .entries
-              .map((e) =>
-              AnimatedEntrance(
+          ...qs.asMap().entries.map((e) => AnimatedEntrance(
                 delay: Duration(milliseconds: 110 * e.key),
                 child: _InfraCard(
                   question: e.value,
@@ -1792,38 +1782,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: isPageAnswered
                     ? () => setState(() => step = 6)
                     : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.info_outline_rounded,
-                              color: Colors.amber, size: 24),
-                          SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              "Please answer all questions to continue.",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Row(
+                              children: [
+                                Icon(Icons.info_outline_rounded,
+                                    color: Colors.amber, size: 24),
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    "Please answer all questions to continue.",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF4E4376),
+                            behavior: SnackBarBehavior.floating,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 26, vertical: 22),
+                            action: SnackBarAction(
+                              label: 'Dismiss',
+                              textColor: Colors.amber.withOpacity(0.7),
+                              onPressed: () {},
                             ),
                           ),
-                        ],
-                      ),
-                      backgroundColor: const Color(0xFF4E4376),
-                      behavior: SnackBarBehavior.floating,
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 26, vertical: 22),
-                      action: SnackBarAction(
-                        label: 'Dismiss',
-                        textColor: Colors.amber.withOpacity(0.7),
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -1871,8 +1861,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 9),
                       Icon(Icons.arrow_forward_rounded,
-                          color: isPageAnswered ? Colors.brown.shade500 : Colors
-                              .brown.shade200, size: 22),
+                          color: isPageAnswered
+                              ? Colors.brown.shade500
+                              : Colors.brown.shade200,
+                          size: 22),
                     ],
                   ),
                 ),
@@ -1917,14 +1909,10 @@ class _HomeScreenState extends State<HomeScreen> {
         .toList();
 
     final List<String?> pageAnswers =
-    pageVars.map((v) => _getSavedAnswer(v)).toList();
+        pageVars.map((v) => _getSavedAnswer(v)).toList();
 
     final int answeredCount = pageAnswers
-        .where((ans) =>
-    ans != null && ans
-        .toString()
-        .trim()
-        .isNotEmpty)
+        .where((ans) => ans != null && ans.toString().trim().isNotEmpty)
         .length;
     final int totalQuestions = pageVars.length;
 
@@ -1941,86 +1929,81 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _climateCtrl,
             itemCount: 3,
             onPageChanged: (i) => setState(() => climatePageIdx = i),
-            itemBuilder: (_, i) =>
-                ListView(
-                  padding: EdgeInsets.zero,
-                  physics: const BouncingScrollPhysics(),
-                  children: [
-                    _bar(
-                      titles[i],
-                      Colors.brown.shade700,
-                      textColor: Colors.white,
-                    ),
-                    const SizedBox(height: 10),
-                    if (i == 2)
-                      _bar(
-                        'Adaptation options for dairy animals against climate change are given below. If you are following it, please tick “Yes=1” and “No=0” if you are not.',
-                        Colors.white,
-                        textColor: Colors.red,
-                        innerVPad: 0,
-                        textSize: 12.sp,
-                        borderTransparent: true,
-                      )
-                    else
-                      _bar(
-                        'Please give your opinion on the following based on your experience during last 30-40 years (4=strongly agree, 3=highly agree, 2=somewhat agree, 1=agree, 0=not agree)',
-                        Colors.white,
-                        textColor: Colors.red,
-                        innerVPad: 0,
-                        textSize: 12.sp,
-                        borderTransparent: true,
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
-                      child: Builder(
-                        builder: (_) {
-                          double val;
-                          if (i == 0) {
-                            val = _computePerceptionValue();
-                          } else if (i == 1) {
-                            val = _computeAwarenessValue();
-                          } else {
-                            val = _computePreparednessValue();
-                          }
-                          return SizedBox();
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    ...slice(i)
-                        .asMap()
-                        .entries
-                        .map(
-                          (e) =>
-                          AnimatedEntrance(
-                            delay: Duration(milliseconds: 110 * e.key),
-                            child: i == 2
-                                ? _YesNoCircle(
-                              question: e.value,
-                              savedAnswer:
-                              _getSavedAnswer(e.value.variableNumber),
-                              onSave: _saveAnswer,
-                              showFinal: false,
-                            )
-                                : _RatingCircle(
-                              question: e.value,
-                              savedAnswer:
-                              _getSavedAnswer(e.value.variableNumber),
-                              onSave: _saveAnswer,
-                              showFinal: false,
-                            ),
-                          ),
-                    ),
-                    if (i == 2)
-                      AnimatedEntrance(
-                        delay: const Duration(milliseconds: 400),
-                        child: _ExtraAdaptationCard(
-                          onChanged: (txt) => _saveAnswer('46.99', txt),
-                        ),
-                      ),
-                    SizedBox(height: 80.h),
-                  ],
+            itemBuilder: (_, i) => ListView(
+              padding: EdgeInsets.zero,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                _bar(
+                  titles[i],
+                  Colors.brown.shade700,
+                  textColor: Colors.white,
                 ),
+                const SizedBox(height: 10),
+                if (i == 2)
+                  _bar(
+                    'Adaptation options for dairy animals against climate change are given below. If you are following it, please tick “Yes=1” and “No=0” if you are not.',
+                    Colors.white,
+                    textColor: Colors.red,
+                    innerVPad: 0,
+                    textSize: 12.sp,
+                    borderTransparent: true,
+                  )
+                else
+                  _bar(
+                    'Please give your opinion on the following based on your experience during last 30-40 years (4=strongly agree, 3=highly agree, 2=somewhat agree, 1=agree, 0=not agree)',
+                    Colors.white,
+                    textColor: Colors.red,
+                    innerVPad: 0,
+                    textSize: 12.sp,
+                    borderTransparent: true,
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+                  child: Builder(
+                    builder: (_) {
+                      double val;
+                      if (i == 0) {
+                        val = _computePerceptionValue();
+                      } else if (i == 1) {
+                        val = _computeAwarenessValue();
+                      } else {
+                        val = _computePreparednessValue();
+                      }
+                      return SizedBox();
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ...slice(i).asMap().entries.map(
+                      (e) => AnimatedEntrance(
+                        delay: Duration(milliseconds: 110 * e.key),
+                        child: i == 2
+                            ? _YesNoCircle(
+                                question: e.value,
+                                savedAnswer:
+                                    _getSavedAnswer(e.value.variableNumber),
+                                onSave: _saveAnswer,
+                                showFinal: false,
+                              )
+                            : _RatingCircle(
+                                question: e.value,
+                                savedAnswer:
+                                    _getSavedAnswer(e.value.variableNumber),
+                                onSave: _saveAnswer,
+                                showFinal: false,
+                              ),
+                      ),
+                    ),
+                if (i == 2)
+                  AnimatedEntrance(
+                    delay: const Duration(milliseconds: 400),
+                    child: _ExtraAdaptationCard(
+                      onChanged: (txt) => _saveAnswer('46.99', txt),
+                    ),
+                  ),
+                SizedBox(height: 80.h),
+              ],
+            ),
           ),
         ),
         SizedBox(height: 10.h),
@@ -2028,12 +2011,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             GestureDetector(
-              onTap: () =>
-              climatePageIdx == 0
+              onTap: () => climatePageIdx == 0
                   ? setState(() => step = 5)
                   : _climateCtrl.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeIn),
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeIn),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 170),
                 width: 144,
@@ -2076,43 +2058,42 @@ class _HomeScreenState extends State<HomeScreen> {
             if (climatePageIdx < 2)
               GestureDetector(
                 onTap: isPageAnswered
-                    ? () =>
-                    _climateCtrl.nextPage(
+                    ? () => _climateCtrl.nextPage(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeIn)
                     : () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.info_outline_rounded,
-                              color: Colors.amber, size: 24),
-                          SizedBox(width: 14),
-                          Expanded(
-                            child: Text(
-                              "Please answer all questions to continue.",
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500),
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Row(
+                              children: [
+                                Icon(Icons.info_outline_rounded,
+                                    color: Colors.amber, size: 24),
+                                SizedBox(width: 14),
+                                Expanded(
+                                  child: Text(
+                                    "Please answer all questions to continue.",
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: const Color(0xFF4E4376),
+                            behavior: SnackBarBehavior.floating,
+                            elevation: 8,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 26, vertical: 22),
+                            action: SnackBarAction(
+                              label: 'Dismiss',
+                              textColor: Colors.amber.withOpacity(0.7),
+                              onPressed: () {},
                             ),
                           ),
-                        ],
-                      ),
-                      backgroundColor: const Color(0xFF4E4376),
-                      behavior: SnackBarBehavior.floating,
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 26, vertical: 22),
-                      action: SnackBarAction(
-                        label: 'Dismiss',
-                        textColor: Colors.amber.withOpacity(0.7),
-                        onPressed: () {},
-                      ),
-                    ),
-                  );
-                },
+                        );
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -2160,8 +2141,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 9),
                       Icon(Icons.arrow_forward_rounded,
-                          color: isPageAnswered ? Colors.brown.shade500 : Colors
-                              .brown.shade200, size: 22),
+                          color: isPageAnswered
+                              ? Colors.brown.shade500
+                              : Colors.brown.shade200,
+                          size: 22),
                     ],
                   ),
                 ),
@@ -2170,71 +2153,67 @@ class _HomeScreenState extends State<HomeScreen> {
               GestureDetector(
                 onTap: isPageAnswered
                     ? () async {
-                  final Map<String, String> answerMap = {};
-                  for (final q in st.questions) {
-                    final ans = _getSavedAnswer(q.variableNumber);
-                    if (ans != null && ans.isNotEmpty)
-                      answerMap[q.variableNumber] = ans;
-                  }
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          PreviewAnswersScreen(
-                            allAnswers: answerMap,
-                            allQuestions: st.questions,
-                            onEditFirstQuestion: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                step = 1;
-                                climatePageIdx = 0;
-                              });
-                            },
-                            onSubmit: () async {
-                              Navigator.pop(context);
-                              context
-                                  .read<RiskAssessmentBloc>()
-                                  .add(SubmitAnswersEvent());
-                              await _showSubmitResultDialog(context);
-                            },
-                          ),
-                    ),
-                  );
-                }
-                    : () {
-                  ScaffoldMessenger
-                      .of(context)
-                      .showSnackBar(
-                      SnackBar(
-                        content: const Row(
-                          children: [
-                            Icon(Icons.info_outline_rounded,
-                                color: Colors.amber, size: 24),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                "Please answer all questions to continue.",
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500),
-                              ),
+                        final Map<String, String> answerMap = {};
+                        for (final q in st.questions) {
+                          final ans = _getSavedAnswer(q.variableNumber);
+                          if (ans != null && ans.isNotEmpty)
+                            answerMap[q.variableNumber] = ans;
+                        }
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PreviewAnswersScreen(
+                              allAnswers: answerMap,
+                              allQuestions: st.questions,
+                              onEditFirstQuestion: () {
+                                Navigator.pop(context);
+                                setState(() {
+                                  step = 1;
+                                  climatePageIdx = 0;
+                                });
+                              },
+                              onSubmit: () async {
+                                Navigator.pop(context);
+                                context
+                                    .read<RiskAssessmentBloc>()
+                                    .add(SubmitAnswersEvent());
+                                await _showSubmitResultDialog(context);
+                              },
                             ),
-                          ],
-                        ),
-                        backgroundColor: const Color(0xFF4E4376),
-                        behavior: SnackBarBehavior.floating,
-                        elevation: 8,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 26, vertical: 22),
-                        action: SnackBarAction(
-                          label: 'Dismiss',
-                          textColor: Colors.amber.withOpacity(0.7),
-                          onPressed: () {},
-                        ),
-                      ));
-                },
+                          ),
+                        );
+                      }
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  color: Colors.amber, size: 24),
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  "Please answer all questions to continue.",
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFF4E4376),
+                          behavior: SnackBarBehavior.floating,
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 26, vertical: 22),
+                          action: SnackBarAction(
+                            label: 'Dismiss',
+                            textColor: Colors.amber.withOpacity(0.7),
+                            onPressed: () {},
+                          ),
+                        ));
+                      },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   width: 144,
@@ -2293,53 +2272,53 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
           ],
         ),
         if (climatePageIdx == 2)
-          SizedBox(height: 10.h,),
+          SizedBox(
+            height: 10.h,
+          ),
         if (climatePageIdx == 2)
           GestureDetector(
             onTap: isPageAnswered
                 ? () async {
-              context
-                  .read<RiskAssessmentBloc>()
-                  .add(SubmitAnswersEvent());
-              await _showSubmitResultDialog(context);
-            }
+                    context
+                        .read<RiskAssessmentBloc>()
+                        .add(SubmitAnswersEvent());
+                    await _showSubmitResultDialog(context);
+                  }
                 : () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded,
-                          color: Colors.amber, size: 24),
-                      SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          "Please answer all questions to continue.",
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Row(
+                          children: [
+                            Icon(Icons.info_outline_rounded,
+                                color: Colors.amber, size: 24),
+                            SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                "Please answer all questions to continue.",
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF4E4376),
+                        behavior: SnackBarBehavior.floating,
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 26, vertical: 22),
+                        action: SnackBarAction(
+                          label: 'Dismiss',
+                          textColor: Colors.amber.withOpacity(0.7),
+                          onPressed: () {},
                         ),
                       ),
-                    ],
-                  ),
-                  backgroundColor: const Color(0xFF4E4376),
-                  behavior: SnackBarBehavior.floating,
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  margin: const EdgeInsets.symmetric(
-                      horizontal: 26, vertical: 22),
-                  action: SnackBarAction(
-                    label: 'Dismiss',
-                    textColor: Colors.amber.withOpacity(0.7),
-                    onPressed: () {},
-                  ),
-                ),
-              );
-            },
+                    );
+                  },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               width: 144,
@@ -2402,8 +2381,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _thanks() =>
-      Container(
+  Widget _thanks() => Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
@@ -2426,70 +2404,67 @@ class _HomeScreenState extends State<HomeScreen> {
                   tween: Tween(begin: 0.9, end: 1.0),
                   duration: const Duration(milliseconds: 1200),
                   curve: Curves.elasticOut,
-                  builder: (context, scale, _) =>
-                      Transform.scale(
-                        scale: scale,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 26.w, vertical: 22.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(22),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.greenColor.withOpacity(0.18),
-                                blurRadius: 34,
-                                spreadRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: AppColors.headerBlueColor.withOpacity(
-                                  0.18),
-                              width: 2.5,
-                            ),
+                  builder: (context, scale, _) => Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 26.w, vertical: 22.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.greenColor.withOpacity(0.18),
+                            blurRadius: 34,
+                            spreadRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.celebration_rounded,
-                                      color: AppColors.yellowColor, size: 38),
-                                  const SizedBox(width: 10),
-                                  AppText(
-                                    text: 'Thank You!',
-                                    color: AppColors.greenColor,
-                                    textSize: 27.sp,
-                                    fontWeight: FontWeight.w900,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  const Icon(Icons.celebration_rounded,
-                                      color: AppColors.yellowColor, size: 38),
-                                ],
-                              ),
-                              SizedBox(height: 6.h),
-                              AppText(
-                                text: 'for your response',
-                                color: Colors.grey.shade800,
-                                textSize: 18.sp,
-                                fontWeight: FontWeight.bold,
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 8.h),
-                              AppText(
-                                text: 'You’ve helped us make a difference!',
-                                color: AppColors.headerBlueColor.withOpacity(
-                                    0.92),
-                                textSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                        ],
+                        border: Border.all(
+                          color: AppColors.headerBlueColor.withOpacity(0.18),
+                          width: 2.5,
                         ),
                       ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.celebration_rounded,
+                                  color: AppColors.yellowColor, size: 38),
+                              const SizedBox(width: 10),
+                              AppText(
+                                text: 'Thank You!',
+                                color: AppColors.greenColor,
+                                textSize: 27.sp,
+                                fontWeight: FontWeight.w900,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(width: 10),
+                              const Icon(Icons.celebration_rounded,
+                                  color: AppColors.yellowColor, size: 38),
+                            ],
+                          ),
+                          SizedBox(height: 6.h),
+                          AppText(
+                            text: 'for your response',
+                            color: Colors.grey.shade800,
+                            textSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 8.h),
+                          AppText(
+                            text: 'You’ve helped us make a difference!',
+                            color: AppColors.headerBlueColor.withOpacity(0.92),
+                            textSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
                 SizedBox(height: 36.h),
                 Padding(
@@ -2527,42 +2502,40 @@ class _HomeScreenState extends State<HomeScreen> {
                   tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 1300),
                   curve: Curves.easeOutBack,
-                  builder: (context, anim, child) =>
-                      Opacity(
-                        opacity: (anim.clamp(0.0, 1.0)),
-                        child: Transform.scale(
-                          scale: 0.98 + 0.02 * anim,
-                          child: child,
-                        ),
-                      ),
-                  child: ElevatedButton.icon(
-                    onPressed: () => ReportGenerator.generate(
-                      context: context,
-                      answers: _localAnswers,
-                      notifications: _localNotifications,
-                      initPermissions: _initPermissions,
-                      name: nameCtrl.text.trim(),
-                      block: blockCtrl.text.trim(),
-                      village: villageCtrl.text.trim(),
-                      stateName: selectedState,
-                      district: selectedDistrict,
+                  builder: (context, anim, child) => Opacity(
+                    opacity: (anim.clamp(0.0, 1.0)),
+                    child: Transform.scale(
+                      scale: 0.98 + 0.02 * anim,
+                      child: child,
                     ),
-                    icon: TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 1100),
-                      builder: (context, value, child) =>
-                          Transform.translate(
-                            offset: Offset(0, -7 + 7 * value),
-                            child: Icon(
-                              Icons.download_rounded,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: _generatingReport ? null : _generateReport,
+                    icon: _generatingReport
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
                               color: Colors.white,
-                              size: 27 + 7 * value,
+                            ),
+                          )
+                        : TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 0.0, end: 1.0),
+                            duration: const Duration(milliseconds: 1100),
+                            builder: (context, value, child) =>
+                                Transform.translate(
+                              offset: Offset(0, -7 + 7 * value),
+                              child: Icon(
+                                Icons.download_rounded,
+                                color: Colors.white,
+                                size: 27 + 7 * value,
+                              ),
                             ),
                           ),
-                    ),
-                    label: const Text(
-                      'Download Report',
-                      style: TextStyle(
+                    label: Text(
+                      _generatingReport ? 'Creating Report...' : 'Save Report',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -2586,14 +2559,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   tween: Tween(begin: 0.0, end: 1.0),
                   duration: const Duration(milliseconds: 1100),
                   curve: Curves.easeOutExpo,
-                  builder: (context, anim, child) =>
-                      Opacity(
-                        opacity: (anim.clamp(0.0, 1.0)),
-                        child: Transform.scale(
-                          scale: 0.98 + 0.02 * anim,
-                          child: child,
-                        ),
-                      ),
+                  builder: (context, anim, child) => Opacity(
+                    opacity: (anim.clamp(0.0, 1.0)),
+                    child: Transform.scale(
+                      scale: 0.98 + 0.02 * anim,
+                      child: child,
+                    ),
+                  ),
                   child: ElevatedButton(
                     onPressed: () async {
                       await _clearAnswers();
@@ -2644,7 +2616,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _livelihood(RiskAssessmentState st) {
     final qs =
-    st.questions.where((q) => livVars.contains(q.variableNumber)).toList();
+        st.questions.where((q) => livVars.contains(q.variableNumber)).toList();
 
     final Set<String> livHeadings = {};
 
@@ -2652,22 +2624,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final List<QuestionModel> inputQuestions = qs
         .where((q) =>
-    !livHeadings.contains(q.variableNumber.toString()) &&
-        q.variableNumber.toString() != '29')
+            !livHeadings.contains(q.variableNumber.toString()) &&
+            q.variableNumber.toString() != '29')
         .toList();
 
     final List<String> inputVars =
-    inputQuestions.map((q) => q.variableNumber.toString()).toList();
+        inputQuestions.map((q) => q.variableNumber.toString()).toList();
 
     final List<String?> inputAnswers =
-    inputVars.map((v) => _getSavedAnswer(v)).toList();
+        inputVars.map((v) => _getSavedAnswer(v)).toList();
 
     final int answeredCount = inputAnswers
-        .where((ans) =>
-    ans != null && ans
-        .toString()
-        .trim()
-        .isNotEmpty)
+        .where((ans) => ans != null && ans.toString().trim().isNotEmpty)
         .length;
     final int totalQuestions = inputVars.length;
 
@@ -2685,8 +2653,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onSave: (num variable, dynamic value) =>
               _saveAnswer(variable.toString(), value),
         ),
-        ...inputQuestions.map((q) =>
-            _LivCard(
+        ...inputQuestions.map((q) => _LivCard(
               question: q,
               savedAnswer: _getSavedAnswer(q.variableNumber),
               onSave: (variable, value) =>
@@ -2741,38 +2708,38 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: isPageAnswered
                   ? () => setState(() => step = 4)
                   : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.info_outline_rounded,
-                            color: Colors.amber, size: 24),
-                        SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            "Please answer all questions to continue.",
-                            style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  color: Colors.amber, size: 24),
+                              SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  "Please answer all questions to continue.",
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: const Color(0xFF4E4376),
+                          behavior: SnackBarBehavior.floating,
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 26, vertical: 22),
+                          action: SnackBarAction(
+                            label: 'Dismiss',
+                            textColor: Colors.amber.withOpacity(0.7),
+                            onPressed: () {},
                           ),
                         ),
-                      ],
-                    ),
-                    backgroundColor: const Color(0xFF4E4376),
-                    behavior: SnackBarBehavior.floating,
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 26, vertical: 22),
-                    action: SnackBarAction(
-                      label: 'Dismiss',
-                      textColor: Colors.amber.withOpacity(0.7),
-                      onPressed: () {},
-                    ),
-                  ),
-                );
-              },
+                      );
+                    },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 width: 144,
@@ -2820,8 +2787,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(width: 9),
                     Icon(Icons.arrow_forward_rounded,
-                        color: isPageAnswered ? Colors.brown.shade500 : Colors
-                            .brown.shade200, size: 22),
+                        color: isPageAnswered
+                            ? Colors.brown.shade500
+                            : Colors.brown.shade200,
+                        size: 22),
                   ],
                 ),
               ),
@@ -2833,20 +2802,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _validBasic() =>
-      nameCtrl.text
-          .trim()
-          .isNotEmpty &&
-          blockCtrl.text
-              .trim()
-              .isNotEmpty &&
-          villageCtrl.text
-              .trim()
-              .isNotEmpty &&
-          selectedState != null &&
-          selectedDistrict != null;
+      nameCtrl.text.trim().isNotEmpty &&
+      blockCtrl.text.trim().isNotEmpty &&
+      villageCtrl.text.trim().isNotEmpty &&
+      selectedState != null &&
+      selectedDistrict != null;
 
-  InputDecoration _dec(String h) =>
-      InputDecoration(
+  InputDecoration _dec(String h) => InputDecoration(
         isDense: true,
         filled: true,
         fillColor: Colors.white,
@@ -2859,8 +2821,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _outlined(TextEditingController c, String h) =>
       TextField(controller: c, decoration: _dec(h));
 
-  Widget _disabled(String h) =>
-      InputDecorator(
+  Widget _disabled(String h) => InputDecorator(
         decoration: _dec(h),
         child: SizedBox(
           height: 25.h,
@@ -2874,21 +2835,22 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
 
-  Widget _bar(String t,
-      Color c, {
-        Color textColor = Colors.white,
-        double? height,
-        bool center = false,
-        bool expanded = true,
-        double innerHPad = 8,
-        double innerVPad = 7,
-        double outerHPad = 10,
-        double? textSize,
-        bool borderTransparent = false,
-      }) {
+  Widget _bar(
+    String t,
+    Color c, {
+    Color textColor = Colors.white,
+    double? height,
+    bool center = false,
+    bool expanded = true,
+    double innerHPad = 8,
+    double innerVPad = 7,
+    double outerHPad = 10,
+    double? textSize,
+    bool borderTransparent = false,
+  }) {
     final barContent = Container(
       padding:
-      EdgeInsets.symmetric(horizontal: innerHPad.w, vertical: innerVPad.h),
+          EdgeInsets.symmetric(horizontal: innerHPad.w, vertical: innerVPad.h),
       decoration: BoxDecoration(
         color: c,
         border: Border.all(
@@ -2964,7 +2926,6 @@ class _HumanCardState extends State<_HumanCard> {
     setState(() {});
   }
 
-
   @override
   void dispose() {
     _ctrl.dispose();
@@ -2987,7 +2948,9 @@ class _HumanCardState extends State<_HumanCard> {
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
           hint: const Text(
-            "Select Gender", style: TextStyle(color: Colors.grey),),
+            "Select Gender",
+            style: TextStyle(color: Colors.grey),
+          ),
           items: ['Male', 'Female', 'Other']
               .map((g) => DropdownMenuItem(value: g, child: Text(g)))
               .toList(),
@@ -3005,7 +2968,10 @@ class _HumanCardState extends State<_HumanCard> {
           value: _edu,
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
-          hint: Text('Select Education', style: TextStyle(color: Colors.grey),),
+          hint: Text(
+            'Select Education',
+            style: TextStyle(color: Colors.grey),
+          ),
           items: [
             'No formal schooling',
             'Primary',
@@ -3016,7 +2982,7 @@ class _HumanCardState extends State<_HumanCard> {
             'Post graduate and above',
           ]
               .map((e) => DropdownMenuItem(
-              value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
+                  value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
               .toList(),
           onChanged: (val) {
             setState(() => _edu = val);
@@ -3084,7 +3050,9 @@ class _HumanCardState extends State<_HumanCard> {
           isExpanded: true,
           icon: const Icon(Icons.arrow_drop_down),
           hint: Text(
-            'Select Household Type', style: TextStyle(color: Colors.grey),),
+            'Select Household Type',
+            style: TextStyle(color: Colors.grey),
+          ),
           items: [
             'Permanent Pucca house',
             'Permanent Kaccha house',
@@ -3128,8 +3096,8 @@ class _HumanCardState extends State<_HumanCard> {
               border: Border.all(color: Colors.black, width: 1.5)),
           child: AppText(
               text: '$v. ${widget.question.questionText}',
-              color: barCol == AppColors.yellowColor ? Colors.black : Colors
-                  .white,
+              color:
+                  barCol == AppColors.yellowColor ? Colors.black : Colors.white,
               textSize: 14.sp,
               fontWeight: FontWeight.w600),
         ),
@@ -3144,12 +3112,10 @@ class _HumanCardState extends State<_HumanCard> {
           child: field,
         ),
         if (extraField != null) extraField!,
-
       ],
     );
   }
 }
-
 
 class AnimatedEntrance extends StatefulWidget {
   final Widget child;
@@ -3190,10 +3156,9 @@ class _AEState extends State<AnimatedEntrance>
   }
 
   @override
-  Widget build(BuildContext context) =>
-      SlideTransition(
-          position: _slide,
-          child: FadeTransition(opacity: _fade, child: widget.child));
+  Widget build(BuildContext context) => SlideTransition(
+      position: _slide,
+      child: FadeTransition(opacity: _fade, child: widget.child));
 }
 
 class _AgCard extends StatefulWidget {
@@ -3296,8 +3261,9 @@ class _AgCardState extends State<_AgCard> {
       bloc.add(SaveAnswerEvent('13', operational.toString()));
       widget.onSave?.call('13', operational.toString());
 
-      finalValue =
-      v == '13.3' ? computeFinalValueForInput('13', operational.toString()) : null;
+      finalValue = v == '13.3'
+          ? computeFinalValueForInput('13', operational.toString())
+          : null;
     } else if (v.startsWith('18.')) {
       _herdAnswers[v] = input;
       double sum = 0.0;
@@ -3309,7 +3275,7 @@ class _AgCardState extends State<_AgCard> {
       widget.onSave?.call('18', sum.toString());
 
       finalValue =
-      v == '18.18' ? computeFinalValueForInput('18', sum.toString()) : null;
+          v == '18.18' ? computeFinalValueForInput('18', sum.toString()) : null;
     } else {
       finalValue = computeFinalValueForInput(v, input);
     }
@@ -3382,26 +3348,26 @@ class _AgCardState extends State<_AgCard> {
       children: [
         Container(
           margin: (v == '13.1' ||
-              v == '13.2' ||
-              v == '13.3' ||
-              v == '18.1' ||
-              v == '18.2' ||
-              v == '18.3' ||
-              v == '18.4' ||
-              v == '18.5' ||
-              v == '18.6' ||
-              v == '18.7' ||
-              v == '18.8' ||
-              v == '18.9' ||
-              v == '18.10' ||
-              v == '18.11' ||
-              v == '18.12' ||
-              v == '18.13' ||
-              v == '18.14' ||
-              v == '18.15' ||
-              v == '18.16' ||
-              v == '18.17' ||
-              v == '18.18')
+                  v == '13.2' ||
+                  v == '13.3' ||
+                  v == '18.1' ||
+                  v == '18.2' ||
+                  v == '18.3' ||
+                  v == '18.4' ||
+                  v == '18.5' ||
+                  v == '18.6' ||
+                  v == '18.7' ||
+                  v == '18.8' ||
+                  v == '18.9' ||
+                  v == '18.10' ||
+                  v == '18.11' ||
+                  v == '18.12' ||
+                  v == '18.13' ||
+                  v == '18.14' ||
+                  v == '18.15' ||
+                  v == '18.16' ||
+                  v == '18.17' ||
+                  v == '18.18')
               ? const EdgeInsets.only(left: 25)
               : EdgeInsets.zero,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -3411,10 +3377,9 @@ class _AgCardState extends State<_AgCard> {
           ),
           child: AppText(
             text:
-            '${widget.question.variableNumber}. ${widget.question
-                .questionText}',
+                '${widget.question.variableNumber}. ${widget.question.questionText}',
             color: (barCol == AppColors.yellowColor ||
-                barCol == AppColors.hardPink)
+                    barCol == AppColors.hardPink)
                 ? Colors.black
                 : Colors.white,
             textSize: 14,
@@ -3424,59 +3389,57 @@ class _AgCardState extends State<_AgCard> {
         ),
         v == '18' || v == '13' || v == '20'
             ? const SizedBox(
-          height: 24,
-        )
+                height: 24,
+              )
             : Container(
-          height: 34,
-          margin: (v == '13.1' ||
-              v == '13.2' ||
-              v == '13.3' ||
-              v == '18.1' ||
-              v == '18.2' ||
-              v == '18.3' ||
-              v == '18.4' ||
-              v == '18.5' ||
-              v == '18.6' ||
-              v == '18.7' ||
-              v == '18.8' ||
-              v == '18.9' ||
-              v == '18.10' ||
-              v == '18.11' ||
-              v == '18.12' ||
-              v == '18.13' ||
-              v == '18.14' ||
-              v == '18.15' ||
-              v == '18.16' ||
-              v == '18.17' ||
-              v == '18.18')
-              ? const EdgeInsets.only(left: 25, bottom: 14)
-              : const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: AppColors.greenColor, width: 1.4),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: TextField(
-            controller: _ctrl,
-            textAlignVertical: TextAlignVertical.center,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              hintText: 'Type here',
-              hintStyle: const TextStyle(color: Colors.grey),
-              contentPadding: EdgeInsets.symmetric(vertical: 3.h),
-            ),
-            keyboardType: TextInputType.number,
-            onChanged: (txt) {
-              setState(() => calculateFinalValue(txt));
-              context
-                  .read<RiskAssessmentBloc>()
-                  .add(SaveAnswerEvent(widget.question.variableNumber, txt));
-              widget.onSave?.call(widget.question.variableNumber, txt);
-            },
-          ),
-        ),
-
+                height: 34,
+                margin: (v == '13.1' ||
+                        v == '13.2' ||
+                        v == '13.3' ||
+                        v == '18.1' ||
+                        v == '18.2' ||
+                        v == '18.3' ||
+                        v == '18.4' ||
+                        v == '18.5' ||
+                        v == '18.6' ||
+                        v == '18.7' ||
+                        v == '18.8' ||
+                        v == '18.9' ||
+                        v == '18.10' ||
+                        v == '18.11' ||
+                        v == '18.12' ||
+                        v == '18.13' ||
+                        v == '18.14' ||
+                        v == '18.15' ||
+                        v == '18.16' ||
+                        v == '18.17' ||
+                        v == '18.18')
+                    ? const EdgeInsets.only(left: 25, bottom: 14)
+                    : const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: AppColors.greenColor, width: 1.4),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: TextField(
+                  controller: _ctrl,
+                  textAlignVertical: TextAlignVertical.center,
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    isDense: true,
+                    hintText: 'Type here',
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    contentPadding: EdgeInsets.symmetric(vertical: 3.h),
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (txt) {
+                    setState(() => calculateFinalValue(txt));
+                    context.read<RiskAssessmentBloc>().add(
+                        SaveAnswerEvent(widget.question.variableNumber, txt));
+                    widget.onSave?.call(widget.question.variableNumber, txt);
+                  },
+                ),
+              ),
         if (v == '18')
           Container(
             margin: const EdgeInsets.only(bottom: 20),
@@ -3528,59 +3491,62 @@ class _AgCardState extends State<_AgCard> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: selP
-                                .map((d) =>
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selP.remove(d);
-                                        finalValue = computeFinalValueForInput('20', selP.join(','));
-                                      });
-                                      context
-                                          .read<RiskAssessmentBloc>()
-                                          .add(SaveAnswerEvent(
-                                          '20', selP.join(',')));
-                                      widget.onSave
-                                          ?.call('20', selP.join(','));
-                                    },
-                                    child: Chip(
-                                      backgroundColor:
-                                      Colors.green.shade100,
-                                      avatar: const Icon(Icons.check_circle,
-                                          color: Colors.green, size: 18),
-                                      label: Text(
-                                        d,
-                                        style: TextStyle(
-                                          color: Colors.green.shade800,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
+                                .map((d) => Padding(
+                                      padding: const EdgeInsets.only(right: 8),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selP.remove(d);
+                                            finalValue =
+                                                computeFinalValueForInput(
+                                                    '20', selP.join(','));
+                                          });
+                                          context
+                                              .read<RiskAssessmentBloc>()
+                                              .add(SaveAnswerEvent(
+                                                  '20', selP.join(',')));
+                                          widget.onSave
+                                              ?.call('20', selP.join(','));
+                                        },
+                                        child: Chip(
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          avatar: const Icon(Icons.check_circle,
+                                              color: Colors.green, size: 18),
+                                          label: Text(
+                                            d,
+                                            style: TextStyle(
+                                              color: Colors.green.shade800,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          deleteIcon: Icon(Icons.close,
+                                              size: 16,
+                                              color: Colors.green.shade700),
+                                          onDeleted: () {
+                                            setState(() {
+                                              selP.remove(d);
+                                              finalValue =
+                                                  computeFinalValueForInput(
+                                                      '20', selP.join(','));
+                                            });
+                                            context
+                                                .read<RiskAssessmentBloc>()
+                                                .add(SaveAnswerEvent(
+                                                    '20', selP.join(',')));
+                                            widget.onSave
+                                                ?.call('20', selP.join(','));
+                                          },
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
                                         ),
                                       ),
-                                      deleteIcon: Icon(Icons.close,
-                                          size: 16,
-                                          color: Colors.green.shade700),
-                                      onDeleted: () {
-                                        setState(() {
-                                          selP.remove(d);
-                                          finalValue = computeFinalValueForInput('20', selP.join(','));
-                                        });
-                                        context
-                                            .read<RiskAssessmentBloc>()
-                                            .add(SaveAnswerEvent(
-                                            '20', selP.join(',')));
-                                        widget.onSave
-                                            ?.call('20', selP.join(','));
-                                      },
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ))
+                                    ))
                                 .toList(),
                           ),
                         ),
@@ -3619,7 +3585,8 @@ class _AgCardState extends State<_AgCard> {
                       onTap: () {
                         setState(() {
                           selected ? selP.remove(label) : selP.add(label);
-                          finalValue = computeFinalValueForInput('20', selP.join(','));
+                          finalValue =
+                              computeFinalValueForInput('20', selP.join(','));
                         });
                         context
                             .read<RiskAssessmentBloc>()
@@ -3631,11 +3598,11 @@ class _AgCardState extends State<_AgCard> {
                         curve: Curves.easeInOut,
                         decoration: BoxDecoration(
                           color:
-                          selected ? Colors.green.shade100 : Colors.white,
+                              selected ? Colors.green.shade100 : Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color:
-                            selected ? Colors.green : Colors.grey.shade300,
+                                selected ? Colors.green : Colors.grey.shade300,
                             width: selected ? 2 : 1.1,
                           ),
                           boxShadow: [
@@ -3697,7 +3664,6 @@ class _AgCardState extends State<_AgCard> {
                 textAlign: TextAlign.start,
                 fontWeight: FontWeight.w700),
           ),
-
       ],
     );
   }
@@ -3792,61 +3758,62 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: sel
-                                .map((d) =>
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 7),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        sel.remove(d);
-                                        finalValue = computeFinalValueForInput(
-                                            '29_exp', sel.join(','));
-                                      });
-                                      context
-                                          .read<RiskAssessmentBloc>()
-                                          .add(SaveAnswerEvent(
-                                          '30', sel.join(',')));
-                                      widget.onSave
-                                          ?.call(30, sel.join(','));
-                                    },
-                                    child: Chip(
-                                      backgroundColor:
-                                      Colors.green.shade100,
-                                      avatar: const Icon(Icons.check_circle,
-                                          color: Colors.green, size: 18),
-                                      label: Text(
-                                        d,
-                                        style: TextStyle(
-                                          color: Colors.green.shade800,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
+                                .map((d) => Padding(
+                                      padding: const EdgeInsets.only(right: 7),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            sel.remove(d);
+                                            finalValue =
+                                                computeFinalValueForInput(
+                                                    '29_exp', sel.join(','));
+                                          });
+                                          context
+                                              .read<RiskAssessmentBloc>()
+                                              .add(SaveAnswerEvent(
+                                                  '30', sel.join(',')));
+                                          widget.onSave
+                                              ?.call(30, sel.join(','));
+                                        },
+                                        child: Chip(
+                                          backgroundColor:
+                                              Colors.green.shade100,
+                                          avatar: const Icon(Icons.check_circle,
+                                              color: Colors.green, size: 18),
+                                          label: Text(
+                                            d,
+                                            style: TextStyle(
+                                              color: Colors.green.shade800,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          deleteIcon: Icon(Icons.close,
+                                              size: 16,
+                                              color: Colors.green.shade700),
+                                          onDeleted: () {
+                                            setState(() {
+                                              sel.remove(d);
+                                              finalValue =
+                                                  computeFinalValueForInput(
+                                                      '29_exp', sel.join(','));
+                                            });
+                                            context
+                                                .read<RiskAssessmentBloc>()
+                                                .add(SaveAnswerEvent(
+                                                    '30', sel.join(',')));
+                                            widget.onSave
+                                                ?.call(30, sel.join(','));
+                                          },
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
                                         ),
                                       ),
-                                      deleteIcon: Icon(Icons.close,
-                                          size: 16,
-                                          color: Colors.green.shade700),
-                                      onDeleted: () {
-                                        setState(() {
-                                          sel.remove(d);
-                                          finalValue = computeFinalValueForInput(
-                                              '29_exp', sel.join(','));
-                                        });
-                                        context
-                                            .read<RiskAssessmentBloc>()
-                                            .add(SaveAnswerEvent(
-                                            '30', sel.join(',')));
-                                        widget.onSave
-                                            ?.call(30, sel.join(','));
-                                      },
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                  ),
-                                ))
+                                    ))
                                 .toList(),
                           ),
                         ),
@@ -3898,11 +3865,11 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                         curve: Curves.easeInOut,
                         decoration: BoxDecoration(
                           color:
-                          selected ? Colors.green.shade100 : Colors.white,
+                              selected ? Colors.green.shade100 : Colors.white,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color:
-                            selected ? Colors.green : Colors.grey.shade300,
+                                selected ? Colors.green : Colors.grey.shade300,
                             width: selected ? 2 : 1.1,
                           ),
                           boxShadow: [
@@ -3949,7 +3916,6 @@ class _IncomeMultiState extends State<_IncomeMulti> {
                 const SizedBox(height: 2),
               ],
             )),
-
       ]);
 }
 
@@ -4008,7 +3974,7 @@ class _LivCardState extends State<_LivCard> {
         child: AppText(
             text: '${v.toString()}. ${widget.question.questionText}',
             color:
-            barCol == AppColors.yellowColor ? Colors.black : Colors.white,
+                barCol == AppColors.yellowColor ? Colors.black : Colors.white,
             textSize: 14,
             fontWeight: FontWeight.w700),
       ),
@@ -4033,7 +3999,8 @@ class _LivCardState extends State<_LivCard> {
           onChanged: (txt) {
             setState(() {
               if (v == '31' || v == '32' || v == '33') {
-                final ans = context.read<RiskAssessmentBloc>().state.answers['30'];
+                final ans =
+                    context.read<RiskAssessmentBloc>().state.answers['30'];
                 final total = double.tryParse(ans ?? '') ?? 0.0;
                 final perc = double.tryParse(txt) ?? 0.0;
                 final computed = total * perc / 100.0;
@@ -4049,7 +4016,6 @@ class _LivCardState extends State<_LivCard> {
           },
         ),
       ),
-
     ]);
   }
 }
@@ -4086,8 +4052,7 @@ class _SCYesNoState extends State<_SocialCardYesNo> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      _line(
+  Widget build(BuildContext context) => _line(
         widget.question.questionText,
         AppColors.greenColor,
         child: DropdownButtonHideUnderline(
@@ -4096,7 +4061,9 @@ class _SCYesNoState extends State<_SocialCardYesNo> {
             isExpanded: true,
             icon: const Icon(Icons.arrow_drop_down),
             hint: Text(
-              "Select Yes or No", style: TextStyle(color: Colors.grey),),
+              "Select Yes or No",
+              style: TextStyle(color: Colors.grey),
+            ),
             items: const [
               DropdownMenuItem(value: 1, child: Text('Yes')),
               DropdownMenuItem(value: 0, child: Text('No')),
@@ -4107,7 +4074,7 @@ class _SCYesNoState extends State<_SocialCardYesNo> {
                 finalValue = v == null
                     ? null
                     : computeFinalValueForInput(
-                    widget.question.variableNumber, v.toString());
+                        widget.question.variableNumber, v.toString());
               });
               context.read<RiskAssessmentBloc>().add(SaveAnswerEvent(
                   widget.question.variableNumber, v.toString()));
@@ -4144,8 +4111,8 @@ class _SocialCardNumState extends State<_SocialCardNum> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
-    finalValue = computeFinalValueForInput(
-        widget.question.variableNumber, _ctrl.text);
+    finalValue =
+        computeFinalValueForInput(widget.question.variableNumber, _ctrl.text);
   }
 
   @override
@@ -4155,8 +4122,7 @@ class _SocialCardNumState extends State<_SocialCardNum> {
   }
 
   @override
-  Widget build(BuildContext ctx) =>
-      _line(
+  Widget build(BuildContext ctx) => _line(
         widget.question.questionText,
         widget.yellow ? AppColors.yellowColor : AppColors.greenColor,
         child: TextField(
@@ -4171,8 +4137,8 @@ class _SocialCardNumState extends State<_SocialCardNum> {
           ),
           keyboardType: TextInputType.number,
           onChanged: (v) {
-            setState(() =>
-            finalValue = computeFinalValueForInput(widget.question.variableNumber, v));
+            setState(() => finalValue =
+                computeFinalValueForInput(widget.question.variableNumber, v));
             ctx
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, v));
@@ -4213,8 +4179,7 @@ class _OfficialMultiState extends State<_OfficialMulti> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Column(
+  Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
@@ -4223,7 +4188,8 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                   color: AppColors.greenColor,
                   border: Border.all(color: Colors.black, width: 1.5)),
               child: const AppText(
-                  text: '36. Tap on the types of officials to whom you visited during last one year',
+                  text:
+                      '36. Tap on the types of officials to whom you visited during last one year',
                   color: Colors.white,
                   textSize: 14,
                   fontWeight: FontWeight.w700)),
@@ -4246,40 +4212,39 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: sel
-                                  .map((d) =>
-                                  Padding(
-                                    padding:
-                                    const EdgeInsets.only(right: 6),
-                                    child: Chip(
-                                      label: Text(
-                                        d,
-                                        style: TextStyle(
-                                          color: Colors.green.shade800,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 13,
+                                  .map((d) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 6),
+                                        child: Chip(
+                                          label: Text(
+                                            d,
+                                            style: TextStyle(
+                                              color: Colors.green.shade800,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                          backgroundColor: Colors.green.shade50,
+                                          deleteIcon: Icon(Icons.close,
+                                              size: 15,
+                                              color: Colors.green.shade700),
+                                          onDeleted: () {
+                                            setState(() => sel.remove(d));
+                                            context
+                                                .read<RiskAssessmentBloc>()
+                                                .add(SaveAnswerEvent(
+                                                    '36', sel.join(',')));
+                                            widget.onSave
+                                                ?.call(36, sel.join(','));
+                                          },
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 0),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(9),
+                                          ),
                                         ),
-                                      ),
-                                      backgroundColor: Colors.green.shade50,
-                                      deleteIcon: Icon(Icons.close,
-                                          size: 15,
-                                          color: Colors.green.shade700),
-                                      onDeleted: () {
-                                        setState(() => sel.remove(d));
-                                        context
-                                            .read<RiskAssessmentBloc>()
-                                            .add(SaveAnswerEvent(
-                                            '36', sel.join(',')));
-                                        widget.onSave
-                                            ?.call(36, sel.join(','));
-                                      },
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                        BorderRadius.circular(9),
-                                      ),
-                                    ),
-                                  ))
+                                      ))
                                   .toList(),
                             ),
                           ),
@@ -4317,7 +4282,7 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                     return GestureDetector(
                       onTap: () {
                         setState(() =>
-                        selected ? sel.remove(label) : sel.add(label));
+                            selected ? sel.remove(label) : sel.add(label));
                         context
                             .read<RiskAssessmentBloc>()
                             .add(SaveAnswerEvent('36', sel.join(',')));
@@ -4328,11 +4293,11 @@ class _OfficialMultiState extends State<_OfficialMulti> {
                         curve: Curves.easeInOut,
                         decoration: BoxDecoration(
                           color:
-                          selected ? Colors.green.shade100 : Colors.white,
+                              selected ? Colors.green.shade100 : Colors.white,
                           borderRadius: BorderRadius.circular(13),
                           border: Border.all(
                             color:
-                            selected ? Colors.green : Colors.grey.shade400,
+                                selected ? Colors.green : Colors.grey.shade400,
                             width: selected ? 2 : 1.1,
                           ),
                           boxShadow: [
@@ -4407,8 +4372,8 @@ class _InfraCardState extends State<_InfraCard> {
   void initState() {
     super.initState();
     _ctrl = TextEditingController(text: widget.savedAnswer ?? '');
-    finalValue = computeFinalValueForInput(
-        widget.question.variableNumber, _ctrl.text);
+    finalValue =
+        computeFinalValueForInput(widget.question.variableNumber, _ctrl.text);
   }
 
   @override
@@ -4431,7 +4396,7 @@ class _InfraCardState extends State<_InfraCard> {
         child: AppText(
             text: '${v.toString()}. ${widget.question.questionText}',
             color:
-            barCol == AppColors.yellowColor ? Colors.black : Colors.white,
+                barCol == AppColors.yellowColor ? Colors.black : Colors.white,
             textSize: 14,
             fontWeight: FontWeight.w700),
       ),
@@ -4452,11 +4417,9 @@ class _InfraCardState extends State<_InfraCard> {
             hintStyle: const TextStyle(color: Colors.grey),
             contentPadding: EdgeInsets.symmetric(vertical: 3.h),
           ),
-
           keyboardType: TextInputType.number,
           onChanged: (txt) {
-            setState(() =>
-            finalValue = computeFinalValueForInput(v, txt));
+            setState(() => finalValue = computeFinalValueForInput(v, txt));
             context
                 .read<RiskAssessmentBloc>()
                 .add(SaveAnswerEvent(widget.question.variableNumber, txt));
@@ -4464,7 +4427,6 @@ class _InfraCardState extends State<_InfraCard> {
           },
         ),
       ),
-
     ]);
   }
 }
@@ -4503,50 +4465,49 @@ class _YesNoCircleState extends State<_YesNoCircle> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Column(
+  Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
               color: {'10. Follow vaccination schedule'}
-                  .contains(widget.question.questionText.toString())
+                      .contains(widget.question.questionText.toString())
                   ? AppColors.yellowColor
                   : {
-                '46.1',
-                '46.3',
-                '46.5',
-                '46.7',
-                '46.9',
-                '46.11',
-                '46.13',
-                '46.15',
-                '46.17'
-              }.contains(widget.question.variableNumber.toString())
-                  ? AppColors.greenColor
-                  : AppColors.yellowColor,
+                      '46.1',
+                      '46.3',
+                      '46.5',
+                      '46.7',
+                      '46.9',
+                      '46.11',
+                      '46.13',
+                      '46.15',
+                      '46.17'
+                    }.contains(widget.question.variableNumber.toString())
+                      ? AppColors.greenColor
+                      : AppColors.yellowColor,
               border: Border.all(color: Colors.black, width: 1.5),
             ),
             child: Text(
               widget.question.questionText,
               style: TextStyle(
                 color: {'10. Follow vaccination schedule'}
-                    .contains(widget.question.questionText.toString())
+                        .contains(widget.question.questionText.toString())
                     ? AppColors.blackColor
                     : {
-                  '46.1',
-                  '46.3',
-                  '46.5',
-                  '46.7',
-                  '46.9',
-                  '46.11',
-                  '46.13',
-                  '46.15',
-                  '46.17'
-                }.contains(widget.question.variableNumber.toString())
-                    ? Colors.white
-                    : Colors.black,
+                        '46.1',
+                        '46.3',
+                        '46.5',
+                        '46.7',
+                        '46.9',
+                        '46.11',
+                        '46.13',
+                        '46.15',
+                        '46.17'
+                      }.contains(widget.question.variableNumber.toString())
+                        ? Colors.white
+                        : Colors.black,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
@@ -4581,8 +4542,8 @@ class _YesNoCircleState extends State<_YesNoCircle> {
                             color: yes == null
                                 ? Colors.grey
                                 : (yes!
-                                ? const Color(0xFF2e7d32)
-                                : const Color(0xFFc62828)),
+                                    ? const Color(0xFF2e7d32)
+                                    : const Color(0xFFc62828)),
                           ),
                         ),
                       ),
@@ -4593,7 +4554,6 @@ class _YesNoCircleState extends State<_YesNoCircle> {
               ],
             ),
           ),
-
         ],
       );
 
@@ -4736,50 +4696,50 @@ class _RatingCircleState extends State<_RatingCircle>
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: {'10. Change in the season cycle during last 10-15 years'}
-                .contains(widget.question.questionText.toString())
+                    .contains(widget.question.questionText.toString())
                 ? AppColors.yellowColor
                 : {
-              '44.1',
-              '44.3',
-              '44.5',
-              '44.7',
-              '44.9',
-              '44.11',
-              '44.13',
-              '44.15',
-              '45.1',
-              '45.3',
-              '45.5',
-              '45.7',
-              '46.1',
-              '46.3'
-            }.contains(widget.question.variableNumber.toString())
-                ? AppColors.greenColor
-                : AppColors.yellowColor,
+                    '44.1',
+                    '44.3',
+                    '44.5',
+                    '44.7',
+                    '44.9',
+                    '44.11',
+                    '44.13',
+                    '44.15',
+                    '45.1',
+                    '45.3',
+                    '45.5',
+                    '45.7',
+                    '46.1',
+                    '46.3'
+                  }.contains(widget.question.variableNumber.toString())
+                    ? AppColors.greenColor
+                    : AppColors.yellowColor,
             border: Border.all(color: Colors.black, width: 1.5),
           ),
           child: Text(
             widget.question.questionText,
             style: TextStyle(
               color: {'10. Change in the season cycle during last 10-15 years'}
-                  .contains(widget.question.questionText.toString())
+                      .contains(widget.question.questionText.toString())
                   ? AppColors.blackColor
                   : {
-                '44.1',
-                '44.3',
-                '44.5',
-                '44.7',
-                '44.9',
-                '44.11',
-                '44.13',
-                '44.15',
-                '45.1',
-                '45.3',
-                '45.5',
-                '45.7'
-              }.contains(widget.question.variableNumber.toString())
-                  ? AppColors.whiteColor
-                  : AppColors.blackColor,
+                      '44.1',
+                      '44.3',
+                      '44.5',
+                      '44.7',
+                      '44.9',
+                      '44.11',
+                      '44.13',
+                      '44.15',
+                      '45.1',
+                      '45.3',
+                      '45.5',
+                      '45.7'
+                    }.contains(widget.question.variableNumber.toString())
+                      ? AppColors.whiteColor
+                      : AppColors.blackColor,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -4806,62 +4766,61 @@ class _RatingCircleState extends State<_RatingCircle>
                   children: [
                     AnimatedBuilder(
                       animation: _anim,
-                      builder: (_, child) =>
-                          Transform.scale(
-                            scale: isSelected ? _anim.value : 1.0,
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: _circleColor(i, isSelected),
-                                border: Border.all(
-                                  color:
+                      builder: (_, child) => Transform.scale(
+                        scale: isSelected ? _anim.value : 1.0,
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _circleColor(i, isSelected),
+                            border: Border.all(
+                              color:
                                   isSelected ? colors[i] : Colors.grey.shade300,
-                                  width: isSelected ? 3.0 : 1.3,
-                                ),
-                                boxShadow: isSelected
-                                    ? [
-                                  BoxShadow(
-                                    color: colors[i].withOpacity(0.32),
-                                    blurRadius: 8,
-                                    spreadRadius: 0,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                                    : [],
-                              ),
-                              alignment: Alignment.center,
-                              child: isSelected
-                                  ? Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Text(
-                                    val.toString(),
-                                    style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15),
-                                  ),
-                                  Positioned(
-                                    right: 5,
-                                    top: 4,
-                                    child: Icon(Icons.check_circle_rounded,
-                                        size: 13,
-                                        color: colors[i].withOpacity(0.78)),
-                                  ),
-                                ],
-                              )
-                                  : Text(
-                                val.toString(),
-                                style: TextStyle(
-                                  color: Colors.grey[800],
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
+                              width: isSelected ? 3.0 : 1.3,
                             ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: colors[i].withOpacity(0.32),
+                                      blurRadius: 8,
+                                      spreadRadius: 0,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : [],
                           ),
+                          alignment: Alignment.center,
+                          child: isSelected
+                              ? Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Text(
+                                      val.toString(),
+                                      style: const TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15),
+                                    ),
+                                    Positioned(
+                                      right: 5,
+                                      top: 4,
+                                      child: Icon(Icons.check_circle_rounded,
+                                          size: 13,
+                                          color: colors[i].withOpacity(0.78)),
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  val.toString(),
+                                  style: TextStyle(
+                                    color: Colors.grey[800],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 4),
                     SizedBox(
@@ -4872,7 +4831,7 @@ class _RatingCircleState extends State<_RatingCircle>
                           fontSize: 10.5,
                           color: isSelected ? colors[i] : Colors.grey[700],
                           fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w400,
+                              isSelected ? FontWeight.w700 : FontWeight.w400,
                           height: 1.13,
                         ),
                         textAlign: TextAlign.center,
@@ -4884,7 +4843,6 @@ class _RatingCircleState extends State<_RatingCircle>
             }),
           ),
         ),
-
       ],
     );
   }
@@ -4894,17 +4852,14 @@ class _DashLine extends StatelessWidget {
   const _DashLine();
 
   @override
-  Widget build(BuildContext context) =>
-      LayoutBuilder(builder: (_, c) {
-        const dashW = 4.0,
-            dashS = 3.0;
+  Widget build(BuildContext context) => LayoutBuilder(builder: (_, c) {
+        const dashW = 4.0, dashS = 3.0;
         final count = (c.maxWidth / (dashW + dashS)).floor();
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: List.generate(
             count,
-                (_) =>
-                Container(width: dashW, height: 1.6, color: Colors.blueGrey),
+            (_) => Container(width: dashW, height: 1.6, color: Colors.blueGrey),
           ),
         );
       });
@@ -4924,8 +4879,7 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
   @override
   void initState() {
     super.initState();
-    final saved =
-    context.read<RiskAssessmentBloc>().state.answers['46.99'];
+    final saved = context.read<RiskAssessmentBloc>().state.answers['46.99'];
     if (saved != null && saved is String) {
       ctrl.text = saved;
     }
@@ -4938,8 +4892,7 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
   }
 
   @override
-  Widget build(BuildContext context) =>
-      Column(
+  Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
@@ -4978,8 +4931,8 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
               onChanged: (txt) {
                 widget.onChanged(txt);
                 context.read<RiskAssessmentBloc>().add(
-                  SaveAnswerEvent('46.99', txt),
-                );
+                      SaveAnswerEvent('46.99', txt),
+                    );
               },
             ),
           ),
@@ -4987,8 +4940,7 @@ class _ExtraAdaptationCardState extends State<_ExtraAdaptationCard> {
       );
 }
 
-Widget _bar(String t, Color c, {Color textColor = Colors.white}) =>
-    Container(
+Widget _bar(String t, Color c, {Color textColor = Colors.white}) => Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
       decoration: BoxDecoration(
@@ -5009,7 +4961,7 @@ Widget _bar(String t, Color c, {Color textColor = Colors.white}) =>
     );
 
 Widget _line(String q, Color barColor,
-    {required Widget child, double? finalValue}) =>
+        {required Widget child, double? finalValue}) =>
     Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -5036,6 +4988,5 @@ Widget _line(String q, Color barColor,
           alignment: Alignment.centerLeft,
           child: child,
         ),
-
       ],
     );

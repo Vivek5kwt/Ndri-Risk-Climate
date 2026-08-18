@@ -1,17 +1,15 @@
 import 'dart:io' show Directory, File, Platform;
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
 
 import '../../data/services/location_service.dart';
 import '../../logic/risk_assessment/bloc/risk_assessment_bloc.dart';
@@ -107,9 +105,13 @@ class ReportGenerator {
     String? stateName,
     String? district,
   }) async {
-    await initPermissions();
     final st = context.read<RiskAssessmentBloc>().state;
-    if (st is! RiskAssessmentLoaded) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final renderBox = context.findRenderObject() as RenderBox?;
+    await initPermissions();
+    if (st is! RiskAssessmentLoaded) {
+      throw StateError('Report data is still loading. Please try again.');
+    }
 
     // ==== 1) RAW scores ====
     final formattedAnswers = answers.map((k, v) => MapEntry(k, v.toString()));
@@ -133,19 +135,24 @@ class ReportGenerator {
     final double rawHazard = LocationService().hazardFor(district ?? '');
 
     // ==== 2) Normalize per Excel ====
-    final double acceptedExposure =
-    _clamp01(_normalize(b3Exposure, _expMin, _expMax));            // (B3 - 0.1964) / (0.6196 - 0.1964)
-    final double acceptedVulnerability =
-    _clamp01(_normalize(d3Vulnerability, _vulnMin, _vulnMax));     // (D3 - 0.3967) / (0.857 - 0.3967)
+    final double acceptedExposure = _clamp01(_normalize(
+        b3Exposure, _expMin, _expMax)); // (B3 - 0.1964) / (0.6196 - 0.1964)
+    final double acceptedVulnerability = _clamp01(_normalize(d3Vulnerability,
+        _vulnMin, _vulnMax)); // (D3 - 0.3967) / (0.857 - 0.3967)
     final double acceptedHazard =
-    _clamp01(_normalize(rawHazard, _hazMin, _hazMax));
+        _clamp01(_normalize(rawHazard, _hazMin, _hazMax));
 
     // Logs to verify against Excel
-    debugPrint('B3 (raw exposure)..................: ${b3Exposure.toStringAsFixed(9)}');
-    debugPrint('Accepted Exposure (0-1).............: ${acceptedExposure.toStringAsFixed(9)}');
-    debugPrint('D3 (raw vulnerability)..............: ${d3Vulnerability.toStringAsFixed(9)}');
-    debugPrint('Accepted Vulnerability (0-1)........: ${acceptedVulnerability.toStringAsFixed(9)}');
-    debugPrint('Accepted Hazard (0-1)...............: ${acceptedHazard.toStringAsFixed(9)}');
+    debugPrint(
+        'B3 (raw exposure)..................: ${b3Exposure.toStringAsFixed(9)}');
+    debugPrint(
+        'Accepted Exposure (0-1).............: ${acceptedExposure.toStringAsFixed(9)}');
+    debugPrint(
+        'D3 (raw vulnerability)..............: ${d3Vulnerability.toStringAsFixed(9)}');
+    debugPrint(
+        'Accepted Vulnerability (0-1)........: ${acceptedVulnerability.toStringAsFixed(9)}');
+    debugPrint(
+        'Accepted Hazard (0-1)...............: ${acceptedHazard.toStringAsFixed(9)}');
 
     // ==== 3) Status labels ====
     final String exposureStatus = _exposureBandLabel(b3Exposure);
@@ -155,7 +162,8 @@ class ReportGenerator {
     // ==== 4) Risk ====
     final double calculatedRisk =
         acceptedExposure * acceptedHazard * acceptedVulnerability;
-    final double acceptedRisk = calculatedRisk / _riskDivisor; // per Excel (no clamp)
+    final double acceptedRisk =
+        calculatedRisk / _riskDivisor; // per Excel (no clamp)
     final String riskStatus = _bandLabel(acceptedRisk);
 
     // ==== 5) Build PDF ====
@@ -226,7 +234,8 @@ class ReportGenerator {
               ),
             ),
             pw.SizedBox(width: 7),
-            pw.Text(label, style: pw.TextStyle(fontSize: 18, font: garamondSemiBold)),
+            pw.Text(label,
+                style: pw.TextStyle(fontSize: 18, font: garamondSemiBold)),
           ],
         ),
       );
@@ -234,15 +243,18 @@ class ReportGenerator {
 
     // ------------------ Calibrated Gauge (pointer drawn LAST) ------------------
     pw.Widget _gaugeWithPointerCalibrated({
-      required double value,                // clamped to [0,1]
+      required double value, // clamped to [0,1]
       required pw.MemoryImage gaugeImage,
       required pw.MemoryImage pointerImage,
       double width = 640,
       double height = 340,
       // Anchor positions as fractions of (width,height). Tuned to rainbow_color.png.
-      double leftFracX = 0.155,  double leftFracY = 0.76,
-      double topFracX  = 0.500,  double topFracY  = 0.245,
-      double rightFracX= 0.845,  double rightFracY= 0.76,
+      double leftFracX = 0.155,
+      double leftFracY = 0.76,
+      double topFracX = 0.500,
+      double topFracY = 0.245,
+      double rightFracX = 0.845,
+      double rightFracY = 0.76,
       // Move pointer inward to sit roughly mid-thickness of the ring.
       double radialOffset = 8.0,
       double pointerSize = 26,
@@ -251,20 +263,19 @@ class ReportGenerator {
       final v = _clamp01(value);
 
       // Resolve anchors to absolute pixels
-      final x1 = width * leftFracX,  y1 = height * leftFracY;
-      final x2 = width * topFracX,   y2 = height * topFracY;
+      final x1 = width * leftFracX, y1 = height * leftFracY;
+      final x2 = width * topFracX, y2 = height * topFracY;
       final x3 = width * rightFracX, y3 = height * rightFracY;
 
       // Circumcircle through 3 points
-      final double d = 2 *
-          (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
+      final double d = 2 * (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2));
 
       // Fallback if nearly collinear
       double cx, cy, r;
       if (d.abs() < 1e-6) {
         cx = width / 2;
         cy = height - 72;
-        r  = width / 2 - 155;
+        r = width / 2 - 155;
       } else {
         final double x1s = x1 * x1 + y1 * y1;
         final double x2s = x2 * x2 + y2 * y2;
@@ -272,13 +283,13 @@ class ReportGenerator {
 
         cx = (x1s * (y2 - y3) + x2s * (y3 - y1) + x3s * (y1 - y2)) / d;
         cy = (x1s * (x3 - x2) + x2s * (x1 - x3) + x3s * (x2 - x1)) / d;
-        r  = sqrt((x1 - cx) * (x1 - cx) + (y1 - cy) * (y1 - cy));
+        r = sqrt((x1 - cx) * (x1 - cx) + (y1 - cy) * (y1 - cy));
       }
 
       // Angles for the left and right anchors
-      double aLeft  = atan2(y1 - cy, x1 - cx);
+      double aLeft = atan2(y1 - cy, x1 - cx);
       double aRight = atan2(y3 - cy, x3 - cx);
-      if (aLeft < aRight) aLeft += 2 * pi;    // ensure we sweep across the top arc
+      if (aLeft < aRight) aLeft += 2 * pi; // ensure we sweep across the top arc
 
       final angle = aLeft + (aRight - aLeft) * v;
       final rAdj = max(1.0, r - radialOffset);
@@ -288,9 +299,10 @@ class ReportGenerator {
 
       final needle = rotatePointerAlongTangent
           ? pw.Transform.rotate(
-        angle: -(pi / 2 - angle),
-        child: pw.Image(pointerImage, width: pointerSize, height: pointerSize),
-      )
+              angle: -(pi / 2 - angle),
+              child: pw.Image(pointerImage,
+                  width: pointerSize, height: pointerSize),
+            )
           : pw.Image(pointerImage, width: pointerSize, height: pointerSize);
 
       return pw.Container(
@@ -300,7 +312,8 @@ class ReportGenerator {
         child: pw.Stack(
           children: [
             // 1) gauge image
-            pw.Image(gaugeImage, width: width, height: height, fit: pw.BoxFit.contain),
+            pw.Image(gaugeImage,
+                width: width, height: height, fit: pw.BoxFit.contain),
 
             // 2) centered date + score (this used to cover the dot)
             pw.Positioned.fill(
@@ -310,12 +323,15 @@ class ReportGenerator {
                   mainAxisSize: pw.MainAxisSize.min,
                   children: [
                     pw.Text(
-                      DateFormat('MMM d, yyyy').format(DateTime.now())+'  ',
-                      style: pw.TextStyle(fontSize: 30, fontWeight: pw.FontWeight.bold,font: garamondSemiBold),
+                      DateFormat('MMM d, yyyy').format(DateTime.now()) + '  ',
+                      style: pw.TextStyle(
+                          fontSize: 30,
+                          fontWeight: pw.FontWeight.bold,
+                          font: garamondSemiBold),
                     ),
                     pw.SizedBox(height: 3),
                     pw.Text(
-                      _asFixed(acceptedRisk, digits: 2)+'  ',
+                      _asFixed(acceptedRisk, digits: 2) + '  ',
                       style: pw.TextStyle(
                         fontSize: 50,
                         font: garamondBold,
@@ -343,7 +359,7 @@ class ReportGenerator {
     pw.Widget _imageScoreBarWithArrow({
       required String label,
       required String scoreText, // (formatted string)
-      required double value,     // accepted 0..1 (for pointer)
+      required double value, // accepted 0..1 (for pointer)
       required String status,
       required pw.MemoryImage barImage,
       required pw.MemoryImage pointerImage,
@@ -360,7 +376,10 @@ class ReportGenerator {
             pw.SizedBox(
               width: 215,
               child: pw.Text(label,
-                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, font: font)),
+                  style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                      font: font)),
             ),
             pw.SizedBox(width: 5),
             pw.Container(
@@ -371,7 +390,8 @@ class ReportGenerator {
                   pw.Positioned(
                     left: 0,
                     top: 14,
-                    child: pw.Image(barImage, width: barWidth, height: barHeight),
+                    child:
+                        pw.Image(barImage, width: barWidth, height: barHeight),
                   ),
                   pw.Positioned(
                     left: (barWidth - 22) * clamped,
@@ -386,7 +406,10 @@ class ReportGenerator {
               width: 61,
               alignment: pw.Alignment.center,
               child: pw.Text(scoreText,
-                  style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, font: font)),
+                  style: pw.TextStyle(
+                      fontSize: 22,
+                      fontWeight: pw.FontWeight.bold,
+                      font: font)),
             ),
             pw.SizedBox(width: 5),
             pw.Container(
@@ -424,7 +447,7 @@ class ReportGenerator {
           // 3-decimal TRUNCATION for the bars (matches your Excel intent)
           final vulnText = _toFixedTrunc(acceptedVulnerability, digits: 3);
           final expoText = _toFixedTrunc(acceptedExposure, digits: 3);
-          final hazText  = _toFixedTrunc(acceptedHazard, digits: 3);
+          final hazText = _toFixedTrunc(acceptedHazard, digits: 3);
 
           return pw.Stack(
             children: [
@@ -491,7 +514,8 @@ class ReportGenerator {
                       children: [
                         pw.Row(children: [
                           pw.Text('Name of the dairy farmer: ',
-                              style: pw.TextStyle(fontSize: 22, font: garamondExtraBold)),
+                              style: pw.TextStyle(
+                                  fontSize: 22, font: garamondExtraBold)),
                           pw.Expanded(
                             child: pw.Text(
                               name,
@@ -503,7 +527,6 @@ class ReportGenerator {
                           ),
                         ]),
                         pw.SizedBox(height: 8),
-
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
@@ -557,7 +580,6 @@ class ReportGenerator {
                           ],
                         ),
                         pw.SizedBox(height: 5),
-
                         pw.Row(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
@@ -650,12 +672,12 @@ class ReportGenerator {
                     child: _gaugeWithPointerCalibrated(
                       value: acceptedRisk,
                       gaugeImage: rainbowGaugeImage,
-                      pointerImage: pointerDotImage,     // or pointerArrowImage
+                      pointerImage: pointerDotImage, // or pointerArrowImage
                       width: 640,
                       height: 340,
-                      leftFracX: 0.155,  leftFracY: 0.76,
-                      topFracX:  0.50,   topFracY:  0.245,
-                      rightFracX:0.845,  rightFracY: 0.76,
+                      leftFracX: 0.155, leftFracY: 0.76,
+                      topFracX: 0.50, topFracY: 0.245,
+                      rightFracX: 0.845, rightFracY: 0.76,
                       radialOffset: 8.0,
                       pointerSize: 26,
                       rotatePointerAlongTangent: false,
@@ -668,7 +690,8 @@ class ReportGenerator {
                     child: pw.Column(
                       children: [
                         pw.Text('Your socio-climatic risk is calculated to be',
-                            style: pw.TextStyle(fontSize: 24, font: garamondBold)),
+                            style:
+                                pw.TextStyle(fontSize: 24, font: garamondBold)),
                         pw.SizedBox(height: 4),
                         pw.Text(
                           riskStatus,
@@ -732,12 +755,16 @@ class ReportGenerator {
                         pw.Text(
                           'Disclaimer: ',
                           style: pw.TextStyle(
-                              fontSize: 24, color: disclaimerColor, font: garamondExtraBold),
+                              fontSize: 24,
+                              color: disclaimerColor,
+                              font: garamondExtraBold),
                         ),
                         pw.Text(
                           'Above socio-climatic risk score is calculated based on information provided by the farmer.',
                           style: pw.TextStyle(
-                              fontSize: 20, color: PdfColors.black, font: garamondMedium),
+                              fontSize: 20,
+                              color: PdfColors.black,
+                              font: garamondMedium),
                         ),
                       ],
                     ),
@@ -750,18 +777,39 @@ class ReportGenerator {
       ),
     );
 
-    // ==== Save ====
-    Directory downloadsDir;
-    if (Platform.isAndroid) {
-      downloadsDir = Directory('/storage/emulated/0/Download');
-    } else {
-      downloadsDir = (await getDownloadsDirectory())!;
-    }
-    if (!await downloadsDir.exists()) await downloadsDir.create(recursive: true);
-
+    // ==== Save / Share ====
     final fileName = 'report_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final pdfBytes = await pdf.save();
+
+    // iOS apps cannot silently write into the user's Downloads folder. The
+    // native share sheet lets the user preview, share, print, or Save to Files.
+    if (Platform.isIOS) {
+      final tempDir = await getTemporaryDirectory();
+      final outFile = File('${tempDir.path}/$fileName');
+      await outFile.writeAsBytes(pdfBytes, flush: true);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(outFile.path, mimeType: 'application/pdf')],
+          subject: 'Socio-Climatic Risk Report',
+          title: 'Save or share report',
+          sharePositionOrigin: renderBox != null && renderBox.hasSize
+              ? renderBox.localToGlobal(Offset.zero) & renderBox.size
+              : null,
+        ),
+      );
+      return;
+    }
+
+    final downloadsDir = Platform.isAndroid
+        ? Directory('/storage/emulated/0/Download')
+        : (await getDownloadsDirectory())!;
+    if (!await downloadsDir.exists()) {
+      await downloadsDir.create(recursive: true);
+    }
+
     final outFile = File('${downloadsDir.path}/$fileName');
-    await outFile.writeAsBytes(await pdf.save());
+    await outFile.writeAsBytes(pdfBytes, flush: true);
 
     const androidDetails = AndroidNotificationDetails(
       'reports',
@@ -777,5 +825,11 @@ class ReportGenerator {
       NotificationDetails(android: androidDetails),
       payload: outFile.path,
     );
+
+    if (messenger.mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Report saved to Downloads as $fileName')),
+      );
+    }
   }
 }
