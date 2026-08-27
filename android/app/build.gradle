@@ -24,7 +24,10 @@ android {
 
     defaultConfig {
         applicationId = "com.ndri.dairyrisk"
-        minSdk        = flutter.minSdkVersion
+        // Keep Android 5.0+ devices supported. The Firebase packages used by
+        // this app are compatible with API 21, while newer Flutter defaults
+        // would otherwise raise the minimum to API 24.
+        minSdkVersion = flutter.minSdkVersion
         targetSdk     = flutter.targetSdkVersion
         versionCode   = flutter.versionCode
         versionName   = flutter.versionName

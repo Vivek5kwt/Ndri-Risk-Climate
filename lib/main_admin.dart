@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,13 @@ Future<void> main() async {
 
 final GoRouter _router = GoRouter(
   initialLocation: '/',
+  redirect: (context, state) {
+    final signedIn = FirebaseAuth.instance.currentUser != null;
+    final isLoginRoute = state.matchedLocation == '/';
+    if (!signedIn && !isLoginRoute) return '/';
+    if (signedIn && isLoginRoute) return '/adminDashboard';
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/',

@@ -1,13 +1,14 @@
 import 'package:bloc/bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../config/card_option.dart';
 import '../../../data/repositories/question_repository.dart';
 import 'risk_assessment_event.dart';
 import 'risk_assessment_state.dart';
 
-class RiskAssessmentBloc extends Bloc<RiskAssessmentEvent, RiskAssessmentState> {
+class RiskAssessmentBloc
+    extends Bloc<RiskAssessmentEvent, RiskAssessmentState> {
   RiskAssessmentBloc() : super(const RiskAssessmentState()) {
     /* ───── Load questions once ───── */
     on<LoadQuestionsEvent>((event, emit) {
@@ -79,8 +80,8 @@ class RiskAssessmentBloc extends Bloc<RiskAssessmentEvent, RiskAssessmentState> 
     /* ───── Submit all answers to Firestore ───── */
     on<SubmitAnswersEvent>((event, emit) async {
       try {
-        final String? token = await FirebaseMessaging.instance.getToken();
-        if (token == null) {
+        final String? userId = FirebaseAuth.instance.currentUser?.uid;
+        if (userId == null) {
           emit(
             RiskAssessmentLoaded(
               questions: state.questions,
@@ -101,19 +102,18 @@ class RiskAssessmentBloc extends Bloc<RiskAssessmentEvent, RiskAssessmentState> 
         /* If there’s a previous submission, merge with it */
         final docRef = FirebaseFirestore.instance
             .collection('surveySubmissions')
-            .doc(token);
+            .doc(userId);
         final snap = await docRef.get();
         Map<String, dynamic> accumulated = {};
         if (snap.exists &&
             snap.data() != null &&
             snap.data()!.containsKey('answers')) {
           accumulated =
-          Map<String, dynamic>.from(snap.data()!['answers'] as Map);
+              Map<String, dynamic>.from(snap.data()!['answers'] as Map);
         }
 
-        final type = state.option == CardOption.exposure
-            ? 'exposure'
-            : 'vulnerability';
+        final type =
+            state.option == CardOption.exposure ? 'exposure' : 'vulnerability';
 
         /* Merge current answers into the correct section */
         accumulated[type] = {
@@ -129,14 +129,12 @@ class RiskAssessmentBloc extends Bloc<RiskAssessmentEvent, RiskAssessmentState> 
           'district': state.district,
           'block': state.block,
           'village': state.village,
-          'deviceToken': token,
           'timestamp': FieldValue.serverTimestamp(),
           'answers': accumulated,
         };
 
         await docRef.set(payload, SetOptions(merge: true));
-      } catch (_) {
-      }
+      } catch (_) {}
 
       emit(
         RiskAssessmentLoaded(

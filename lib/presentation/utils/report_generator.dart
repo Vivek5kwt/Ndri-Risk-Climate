@@ -788,15 +788,12 @@ class ReportGenerator {
       final outFile = File('${tempDir.path}/$fileName');
       await outFile.writeAsBytes(pdfBytes, flush: true);
 
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [XFile(outFile.path, mimeType: 'application/pdf')],
-          subject: 'Socio-Climatic Risk Report',
-          title: 'Save or share report',
-          sharePositionOrigin: renderBox != null && renderBox.hasSize
-              ? renderBox.localToGlobal(Offset.zero) & renderBox.size
-              : null,
-        ),
+      await Share.shareXFiles(
+        [XFile(outFile.path, mimeType: 'application/pdf')],
+        subject: 'Socio-Climatic Risk Report',
+        sharePositionOrigin: renderBox != null && renderBox.hasSize
+            ? renderBox.localToGlobal(Offset.zero) & renderBox.size
+            : null,
       );
       return;
     }

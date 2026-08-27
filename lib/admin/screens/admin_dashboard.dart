@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ndri_dairy_risk/admin/screens/view_submission.dart';
@@ -25,7 +27,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-    _fetchStats();
+    _verifyAccessAndLoad();
+  }
+
+  Future<void> _verifyAccessAndLoad() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (mounted) context.go('/');
+      return;
+    }
+
+    final admin = await FirebaseFirestore.instance
+        .collection('admins')
+        .doc(user.uid)
+        .get();
+    if (!admin.exists || admin.data()?['isAdmin'] != true) {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) context.go('/');
+      return;
+    }
+    await _fetchStats();
   }
 
   Future<void> _fetchStats() async {
@@ -71,11 +92,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
     if (confirm == true) {
-      if (Navigator.canPop(context)) {
-        Navigator.of(context).pop();
-      } else {
-        context.go('/');
-      }
+      await FirebaseAuth.instance.signOut();
+      if (mounted) context.go('/');
     }
   }
 
@@ -242,7 +260,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   color: Colors.green[700], size: 26),
             ),
             title: Text(s.name,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
             subtitle: Text(
                 'Submitted on: ${s.timestamp != null ? s.timestamp.toString().split(' ').first : 'Unknown'}'),
             onTap: () {
