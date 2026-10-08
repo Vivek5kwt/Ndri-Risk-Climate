@@ -26,7 +26,7 @@ android {
         applicationId = "com.ndri.dairyrisk"
         // Firebase Auth's native SDK requires API 23. Keep API 23 devices
         // supported rather than silently inheriting Flutter's API 24 default.
-        minSdkVersion = flutter.minSdkVersion
+        minSdkVersion = 23
         targetSdk     = 36
         versionCode   = flutter.versionCode
         versionName   = flutter.versionName
@@ -80,4 +80,19 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}
+
+// Never produce an unsigned "release" bundle by accident. The existing Play
+// upload keystore must be supplied locally; credentials are never committed.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(':app:bundleRelease') || graph.hasTask(':app:assembleRelease')) {
+        def required = ['keyAlias', 'keyPassword', 'storeFile', 'storePassword']
+        def missing = required.findAll { !keystoreProperties[it]?.toString()?.trim() }
+        if (!keystorePropertiesFile.exists() || !missing.isEmpty()) {
+            throw new GradleException('Release signing is not configured. Add the existing Play upload keystore and all four fields to android/key.properties (missing: ' + missing.join(', ') + ').')
+        }
+        if (!file(keystoreProperties['storeFile']).isFile()) {
+            throw new GradleException('Release keystore file was not found at the storeFile path in android/key.properties.')
+        }
+    }
 }
