@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Allow reads of files in the Download folder -->
-    <external-path
-        name="download"
-        path="Download/"/>
-    <!-- Optionally allow access to your app’s cache directory -->
+    <!-- Notification previews use an app-private temporary PDF. -->
     <cache-path
         name="cache"
         path="."/>

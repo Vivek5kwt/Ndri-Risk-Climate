@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../config/app_colors.dart';
 import '../../config/app_strings.dart';
 import '../../config/assets.dart';
@@ -96,10 +97,10 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                             ),
                             SizedBox(height: 14.h),
                             _bullet(
-                              'No personal data will be utilized for commercial purposes. All collected '
-                                  'information will be used exclusively for academic research and will remain '
-                                  'anonymous. Furthermore, no data will be disclosed to any third party under '
-                                  'any circumstances.',
+                              'Survey responses, including the respondent name and location details entered here, '
+                                  'are used for socio-climatic risk assessment and research. They are stored using '
+                                  'Firebase services. Read the Privacy Policy for details about collection, access, '
+                                  'retention, and your choices.',
                             ),
                             SizedBox(height: 14.h),
                             _bullet(
@@ -133,6 +134,15 @@ class _DisclaimerScreenState extends State<DisclaimerScreen>
                         ),
                       ),
                       SizedBox(height: 16.h),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => launchUrl(
+                            Uri.parse('https://ndrics.in/privacy-policy'),
+                            mode: LaunchMode.externalApplication,
+                          ),
+                          child: const Text('Privacy Policy'),
+                        ),
+                      ),
                       GestureDetector(
                         behavior: HitTestBehavior.translucent,
                         onTap: () => setState(() => _isAgreed = !_isAgreed),

@@ -2,10 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:io' show Platform;
 
 import 'config/router/go_router.dart';
 import 'data/services/location_state.dart';
@@ -26,21 +23,6 @@ Future<void> main() async {
   // Firestore rules to protect submissions without requiring a user account.
   if (FirebaseAuth.instance.currentUser == null) {
     await FirebaseAuth.instance.signInAnonymously();
-  }
-
-  await FlutterDownloader.initialize(
-    debug: true,
-    ignoreSsl: true,
-  );
-
-  if (Platform.isAndroid) {
-    var status = await Permission.manageExternalStorage.status;
-    if (!status.isGranted) {
-      status = await Permission.manageExternalStorage.request();
-    }
-    if (!status.isGranted) {
-      await Permission.storage.request();
-    }
   }
 
   final locCubit = LocationCubit();

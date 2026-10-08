@@ -18,27 +18,23 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.ndri.dairyrisk"
-    compileSdk = 35
+    compileSdk = 36
     // if you use native code, keep this:
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.ndri.dairyrisk"
-        // Keep Android 5.0+ devices supported. The Firebase packages used by
-        // this app are compatible with API 21, while newer Flutter defaults
-        // would otherwise raise the minimum to API 24.
+        // Firebase Auth's native SDK requires API 23. Keep API 23 devices
+        // supported rather than silently inheriting Flutter's API 24 default.
         minSdkVersion = flutter.minSdkVersion
-        targetSdk     = flutter.targetSdkVersion
+        targetSdk     = 36
         versionCode   = flutter.versionCode
         versionName   = flutter.versionName
 
-        // This tells the manifest merger to replace android:name="${applicationName}"
-        manifestPlaceholders = [
-                applicationName: "com.ndri.dairyrisk.App"
-        ]
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -51,10 +47,12 @@ android {
     // ✅ Real release signing config (reads from key.properties)
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                storePassword keystoreProperties['storePassword']
+            }
         }
     }
 
@@ -64,7 +62,9 @@ android {
         }
         release {
             // ✅ Use the real release keystore, NOT debug
-            signingConfig signingConfigs.release
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             // Optional: keep as needed
             minifyEnabled false
             shrinkResources false
@@ -76,4 +76,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

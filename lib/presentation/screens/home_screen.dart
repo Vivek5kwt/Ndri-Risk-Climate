@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ndri_dairy_risk/presentation/screens/preview_answers_screen.dart';
 import 'package:ndri_dairy_risk/presentation/widgets/app_text.dart';
 import 'package:open_file/open_file.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../config/app_colors.dart';
 import '../../config/app_strings.dart';
@@ -206,17 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadLocalAnswers();
   }
 
-  Future<void> _initPermissions() async {
-    if (!Platform.isAndroid) return;
-    var status = await Permission.manageExternalStorage.status;
-    if (!status.isGranted) {
-      status = await Permission.manageExternalStorage.request();
-    }
-    if (!status.isGranted) {
-      await Permission.storage.request();
-    }
-  }
-
   Future<void> _generateReport() async {
     if (_generatingReport) return;
     setState(() => _generatingReport = true);
@@ -226,7 +214,6 @@ class _HomeScreenState extends State<HomeScreen> {
         context: context,
         answers: _localAnswers,
         notifications: _localNotifications,
-        initPermissions: _initPermissions,
         name: nameCtrl.text.trim(),
         block: blockCtrl.text.trim(),
         village: villageCtrl.text.trim(),

@@ -1,4 +1,4 @@
-import 'dart:io' show Directory, File, Platform;
+import 'dart:io' show File, Platform;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -98,7 +98,6 @@ class ReportGenerator {
     required BuildContext context,
     required Map<String, dynamic> answers,
     required FlutterLocalNotificationsPlugin notifications,
-    required Future<void> Function() initPermissions,
     required String name,
     required String block,
     required String village,
@@ -108,7 +107,6 @@ class ReportGenerator {
     final st = context.read<RiskAssessmentBloc>().state;
     final messenger = ScaffoldMessenger.of(context);
     final renderBox = context.findRenderObject() as RenderBox?;
-    await initPermissions();
     if (st is! RiskAssessmentLoaded) {
       throw StateError('Report data is still loading. Please try again.');
     }
@@ -798,14 +796,27 @@ class ReportGenerator {
       return;
     }
 
-    final downloadsDir = Platform.isAndroid
-        ? Directory('/storage/emulated/0/Download')
-        : (await getDownloadsDirectory())!;
-    if (!await downloadsDir.exists()) {
-      await downloadsDir.create(recursive: true);
+    if (Platform.isAndroid) {
+      // ACTION_CREATE_DOCUMENT lets the user choose Downloads (or another
+      // provider) without broad storage access on any supported Android API.
+      final saved = await const MethodChannel('com.ndri.dairyrisk/documents')
+          .invokeMethod<bool>('savePdf', {
+        'name': fileName,
+        'bytes': pdfBytes,
+      });
+      if (saved != true) return;
+    } else {
+      final downloadsDir = await getDownloadsDirectory();
+      if (downloadsDir == null) {
+        throw StateError('Downloads folder is unavailable.');
+      }
+      await File('${downloadsDir.path}/$fileName')
+          .writeAsBytes(pdfBytes, flush: true);
     }
 
-    final outFile = File('${downloadsDir.path}/$fileName');
+    // Keep an app-private copy for the existing notification tap-to-open flow.
+    final tempDir = await getTemporaryDirectory();
+    final outFile = File('${tempDir.path}/$fileName');
     await outFile.writeAsBytes(pdfBytes, flush: true);
 
     const androidDetails = AndroidNotificationDetails(
@@ -825,7 +836,7 @@ class ReportGenerator {
 
     if (messenger.mounted) {
       messenger.showSnackBar(
-        SnackBar(content: Text('Report saved to Downloads as $fileName')),
+        SnackBar(content: Text('Report saved as $fileName')),
       );
     }
   }
